@@ -74,72 +74,59 @@ if df is not None:
           for idx, row in members_df.reset_index().iterrows():
             m_name = str(row.get('MEMBER NAME', 'Unknown'))
             m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
-            m_age = row.get('AGE', 35)
-            if pd.isna(m_age):
-              m_age = 35
-            else:
-              m_age = int(m_age)
 
-            if m_age > 70:
-              elig_status = '🚫 Age > 70: ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు'
-            elif m_age < 18:
-              elig_status = '⚠️ Age < 18: ఎంట్రీ చేయడానికి వయస్సు సరిపోదు'
+            # Raw Age from Database/Sheet
+            raw_age = row.get('AGE', 35)
+            if pd.isna(raw_age):
+              raw_age = 35
             else:
-              elig_status = '✅ ఎంట్రీకి అర్హులు'
+              raw_age = int(raw_age)
 
             st.markdown(
                 f"""
                         <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
                             🆔 <b>Member ID: {m_id}</b> &nbsp;|&nbsp; 
-                            👤 <b>{m_name}</b> (వయస్సు: {m_age} - As per Aadhaar)<br>
-                            <span style="font-size: 13px; color: #555;">
-                                <b>Status:</b> <span style="color: #1f77b4;">{elig_status}</span>
-                            </span>
+                            👤 <b>{m_name}</b> (డేటాబేస్ వయస్సు: {raw_age} సంవత్సరాలు)<br>
                         </div>
                         """,
                 unsafe_allow_html=True,
             )
 
-            # Member Update Form
+            # Member Age Confirmation & Update Form
             with st.expander(
-                f'✏️ {m_name} (Member ID: {m_id}) వివరాలు సరిచూడండి / మార్చండి'
+                f'✏️ {m_name} (Member ID: {m_id}) వయస్సు నిర్ధారణ & వివరాలు'
             ):
-              safe_val = m_age if m_age >= 1 else 18
-              updated_age = st.number_input(
+              confirmed_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
                   ' Aadhaar):',
                   min_value=1,
                   max_value=100,
-                  value=safe_val,
+                  value=raw_age,
                   key=f'age_{idx}',
               )
               st.write('---')
 
-              if updated_age < 18:
+              # Strict Age Rules Validation
+              if confirmed_age < 18:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
-                    ' కాబట్టి ఎటువంటి ఎంట్రీ చేయడానికి నిబంధనల ప్రకారం'
-                    ' అనుమతి లేదు.'
+                    ' కాబట్టి నిబంధనల ప్రకారం ఎటువంటి స్కీమ్ ఎంట్రీకి అవకాశం'
+                    ' లేదు.'
                 )
-              elif updated_age > 70:
+              elif confirmed_age > 70:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది. కాబట్టి'
                     ' PMJJBY మరియు PMSBY ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు.'
                 )
               else:
                 st.success(
-                    '✅ వయస్సు నిబంధనల ప్రకారం సముచితమైన స్కీమ్‌లకు వివరాలు'
-                    ' నమోదు చేసుకోవచ్చు.'
+                    f'✅ నిర్ధారించిన వయస్సు: {confirmed_age} సంవత్సరాలు.'
+                    ' నిబంధనల ప్రకారం వర్తించే స్కీమ్‌లు కింద చూపబడ్డాయి.'
                 )
 
-                # PMJJBY Section (Eligible only if 18 <= age < 50)
-                st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
-                if updated_age >= 50:
-                  st.warning(
-                      'ℹ️ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు (Not'
-                      ' Applicable).'
-                  )
-                else:
+                # 1. PMJJBY Section (Eligible strictly if 18 <= age <= 50)
+                if confirmed_age <= 50:
+                  st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                   bc1, bc2, bc3 = st.columns(3)
                   with bc1:
                     pmjjby_bank = st.text_input(
@@ -197,10 +184,15 @@ if df is not None:
                         f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                         ' చేయబడ్డాయి!'
                     )
+                  st.markdown('---')
+                else:
+                  st.info(
+                      'ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు'
+                      ' (Not Applicable).'
+                  )
+                  st.markdown('---')
 
-                st.markdown('---')
-
-                # PMSBY Section (Eligible if 18 <= age <= 70)
+                # 2. PMSBY Section (Eligible if 18 <= age <= 70)
                 st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                 pc1, pc2, pc3 = st.columns(3)
                 with pc1:
@@ -248,7 +240,7 @@ if df is not None:
                         'బ్యాంకు వారు ఎన్రోల్ చేసిన తేదీ (Bank Enrolled Date -'
                         ' Optional) - PMSBY',
                         value=None,
-                        key=f'pmsby_b_date_opt_{idx}',
+                        key=f'pmsby_bank_date_opt_{idx}',
                     )
 
                 if st.button(
@@ -291,7 +283,7 @@ if df is not None:
     )
 
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
-        lambda x: 1 if 18 <= x < 50 else 0
+        lambda x: 1 if 18 <= x <= 50 else 0
     )
     temp_df['PMSBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x <= 70 else 0
