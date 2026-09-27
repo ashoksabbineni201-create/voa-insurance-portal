@@ -27,7 +27,6 @@ def load_data():
 df = load_data()
 
 if df is not None:
-  # డేటా ఫ్రేమ్‌లో అవసరమైన డేట్ కాలమ్స్ లేకపోతే నల్ (None) తో క్రియేట్ చేయడం
   col_pmjjby_sub = (
       'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
       ' Bank) - PMJJBY'
@@ -54,7 +53,6 @@ if df is not None:
 
   st.sidebar.header('📁 నావిగేషన్')
 
-  # --- కేవలం ఎంట్రీలు / అప్‌డేట్లు చేసిన డేటా మాత్రమే డౌన్‌లోడ్ అయ్యేలా ఫిల్టర్ ---
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
@@ -129,16 +127,17 @@ if df is not None:
 
             st.markdown(
                 f"""
-                        <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
+                        <div style="padding: 10px; margin-bottom: 5px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
                             🆔 <b>Member ID: {m_id}</b> &nbsp;|&nbsp; 
-                            👤 <b>{m_name}</b> (డేటాబేస్ వయస్సు: {raw_age} సంవత్సరాలు)<br>
+                            👤 <b>{m_name}</b> (వయస్సు: {raw_age})
                         </div>
                         """,
                 unsafe_allow_html=True,
             )
 
+            # ఒక్కసారి ఒక మెంబర్ మాత్రమే స్పష్టంగా కనిపించడానికి expander బదులుగా ప్రత్యేక సెటప్
             with st.expander(
-                f'✏️ {m_name} (Member ID: {m_id}) వయస్సు నిర్ధారణ & వివరాలు'
+                f'✏️ {m_name} (Member ID: {m_id}) వివరాలు నమోదు చేయండి'
             ):
               entered_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
@@ -150,7 +149,7 @@ if df is not None:
               )
 
               age_confirmed = st.button(
-                  f'✔️ {m_name} వయస్సును నిర్ధారించండి (Confirm Age)',
+                  f'✔️ {m_name} వయస్సును నిర్ధారించండి',
                   key=f'confirm_age_btn_{idx}',
               )
 
@@ -160,7 +159,6 @@ if df is not None:
 
               active_age = st.session_state.get(session_key, raw_age)
 
-              st.write('---')
               st.info(
                   f'📌 ప్రస్తుతం పరిగణించబడిన వయస్సు: **{active_age} సంవత్సరాలు**'
               )
@@ -168,21 +166,16 @@ if df is not None:
               if active_age < 18:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
-                    ' కాబట్టి నిబంధనల ప్రకారం ఎటువంటి స్కీమ్ ఎంట్రీకి అవకాశం'
-                    ' లేదు.'
                 )
               elif active_age > 70:
-                st.error(
-                    '❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది. కాబట్టి'
-                    ' PMJJBY మరియు PMSBY ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు.'
-                )
+                st.error('❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది.')
               else:
                 st.success(
-                    f'✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది. వర్తించే స్కీమ్‌ల'
-                    ' వివరాలు కింద ఇవ్వబడ్డాయి.'
+                    '✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది. స్కీమ్ వివరాలు కింద'
+                    ' ఇవ్వబడ్డాయి.'
                 )
 
-                # ==================== 1. PMJJBY Section ====================
+                # 1. PMJJBY Section
                 if active_age <= 50:
                   st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                   bc1, bc2, bc3 = st.columns(3)
@@ -245,37 +238,41 @@ if df is not None:
                     if pmjjby_enrolled == 'Already Enrolled':
                       if pmjjby_b_date is None:
                         st.error(
-                            '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" (Bank'
-                            ' Enrolled Date) ఎంటర్ చేయండి!'
+                            '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్'
+                            ' చేయండి!'
                         )
                       else:
                         st.success(
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
                         )
-                        st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
-                    else:  # Not Enrolled
+                        st.toast(
+                            f'✅ {m_name} - PMJJBY Saved Successfully!',
+                            icon='🎉',
+                        )
+                    else:
                       if pmjjby_sub_date is None and pmjjby_b_date is None:
                         st.error(
-                            '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
-                            ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక'
-                            ' తేదీని ఎంటర్ చేయండి!'
+                            '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్'
+                            ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                         )
                       else:
                         st.success(
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
                         )
-                        st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
+                        st.toast(
+                            f'✅ {m_name} - PMJJBY Saved Successfully!',
+                            icon='🎉',
+                        )
                   st.markdown('---')
                 else:
                   st.warning(
-                      'ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు'
-                      ' (Not Applicable).'
+                      'ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు.'
                   )
                   st.markdown('---')
 
-                # ==================== 2. PMSBY Section ====================
+                # 2. PMSBY Section
                 st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                 pc1, pc2, pc3 = st.columns(3)
                 with pc1:
@@ -337,28 +334,31 @@ if df is not None:
                   if pmsby_enrolled == 'Already Enrolled':
                     if pmsby_b_date is None:
                       st.error(
-                          '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" (Bank'
-                          ' Enrolled Date) ఎంటర్ చేయండి!'
+                          '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్'
+                          ' చేయండి!'
                       )
                     else:
                       st.success(
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
                       )
-                      st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
-                  else:  # Not Enrolled
+                      st.toast(
+                          f'✅ {m_name} - PMSBY Saved Successfully!', icon='🎉'
+                      )
+                  else:
                     if pmsby_sub_date is None and pmsby_b_date is None:
                       st.error(
-                          '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
-                          ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక తేదీని'
-                          ' ఎంటర్ చేయండి!'
+                          '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్'
+                          ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                       )
                     else:
                       st.success(
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
                       )
-                      st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
+                      st.toast(
+                          f'✅ {m_name} - PMSBY Saved Successfully!', icon='🎉'
+                      )
 
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
