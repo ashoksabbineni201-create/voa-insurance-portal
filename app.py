@@ -98,26 +98,29 @@ if df is not None:
           else:
             m_age = int(m_age)
 
+          account_no = str(row.get('MEMBER sb account number', 'N/A'))
+
           # Age-based Eligibility rules
           if m_age > 70:
-            pmjjby_elig = 'Not Applicable (> 70 yrs)'
-            pmsby_elig = 'Not Applicable (> 70 yrs)'
+            pmjjby_elig = 'Not Applicable'
+            pmsby_elig = 'Not Applicable'
           elif 50 <= m_age <= 70:
-            pmjjby_elig = 'Not Applicable (Age 50-70)'
-            pmsby_elig = 'Eligible'
-          else:  # 18 to 49
-            pmjjby_elig = 'Eligible'
-            pmsby_elig = 'Eligible'
+            pmjjby_elig = 'Not Applicable'
+            pmsby_elig = 'Eligible (Not Enrolled)'
+          else:
+            pmjjby_elig = 'Eligible (Not Enrolled)'
+            pmsby_elig = 'Eligible (Not Enrolled)'
 
-          # Member Card display
+          # Member Card display with Account Number and Status
           st.markdown(
               f"""
-                    <div style="padding: 10px 15px; margin-bottom: 5px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
+                    <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
                         🆔 <b>ID: {idx+1}</b> &nbsp;|&nbsp; 
-                        👤 <b>{m_name}</b> (వయస్సు: {m_age})<br>
+                        👤 <b>{m_name}</b> (వయస్సు: {m_age}) &nbsp;|&nbsp; 
+                        🏦 <b>అకౌంట్ నంబర్:</b> <span style="color: #333; font-weight: bold;">{account_no}</span><br>
                         <span style="font-size: 13px; color: #555;">
-                            PMJJBY Status: <b style="color: #1f77b4;">{pmjjby_elig}</b> &nbsp;|&nbsp; 
-                            PMSBY Status: <b style="color: #1f77b4;">{pmsby_elig}</b>
+                            <b>PMJJBY:</b> <span style="color: #1f77b4;">{pmjjby_elig}</span> &nbsp;|&nbsp; 
+                            <b>PMSBY:</b> <span style="color: #1f77b4;">{pmsby_elig}</span>
                         </span>
                     </div>
                     """,
@@ -126,7 +129,6 @@ if df is not None:
 
           # Member Update & Verification Form (Expander)
           with st.expander(f'✏️ {m_name} (ID: {idx+1}) వివరాలు సరిచూడండి / మార్చండి'):
-            # Step 1: Age Confirmation
             updated_age = st.number_input(
                 'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
                 min_value=18,
@@ -137,41 +139,42 @@ if df is not None:
 
             st.write('---')
 
-            # Dynamic Eligibility based on confirmed age
             if updated_age > 70:
               st.error(
                   '⚠️ ఈ మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది కాబట్టి ఏ స్కీమ్‌కూ'
                   ' ఎలిజిబిలిటీ లేదు (Not Applicable).'
               )
             else:
-              # Bank & Branch details shared across schemes
-              c1, c2, c3 = st.columns(3)
-              with c1:
-                bank_name = st.text_input(
-                    'బ్యాంక్ పేరు (Bank Name)',
-                    value='Indian Overseas Bank',
-                    key=f'bank_{idx}',
-                )
-              with c2:
-                branch_name = st.text_input(
-                    'బ్రాంచ్ (Branch)', value='VEJENDLA', key=f'branch_{idx}'
-                )
-              with c3:
-                acc_no = st.text_input(
-                    'అకౌంట్ నంబర్ (Account Number)',
-                    value=str(row.get('MEMBER sb account number', '')),
-                    key=f'acc_{idx}',
-                )
-
-              st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు')
+              # 1. PMJJBY Scheme Details & Separate Bank Info
+              st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు & బ్యాంక్ అకౌంట్')
               if updated_age >= 50:
                 st.info(
                     'ℹ️ 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు (Not'
                     ' Applicable).'
                 )
               else:
+                bc1, bc2, bc3 = st.columns(3)
+                with bc1:
+                  pmjjby_bank = st.text_input(
+                      'బ్యాంక్ పేరు (PMJJBY Bank)',
+                      value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
+                      key=f'pmjjby_bank_{idx}',
+                  )
+                with bc2:
+                  pmjjby_branch = st.text_input(
+                      'బ్రాంచ్ (PMJJBY Branch)',
+                      value=str(row.get('BRANCH NAME', 'VEJENDLA')),
+                      key=f'pmjjby_branch_{idx}',
+                  )
+                with bc3:
+                  pmjjby_acc = st.text_input(
+                      'అకౌంట్ నంబర్ (PMJJBY Acc No)',
+                      value=account_no,
+                      key=f'pmjjby_acc_{idx}',
+                  )
+
                 pmjjby_enrolled = st.radio(
-                    'PMJJBY కింద మెంబర్ ఆల్రెడీ ఎన్రోల్ అయ్యారా?',
+                    'PMJJBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
                     ['Not Enrolled', 'Already Enrolled'],
                     key=f'pmjjby_status_{idx}',
                 )
@@ -195,9 +198,31 @@ if df is not None:
                     )
 
               st.markdown('---')
-              st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు')
+
+              # 2. PMSBY Scheme Details & Separate Bank Info
+              st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు & బ్యాంక్ అకౌంట్')
+              pc1, pc2, pc3 = st.columns(3)
+              with pc1:
+                pmsby_bank = st.text_input(
+                    'బ్యాంక్ పేరు (PMSBY Bank)',
+                    value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
+                    key=f'pmsby_bank_{idx}',
+                )
+              with pc2:
+                pmsby_branch = st.text_input(
+                    'బ్రాంచ్ (PMSBY Branch)',
+                    value=str(row.get('BRANCH NAME', 'VEJENDLA')),
+                    key=f'pmsby_branch_{idx}',
+                )
+              with pc3:
+                pmsby_acc = st.text_input(
+                    'అకౌంట్ నంబర్ (PMSBY Acc No)',
+                    value=account_no,
+                    key=f'pmsby_acc_{idx}',
+                )
+
               pmsby_enrolled = st.radio(
-                  'PMSBY కింద మెంబర్ ఆల్రెడీ ఎన్రోల్ అయ్యారా?',
+                  'PMSBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
                   ['Not Enrolled', 'Already Enrolled'],
                   key=f'pmsby_status_{idx}',
               )
@@ -224,6 +249,5 @@ if df is not None:
                 f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_btn_{idx}'
             ):
               st.success(
-                  f'✅ {m_name} యొక్క వయస్సు ({updated_age}) మరియు ఎన్రోల్మెంట్'
-                  ' వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!'
+                  f'✅ {m_name} యొక్క వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!'
               )
