@@ -67,7 +67,27 @@ if df is not None:
   else:
     report_df = pd.DataFrame(columns=df.columns)
 
-  entered_csv_report = report_df.to_csv(index=False).encode('utf-8')
+  # మీరు స్క్రీన్‌షాట్‌లో కోరిన హెడ్డింగ్ పేర్లతో రీనేమ్ చేయడం
+  export_df = report_df.copy()
+  rename_dict = {}
+  if col_pmjjby_sub in export_df.columns:
+    rename_dict[col_pmjjby_sub] = 'Application Submitted at Bank - PMJJBY'
+  if col_pmsby_sub in export_df.columns:
+    rename_dict[col_pmsby_sub] = 'Application Submitted at Bank - PMSBY'
+  if col_pmjjby_bank in export_df.columns:
+    rename_dict[col_pmjjby_bank] = 'Bank Enrolled Date - PMJJBY'
+  if col_pmsby_bank in export_df.columns:
+    rename_dict[col_pmsby_bank] = 'Bank Enrolled Date - PMSBY'
+
+  export_df = export_df.rename(columns=rename_dict)
+
+  # సీరియల్ నంబర్ (s.no) మరియు age correction కాలమ్స్ లేకపోతే యాడ్ చేయడం
+  if 's.no' not in export_df.columns:
+    export_df.insert(0, 's.no', range(1, len(export_df) + 1))
+  if 'age correction' not in export_df.columns:
+    export_df['age correction'] = ''
+
+  entered_csv_report = export_df.to_csv(index=False).encode('utf-8')
   st.sidebar.download_button(
       label='📥 ఎంట్రీ చేసిన వివరాలు మాత్రమే డౌన్‌లోడ్ చేసుకోండి (CSV)',
       data=entered_csv_report,
@@ -100,7 +120,6 @@ if df is not None:
         shg = st.sidebar.selectbox('SHG group ఎంచుకోండి', filtered_shgs)
 
         if shg:
-          # సింటాక్స్ ఎర్రర్ ఇక్కడ పూర్తిగా సవరించబడింది
           members_df = df[
               (df['MANDAL'] == mandal) & (df['VO'] == vo) & (df['SHG'] == shg)
           ]
@@ -130,7 +149,6 @@ if df is not None:
             else:
               raw_age = int(raw_age)
 
-            # వయస్సు ఆధారంగా ఎలిజిబిలిటీ స్టేటస్
             if raw_age < 18:
               eligibility_status = 'Not Eligible (<18)'
             elif 18 <= raw_age <= 50:
@@ -140,7 +158,6 @@ if df is not None:
             else:
               eligibility_status = 'Not Eligible (>70)'
 
-            # ఎంట్రీ పూర్తయిందా లేదా చెక్ చేయడం
             saved_mask = False
             if (
                 not st.session_state.saved_entries.empty
@@ -158,7 +175,6 @@ if df is not None:
             else:
               status_badge = f'<span style="color: #d9534f;">[ {eligibility_status} ]</span>'
 
-            # ఒకే లైన్ లో పేరు, ఐడి, పెన్సిల్ గుర్తు మరియు స్టేటస్
             with st.expander(
                 f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | {status_badge}'
             ):
