@@ -49,21 +49,28 @@ if df is not None:
       col_pmsby_bank,
   ]:
     if c not in df.columns:
-      df[c] = pd.NaT
+      df[c] = None
+
+  # Session state లో ఎంట్రీలను స్టోర్ చేయడానికి
+  if 'saved_entries' not in st.session_state:
+    st.session_state.saved_entries = pd.DataFrame(columns=df.columns)
 
   st.sidebar.header('📁 నావిగేషన్')
 
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
-  entered_df = df[
-      df[col_pmjjby_sub].notna()
-      | df[col_pmjjby_bank].notna()
-      | df[col_pmsby_sub].notna()
-      | df[col_pmsby_bank].notna()
-  ]
+  # సేవ్ చేసిన ఎంట్రీలను డౌన్‌లోడ్ చేయడానికి
+  if not st.session_state.saved_entries.empty:
+    report_df = st.session_state.saved_entries.drop_duplicates(
+        subset=['MEMBER ID']
+        if 'MEMBER ID' in st.session_state.saved_entries.columns
+        else None
+    )
+  else:
+    report_df = pd.DataFrame(columns=df.columns)
 
-  entered_csv_report = entered_df.to_csv(index=False).encode('utf-8')
+  entered_csv_report = report_df.to_csv(index=False).encode('utf-8')
   st.sidebar.download_button(
       label='📥 ఎంట్రీ చేసిన వివరాలు మాత్రమే డౌన్‌లోడ్ చేసుకోండి (CSV)',
       data=entered_csv_report,
@@ -135,7 +142,6 @@ if df is not None:
                 unsafe_allow_html=True,
             )
 
-            # ఒక్కసారి ఒక మెంబర్ మాత్రమే స్పష్టంగా కనిపించడానికి expander బదులుగా ప్రత్యేక సెటప్
             with st.expander(
                 f'✏️ {m_name} (Member ID: {m_id}) వివరాలు నమోదు చేయండి'
             ):
@@ -242,6 +248,15 @@ if df is not None:
                             ' చేయండి!'
                         )
                       else:
+                        updated_row = row.copy()
+                        updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                        st.session_state.saved_entries = pd.concat(
+                            [
+                                st.session_state.saved_entries,
+                                pd.DataFrame([updated_row]),
+                            ],
+                            ignore_index=True,
+                        )
                         st.success(
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
@@ -257,6 +272,18 @@ if df is not None:
                             ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                         )
                       else:
+                        updated_row = row.copy()
+                        if pmjjby_sub_date is not None:
+                          updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
+                        if pmjjby_b_date is not None:
+                          updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                        st.session_state.saved_entries = pd.concat(
+                            [
+                                st.session_state.saved_entries,
+                                pd.DataFrame([updated_row]),
+                            ],
+                            ignore_index=True,
+                        )
                         st.success(
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
@@ -338,6 +365,15 @@ if df is not None:
                           ' చేయండి!'
                       )
                     else:
+                      updated_row = row.copy()
+                      updated_row[col_pmsby_bank] = str(pmsby_b_date)
+                      st.session_state.saved_entries = pd.concat(
+                          [
+                              st.session_state.saved_entries,
+                              pd.DataFrame([updated_row]),
+                          ],
+                          ignore_index=True,
+                      )
                       st.success(
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
@@ -352,6 +388,18 @@ if df is not None:
                           ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                       )
                     else:
+                      updated_row = row.copy()
+                      if pmsby_sub_date is not None:
+                        updated_row[col_pmsby_sub] = str(pmsby_sub_date)
+                      if pmsby_b_date is not None:
+                        updated_row[col_pmsby_bank] = str(pmsby_b_date)
+                      st.session_state.saved_entries = pd.concat(
+                          [
+                              st.session_state.saved_entries,
+                              pd.DataFrame([updated_row]),
+                          ],
+                          ignore_index=True,
+                      )
                       st.success(
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
