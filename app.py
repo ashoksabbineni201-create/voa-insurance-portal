@@ -100,8 +100,9 @@ if df is not None:
         shg = st.sidebar.selectbox('SHG group ఎంచుకోండి', filtered_shgs)
 
         if shg:
+          # సింటాక్స్ ఎర్రర్ ఇక్కడ పూర్తిగా సవరించబడింది
           members_df = df[
-              (df['MANDAL'] == mandal) & (df['VO'] == vo) & (df['SHG'] == shg]
+              (df['MANDAL'] == mandal) & (df['VO'] == vo) & (df['SHG'] == shg)
           ]
 
           st.sidebar.markdown('---')
@@ -129,32 +130,41 @@ if df is not None:
             else:
               raw_age = int(raw_age)
 
-            # ఎలిజిబిలిటీ డిటర్మైన్ చేయడం
+            # వయస్సు ఆధారంగా ఎలిజిబిలిటీ స్టేటస్
             if raw_age < 18:
-              eligibility_status = '❌ Not Eligible (<18)'
+              eligibility_status = 'Not Eligible (<18)'
             elif 18 <= raw_age <= 50:
-              eligibility_status = '✅ PMJJBY & PMSBY Eligible'
+              eligibility_status = 'PMJJBY & PMSBY Eligible'
             elif 51 <= raw_age <= 70:
-              eligibility_status = '✅ PMSBY Eligible Only'
+              eligibility_status = 'PMSBY Eligible Only'
             else:
-              eligibility_status = '❌ Not Eligible (>70)'
+              eligibility_status = 'Not Eligible (>70)'
 
-            # ఎంట్రీ స్టేటస్ చెక్ చేయడం
+            # ఎంట్రీ పూర్తయిందా లేదా చెక్ చేయడం
             saved_mask = False
-            if not st.session_state.saved_entries.empty and 'MEMBER ID' in st.session_state.saved_entries.columns:
-              saved_mask = m_id in st.session_state.saved_entries['MEMBER ID'].values
+            if (
+                not st.session_state.saved_entries.empty
+                and 'MEMBER ID' in st.session_state.saved_entries.columns
+            ):
+              saved_mask = (
+                  m_id in st.session_state.saved_entries['MEMBER ID'].values
+              )
 
             if saved_mask:
-              status_badge = '<span style="color: green; font-weight: bold;">[ Enrolled / Submitted ]</span>'
+              status_badge = (
+                  '<span style="color: green; font-weight: bold;">[ Enrolled'
+                  ' / Submitted ]</span>'
+              )
             else:
-              status_badge = f'<span style="color: gray;">[ {eligibility_status} ]</span>'
+              status_badge = f'<span style="color: #d9534f;">[ {eligibility_status} ]</span>'
 
-            # ఒకే లైన్ లో పేరు, ఐడి, పెన్సిల్ గుర్తు మరియు స్టేటస్ చూపించడం
+            # ఒకే లైన్ లో పేరు, ఐడి, పెన్సిల్ గుర్తు మరియు స్టేటస్
             with st.expander(
                 f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | {status_badge}'
             ):
               entered_age = st.number_input(
-                  'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per Aadhaar):',
+                  'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
+                  ' Aadhaar):',
                   min_value=1,
                   max_value=100,
                   value=raw_age,
@@ -219,7 +229,8 @@ if df is not None:
 
                   if pmjjby_enrolled == 'Already Enrolled':
                     pmjjby_b_date = st.date_input(
-                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
+                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                        ' PMJJBY',
                         value=None,
                         key=f'pmjjby_b_date_already_{idx}',
                     )
@@ -227,13 +238,15 @@ if df is not None:
                     col_d1, col_d2 = st.columns(2)
                     with col_d1:
                       pmjjby_sub_date = st.date_input(
-                          'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY',
+                          'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                          ' Submitted at Bank) - PMJJBY',
                           value=None,
                           key=f'pmjjby_sub_date_{idx}',
                       )
                     with col_d2:
                       pmjjby_b_date = st.date_input(
-                          'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
+                          'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                          ' PMJJBY',
                           value=None,
                           key=f'pmjjby_b_date_opt_{idx}',
                       )
@@ -245,7 +258,8 @@ if df is not None:
                     if pmjjby_enrolled == 'Already Enrolled':
                       if pmjjby_b_date is None:
                         st.error(
-                            '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్ చేయండి!'
+                            '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్'
+                            ' చేయండి!'
                         )
                       else:
                         updated_row = row.copy()
@@ -258,15 +272,18 @@ if df is not None:
                             ignore_index=True,
                         )
                         st.success(
-                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
+                            ' చేయబడ్డాయి!'
                         )
                         st.toast(
-                            f'✅ {m_name} - PMJJBY Saved Successfully!', icon='🎉'
+                            f'✅ {m_name} - PMJJBY Saved Successfully!',
+                            icon='🎉',
                         )
                     else:
                       if pmjjby_sub_date is None and pmjjby_b_date is None:
                         st.error(
-                            '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్ ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
+                            '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్'
+                            ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                         )
                       else:
                         updated_row = row.copy()
@@ -282,10 +299,12 @@ if df is not None:
                             ignore_index=True,
                         )
                         st.success(
-                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
+                            ' చేయబడ్డాయి!'
                         )
                         st.toast(
-                            f'✅ {m_name} - PMJJBY Saved Successfully!', icon='🎉'
+                            f'✅ {m_name} - PMJJBY Saved Successfully!',
+                            icon='🎉',
                         )
                   st.markdown('---')
                 else:
@@ -327,7 +346,8 @@ if df is not None:
 
                 if pmsby_enrolled == 'Already Enrolled':
                   pmsby_b_date = st.date_input(
-                      'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
+                      'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                      ' PMSBY',
                       value=None,
                       key=f'pmsby_b_date_already_{idx}',
                   )
@@ -335,13 +355,15 @@ if df is not None:
                   col_d3, col_d4 = st.columns(2)
                   with col_d3:
                     pmsby_sub_date = st.date_input(
-                        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY',
+                        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                        ' Submitted at Bank) - PMSBY',
                         value=None,
                         key=f'pmsby_sub_date_{idx}',
                     )
                   with col_d4:
                     pmsby_b_date = st.date_input(
-                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
+                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                        ' PMSBY',
                         value=None,
                         key=f'pmsby_b_date_opt_{idx}',
                     )
@@ -353,7 +375,8 @@ if df is not None:
                   if pmsby_enrolled == 'Already Enrolled':
                     if pmsby_b_date is None:
                       st.error(
-                          '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్ చేయండి!'
+                          '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" ఎంటర్'
+                          ' చేయండి!'
                       )
                     else:
                       updated_row = row.copy()
@@ -366,7 +389,8 @@ if df is not None:
                           ignore_index=True,
                       )
                       st.success(
-                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
+                          ' చేయబడ్డాయి!'
                       )
                       st.toast(
                           f'✅ {m_name} - PMSBY Saved Successfully!', icon='🎉'
@@ -374,7 +398,8 @@ if df is not None:
                   else:
                     if pmsby_sub_date is None and pmsby_b_date is None:
                       st.error(
-                          '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్ ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
+                          '⚠️ దయచేసి అప్లికేషన్ సబ్మిట్ చేసిన తేదీ లేదా బ్యాంక్'
+                          ' ఎన్‌రోల్ చేసిన తేదీలో ఏదో ఒకటి ఎంటర్ చేయండి!'
                       )
                     else:
                       updated_row = row.copy()
@@ -390,7 +415,8 @@ if df is not None:
                           ignore_index=True,
                       )
                       st.success(
-                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
+                          ' చేయబడ్డాయి!'
                       )
                       st.toast(
                           f'✅ {m_name} - PMSBY Saved Successfully!', icon='🎉'
