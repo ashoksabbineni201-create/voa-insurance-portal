@@ -51,7 +51,7 @@ if df is not None:
     if c not in df.columns:
       df[c] = None
 
-  # Session State lo data persist avvadam kosam
+  # Session State lo data persist avvadam kosam dictionary
   if 'saved_entries_dict' not in st.session_state:
     st.session_state.saved_entries_dict = {}
 
@@ -59,11 +59,23 @@ if df is not None:
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
+  # Merge session state data back to df if entries exist
+  export_df_base = df.copy()
   if len(st.session_state.saved_entries_dict) > 0:
-    saved_rows_list = list(st.session_state.saved_entries_dict.values())
-    report_df = pd.DataFrame(saved_rows_list)
-  else:
-    report_df = pd.DataFrame(columns=df.columns)
+    for m_id, saved_row in st.session_state.saved_entries_dict.items():
+      idx_match = export_df_base[
+          export_df_base['MEMBER ID'].astype(str) == str(m_id)
+      ].index
+      if not idx_match.empty:
+        for k, v in saved_row.items():
+          export_df_base.loc[idx_match, k] = v
+
+  report_df = export_df_base[
+      export_df_base[col_pmjjby_sub].notna()
+      | export_df_base[col_pmjjby_bank].notna()
+      | export_df_base[col_pmsby_sub].notna()
+      | export_df_base[col_pmsby_bank].notna()
+  ]
 
   export_df = report_df.copy()
   rename_dict = {}
@@ -81,7 +93,7 @@ if df is not None:
   if 's.no' not in export_df.columns and not export_df.empty:
     export_df.insert(0, 's.no', range(1, len(export_df) + 1))
   if 'age correction' not in export_df.columns and not export_df.empty:
-    export_df['age correction'] = ''
+    export_df['age correction'] = export_df['AGE']
 
   entered_csv_report = export_df.to_csv(index=False).encode('utf-8')
   st.sidebar.download_button(
@@ -139,7 +151,10 @@ if df is not None:
             m_name = str(row.get('MEMBER NAME', 'Unknown'))
             m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
 
-            raw_age = row.get('AGE', 35)
+            # Check if updated in session state
+            current_row = st.session_state.saved_entries_dict.get(m_id, row)
+
+            raw_age = current_row.get('AGE', 35)
             if pd.isna(raw_age):
               raw_age = 35
             else:
@@ -154,33 +169,25 @@ if df is not None:
             else:
               eligibility_status = 'Not Eligible (>70)'
 
-            # Check if already saved in session state dictionary
-            saved_data = st.session_state.saved_entries_dict.get(m_id, None)
+            # Status check for display
+            status_texts = []
+            if pd.notna(current_row.get(col_pmjjby_bank)):
+              status_texts.append('PMJJBY: Enrolled')
+            elif pd.notna(current_row.get(col_pmjjby_sub)):
+              status_texts.append('PMJJBY: Submitted')
 
-            if saved_data is not None:
-              # Check specific status descriptions
-              status_texts = []
-              if pd.notna(saved_data.get(col_pmjjby_bank)):
-                status_texts.append('PMJJBY: Already Enrolled')
-              elif pd.notna(saved_data.get(col_pmjjby_sub)):
-                status_texts.append('PMJJBY: App Submitted')
+            if pd.notna(current_row.get(col_pmsby_bank)):
+              status_texts.append('PMSBY: Enrolled')
+            elif pd.notna(current_row.get(col_pmsby_sub)):
+              status_texts.append('PMSBY: Submitted')
 
-              if pd.notna(saved_data.get(col_pmsby_bank)):
-                status_texts.append('PMSBY: Already Enrolled')
-              elif pd.notna(saved_data.get(col_pmsby_sub)):
-                status_texts.append('PMSBY: App Submitted')
-
-              status_str = (
-                  ' | '.join(status_texts)
-                  if status_texts
-                  else 'Enrolled / Submitted'
-              )
-              status_badge = f'<span style="color: green; font-weight: bold;">[ {status_str} ]</span>'
+            if status_texts:
+              status_badge = ' | '.join(status_texts)
             else:
-              status_badge = f'<span style="color: #d9534f;">[ {eligibility_status} ]</span>'
+              status_badge = eligibility_status
 
             with st.expander(
-                f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | {status_badge}'
+                f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | Status: {status_badge}'
             ):
               entered_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
@@ -338,7 +345,6 @@ if df is not None:
                     f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                     key=f'save_all_{idx}',
                 ):
-                  # Base row dictionary create chesi dictionary lo store chesthamu
                   updated_row = row.to_dict()
                   updated_row['AGE'] = active_age
                   updated_row['age correction'] = active_age
@@ -364,7 +370,6 @@ if df is not None:
                     if pmsby_b_date_pmsby is not None:
                       updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
-                  # Store persistently in dictionary using member ID as key
                   st.session_state.saved_entries_dict[m_id] = updated_row
                   st.success(
                       f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్'
