@@ -239,13 +239,33 @@ if df is not None:
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
     st.write(
         'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY మరియు PMSBY ఎలిజిబిలిటీ,'
-        ' ఎన్‌రోల్మెంట్ మరియు బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కనిపిస్తుంది.'
+        ' ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు బ్యాలెన్స్'
+        ' వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా కనిపిస్తుంది.'
     )
     st.write('---')
 
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
+    # Correct Logic columns identification based on user prompt
+    col_pmjjby_sub = (
+        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
+        ' Bank) - PMJJBY'
+    )
+    col_pmjjby_bank = (
+        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date - Optional) -'
+        ' PMJJBY'
+    )
+    col_pmsby_sub = (
+        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
+        ' Bank) - PMSBY'
+    )
+    col_pmsby_bank = (
+        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date - Optional) -'
+        ' PMSBY'
+    )
+
+    # Target eligibility flags
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x < 50 else 0
     )
@@ -253,26 +273,52 @@ if df is not None:
         lambda x: 1 if 18 <= x <= 70 else 0
     )
 
-    # All unique mandals from dataset (will include all available mandals)
+    # For demonstration/accuracy based on populated entries in sheet
+    for c in [
+        col_pmjjby_sub,
+        col_pmjjby_bank,
+        col_pmsby_sub,
+        col_pmsby_bank,
+    ]:
+      if c not in temp_df.columns:
+        temp_df[c] = None
+
+    # Dummy/Placeholder logic for Already Enrolled vs Bank Enrolled vs Submitted to be driven by actual entries if present
+    # Here we count non-null values in corresponding date columns as recorded entries
+    temp_df['PMJJBY_Submitted_Count'] = (
+        temp_df[col_pmjjby_sub].notna().astype(int)
+    )
+    temp_df['PMJJBY_Bank_Count'] = temp_df[col_pmjjby_bank].notna().astype(int)
+    temp_df['PMJJBY_Already_Count'] = (
+        0  # Can be split if a specific status column exists
+    )
+
+    temp_df['PMSBY_Submitted_Count'] = (
+        temp_df[col_pmsby_sub].notna().astype(int)
+    )
+    temp_df['PMSBY_Bank_Count'] = temp_df[col_pmsby_bank].notna().astype(int)
+    temp_df['PMSBY_Already_Count'] = 0
+
     all_mandals = sorted(temp_df['MANDAL'].dropna().unique())
 
     abstract_df = (
         temp_df.groupby('MANDAL')
         .agg(
             PMJJBY_Eligible=('PMJJBY_Eligible', 'sum'),
-            PMJJBY_Already_Enrolled=('MEMBER NAME', lambda x: 0),
-            PMJJBY_Submitted_Bank=('MEMBER NAME', lambda x: 0),
-            PMJJBY_Bank_Enrolled=('MEMBER NAME', lambda x: 0),
+            PMJJBY_Already_Enrolled=('PMJJBY_Already_Count', 'sum'),
+            PMJJBY_Submitted_Bank=('PMJJBY_Submitted_Count', 'sum'),
+            PMJJBY_Bank_Enrolled=('PMJJBY_Bank_Count', 'sum'),
             PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
-            PMSBY_Already_Enrolled=('MEMBER NAME', lambda x: 0),
-            PMSBY_Submitted_Bank=('MEMBER NAME', lambda x: 0),
-            PMSBY_Bank_Enrolled=('MEMBER NAME', lambda x: 0),
+            PMSBY_Already_Enrolled=('PMSBY_Already_Count', 'sum'),
+            PMSBY_Submitted_Bank=('PMSBY_Submitted_Count', 'sum'),
+            PMSBY_Bank_Enrolled=('PMSBY_Bank_Count', 'sum'),
         )
         .reindex(all_mandals)
         .fillna(0)
         .reset_index()
     )
 
+    # Balance calculation: Target - (Already Enrolled + Bank Enrolled)
     abstract_df['PMJJBY_Balance'] = (
         abstract_df['PMJJBY_Eligible']
         - abstract_df['PMJJBY_Already_Enrolled']
@@ -284,7 +330,25 @@ if df is not None:
         - abstract_df['PMSBY_Bank_Enrolled']
     )
 
-    abstract_df.insert(0, 'S.NO', range(1, len(abstract_df) + 1))
+    # Grand Total Row Calculation
+    tot_row = {
+        'MANDAL': 'GRAND TOTAL',
+        'PMJJBY_Eligible': abstract_df['PMJJBY_Eligible'].sum(),
+        'PMJJBY_Already_Enrolled': abstract_df['PMJJBY_Already_Enrolled'].sum(),
+        'PMJJBY_Submitted_Bank': abstract_df['PMJJBY_Submitted_Bank'].sum(),
+        'PMJJBY_Bank_Enrolled': abstract_df['PMJJBY_Bank_Enrolled'].sum(),
+        'PMJJBY_Balance': abstract_df['PMJJBY_Balance'].sum(),
+        'PMSBY_Eligible': abstract_df['PMSBY_Eligible'].sum(),
+        'PMSBY_Already_Enrolled': abstract_df['PMSBY_Already_Enrolled'].sum(),
+        'PMSBY_Submitted_Bank': abstract_df['PMSBY_Submitted_Bank'].sum(),
+        'PMSBY_Bank_Enrolled': abstract_df['PMSBY_Bank_Enrolled'].sum(),
+        'PMSBY_Balance': abstract_df['PMSBY_Balance'].sum(),
+    }
+
+    # Append Grand Total row
+    abstract_df.loc[len(abstract_df)] = tot_row
+
+    abstract_df.insert(0, 'S.NO', list(range(1, len(abstract_df))) + ['-'])
 
     abstract_df.columns = [
         'S.NO',
@@ -302,15 +366,18 @@ if df is not None:
     ]
 
     st.subheader(
-        f'📋 Mandal-wise Abstract Summary (Total Mandals: {len(abstract_df)})'
+        f'📋 Mandal-wise Abstract Summary with Grand Total (Total Mandals:'
+        f' {len(abstract_df)-1})'
     )
     st.dataframe(abstract_df, use_container_width=True)
 
-    # Safe CSV Download to avoid openpyxl dependency errors
     csv_data = abstract_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label='📥 అబ్‌స్ట్రాక్ట్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్ చేసుకోండి',
+        label=(
+            '📥 అబ్‌స్ట్రాక్ట్ గ్రాండ్ టోటల్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్'
+            ' చేసుకోండి'
+        ),
         data=csv_data,
-        file_name='District_Insurance_Abstract_Report.csv',
+        file_name='District_Insurance_Abstract_With_Total.csv',
         mime='text/csv',
     )
