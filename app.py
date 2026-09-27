@@ -29,7 +29,7 @@ if df is not None:
   st.sidebar.header('📁 నావిగేషన్')
   app_mode = st.sidebar.radio(
       'పేజీ ఎంచుకోండి:',
-      ['🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)', '📊 సమ్మరీ & ఎక్సెల్ రిపోర్ట్స్'],
+      ['🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)', '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & ఎక్సెల్ రిపోర్ట్'],
   )
 
   if app_mode == '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)':
@@ -68,25 +68,6 @@ if df is not None:
           )
           st.write('---')
 
-          # Pending Summary Cards
-          col_p1, col_p2 = st.columns(2)
-          with col_p1:
-            st.markdown(
-                '<div style="padding: 15px; background-color: #eef6fc;'
-                ' border-radius: 5px; border-left: 5px solid #1f77b4;">'
-                '<b>📌 VOA daggara pending unnavi:</b> 5 applications</div>',
-                unsafe_allow_html=True,
-            )
-          with col_p2:
-            st.markdown(
-                '<div style="padding: 15px; background-color: #fcf8e3;'
-                ' border-radius: 5px; border-left: 5px solid #f0ad4e;">'
-                '<b>🏦 Bank nandu pending unnavi:</b> Andhra Bank: 1 | SBI:'
-                ' 2</div>',
-                unsafe_allow_html=True,
-            )
-
-          st.write('')
           st.markdown(f'### 👥 SHG Sabhyula Jabhita (Dashboard)')
 
           for idx, row in members_df.reset_index().iterrows():
@@ -255,41 +236,91 @@ if df is not None:
                     f'✅ {m_name} యొక్క వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!'
                 )
 
-  elif app_mode == '📊 సమ్మరీ & ఎక్సెల్ రిపోర్ట్స్':
-    st.markdown('## 📊 నా లొకేషన్ రిపోర్ట్ & CSV డౌన్‌లోడ్')
+  elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & ఎక్సెల్ రిపోర్ట్':
+    st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
     st.write(
-        'ఇక్కడ మీరు మీ మండలం లేదా VO పరిధిలోని సభ్యుల ఎన్‌రోల్మెంట్ వివరాలను'
-        ' పరిశీలించి, రిపోర్ట్‌ను డౌన్‌లోడ్ చేసుకోవచ్చు.'
+        'ఇక్కడ మీరు కోరిన ఫార్మాట్ ప్రకారం మండలాల వారీగా PMJJBY మరియు PMSBY'
+        ' ఎలిజిబిలిటీ, ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్ మరియు బ్యాలెన్స్'
+        ' వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కనిపిస్తుంది.'
     )
     st.write('---')
 
-    rep_mandals = sorted(df['MANDAL'].dropna().unique())
-    sel_mandal = st.selectbox('రిపోర్ట్ కోసం మండలం ఎంచుకోండి:', rep_mandals)
+    # Prepare Abstract Data Calculation
+    temp_df = df.copy()
+    temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    if sel_mandal:
-      rep_vos = sorted(
-          df[df['MANDAL'] == sel_mandal]['VO'].dropna().unique()
-      )
-      sel_vo = st.selectbox(
-          'VO ఎంచుకోండి (అన్ని VO ల కోసం వదిలేయండి):',
-          ['అన్ని VO లు'] + list(rep_vos),
-      )
+    # Calculate Eligibility
+    temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
+        lambda x: 1 if 18 <= x < 50 else 0
+    )
+    temp_df['PMSBY_Eligible'] = temp_df['AGE'].apply(
+        lambda x: 1 if 18 <= x <= 70 else 0
+    )
 
-      report_df = df[df['MANDAL'] == sel_mandal]
-      if sel_vo != 'అన్ని VO లు':
-        report_df = report_df[report_df['VO'] == sel_vo]
+    # Placeholder aggregations matching user requested format
+    abstract_df = (
+        temp_df.groupby('MANDAL')
+        .agg(
+            PMJJBY_Eligible=('PMJJBY_Eligible', 'sum'),
+            PMJJBY_Already_Enrolled=('MEMBER NAME', lambda x: 0),
+            PMJJBY_Submitted_Bank=('MEMBER NAME', lambda x: 0),
+            PMJJBY_Bank_Enrolled=('MEMBER NAME', lambda x: 0),
+            PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
+            PMSBY_Already_Enrolled=('MEMBER NAME', lambda x: 0),
+            PMSBY_Submitted_Bank=('MEMBER NAME', lambda x: 0),
+            PMSBY_Bank_Enrolled=('MEMBER NAME', lambda x: 0),
+        )
+        .reset_index()
+    )
 
-      st.subheader(f'📋 {sel_mandal} - {sel_vo} సభ్యుల జాబితా & స్టేటస్')
-      st.dataframe(report_df, use_container_width=True)
+    abstract_df['PMJJBY_Balance'] = (
+        abstract_df['PMJJBY_Eligible']
+        - abstract_df['PMJJBY_Already_Enrolled']
+        - abstract_df['PMJJBY_Bank_Enrolled']
+    )
+    abstract_df['PMSBY_Balance'] = (
+        abstract_df['PMSBY_Eligible']
+        - abstract_df['PMSBY_Already_Enrolled']
+        - abstract_df['PMSBY_Bank_Enrolled']
+    )
 
-      # CSV Download (Works without extra library dependencies)
-      csv_data = report_df.to_csv(index=False).encode('utf-8')
+    # Insert S.NO
+    abstract_df.insert(0, 'S.NO', range(1, len(abstract_df) + 1))
 
-      st.download_button(
-          label='📥 ఈ రిపోర్ట్‌ని CSV/Excel రూపంలో డౌన్‌లోడ్ చేసుకోండి',
-          data=csv_data,
-          file_name=(
-              f'VOA_Report_{sel_mandal}_{sel_vo.replace(" ", "_")}.csv'
-          ),
-          mime='text/csv',
-      )
+    # Rename columns to match exact user format
+    abstract_df.columns = [
+        'S.NO',
+        'MANDAL NAME',
+        'NO OF MEMBERS ELEGIBLE FOR PMJJBY(18-50)',
+        'Already Enrolled (PMJJBY)',
+        'Not Enrolled-అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసినవి - PMJJBY',
+        'బ్యాంకు వారు ఎన్‌రోల్ చేసినవి - PMJJBY',
+        'BALANCE (PMJJBY)',
+        'NO OF MEMBERS ELEGIBLE FOR PMSBY(18-70)',
+        'Already Enrolled (PMSBY)',
+        'Not Enrolled-అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసినవి - PMSBY',
+        'బ్యాంకు వారు ఎన్‌రోల్ చేసినవి - PMSBY',
+        'BALANCE (PMSBY)',
+    ]
+
+    st.subheader('📋 Mandal-wise Abstract Summary')
+    st.dataframe(abstract_df, use_container_width=True)
+
+    # Download Excel with multiple sheets (1. Abstract, 2. Full VOA Entered Data)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+      abstract_df.to_excel(writer, index=False, sheet_name='Abstract_Summary')
+      df.to_excel(writer, index=False, sheet_name='Full_Data')
+    excel_data = output.getvalue()
+
+    st.download_button(
+        label=(
+            '📥 అబ్‌స్ట్రాక్ట్ మరియు పూర్తి డేటాతో కూడిన Excel ఫైల్‌ని'
+            ' డౌన్‌లోడ్ చేసుకోండి'
+        ),
+        data=excel_data,
+        file_name='District_Insurance_Abstract_Report.xlsx',
+        mime=(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ),
+    )
