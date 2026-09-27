@@ -29,7 +29,7 @@ df = load_data()
 if df is not None:
   st.sidebar.header('📁 నావిగేషన్')
 
-  # --- సైడ్‌బార్‌లో ఎడమ వైపు పైన జిల్లా మొత్తానికి సంబంధించిన పూర్తి డేటా డౌన్‌లోడ్ ఆప్షన్ ---
+  # సైడ్‌బార్‌లో ఎడమ వైపు పైన జిల్లా మొత్తానికి సంబంధించిన పూర్తి డేటా డౌన్‌లోడ్ ఆప్షన్
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
   all_csv_report = df.to_csv(index=False).encode('utf-8')
@@ -149,7 +149,7 @@ if df is not None:
                     ' వివరాలు కింద ఇవ్వబడ్డాయి.'
                 )
 
-                # 1. PMJJBY Section
+                # ==================== 1. PMJJBY Section ====================
                 if active_age <= 50:
                   st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                   bc1, bc2, bc3 = st.columns(3)
@@ -178,38 +178,62 @@ if df is not None:
                       key=f'pmjjby_status_{idx}',
                   )
 
-                  col_d1, col_d2 = st.columns(2)
-                  with col_d1:
-                    pmjjby_sub_date = st.date_input(
-                        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                        ' Submitted at Bank) - PMJJBY',
-                        value=None,
-                        key=f'pmjjby_sub_date_{idx}',
-                    )
-                  with col_d2:
+                  pmjjby_sub_date = None
+                  pmjjby_b_date = None
+
+                  if pmjjby_enrolled == 'Already Enrolled':
+                    # Already Enrolled aithe kevalam Bank Enrolled Date matrame chupinchali
                     pmjjby_b_date = st.date_input(
                         'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                         ' PMJJBY',
                         value=None,
-                        key=f'pmjjby_b_date_opt_{idx}',
+                        key=f'pmjjby_b_date_already_{idx}',
                     )
+                  else:
+                    # Not Enrolled aithe rendu dates option lo untayi (renditlo okkati enter cheyali)
+                    col_d1, col_d2 = st.columns(2)
+                    with col_d1:
+                      pmjjby_sub_date = st.date_input(
+                          'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                          ' Submitted at Bank) - PMJJBY',
+                          value=None,
+                          key=f'pmjjby_sub_date_{idx}',
+                      )
+                    with col_d2:
+                      pmjjby_b_date = st.date_input(
+                          'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                          ' PMJJBY',
+                          value=None,
+                          key=f'pmjjby_b_date_opt_{idx}',
+                      )
 
                   if st.button(
                       f'💾 {m_name} - PMJJBY వివరాలు సేవ్ చేయండి',
                       key=f'save_pmjjby_{idx}',
                   ):
-                    # Validation: తేదీలు ఏవీ ఇవ్వకపోతే సేవ్ అవ్వకూడదు
-                    if pmjjby_sub_date is None and pmjjby_b_date is None:
-                      st.error(
-                          '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
-                          ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక'
-                          ' తేదీని ఎంటర్ చేయండి!'
-                      )
-                    else:
-                      st.success(
-                          f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
-                          ' చేయబడ్డాయి!'
-                      )
+                    if pmjjby_enrolled == 'Already Enrolled':
+                      if pmjjby_b_date is None:
+                        st.error(
+                            '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" (Bank'
+                            ' Enrolled Date) ఎంటర్ చేయండి!'
+                        )
+                      else:
+                        st.success(
+                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
+                            ' చేయబడ్డాయి!'
+                        )
+                    else:  # Not Enrolled
+                      if pmjjby_sub_date is None and pmjjby_b_date is None:
+                        st.error(
+                            '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
+                            ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక'
+                            ' తేదీని ఎంటర్ చేయండి!'
+                        )
+                      else:
+                        st.success(
+                            f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
+                            ' చేయబడ్డాయి!'
+                        )
                   st.markdown('---')
                 else:
                   st.warning(
@@ -218,7 +242,7 @@ if df is not None:
                   )
                   st.markdown('---')
 
-                # 2. PMSBY Section
+                # ==================== 2. PMSBY Section ====================
                 st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                 pc1, pc2, pc3 = st.columns(3)
                 with pc1:
@@ -246,38 +270,62 @@ if df is not None:
                     key=f'pmsby_status_{idx}',
                 )
 
-                col_d3, col_d4 = st.columns(2)
-                with col_d3:
-                  pmsby_sub_date = st.date_input(
-                      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                      ' Submitted at Bank) - PMSBY',
-                      value=None,
-                      key=f'pmsby_sub_date_{idx}',
-                  )
-                with col_d4:
+                pmsby_sub_date = None
+                pmsby_b_date = None
+
+                if pmsby_enrolled == 'Already Enrolled':
+                  # Already Enrolled aithe kevalam Bank Enrolled Date matrame chupinchali
                   pmsby_b_date = st.date_input(
                       'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                       ' PMSBY',
                       value=None,
-                      key=f'pmsby_b_date_opt_{idx}',
+                      key=f'pmsby_b_date_already_{idx}',
                   )
+                else:
+                  # Not Enrolled aithe rendu dates option lo untayi (renditlo okkati enter cheyali)
+                  col_d3, col_d4 = st.columns(2)
+                  with col_d3:
+                    pmsby_sub_date = st.date_input(
+                        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                        ' Submitted at Bank) - PMSBY',
+                        value=None,
+                        key=f'pmsby_sub_date_{idx}',
+                    )
+                  with col_d4:
+                    pmsby_b_date = st.date_input(
+                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
+                        ' PMSBY',
+                        value=None,
+                        key=f'pmsby_b_date_opt_{idx}',
+                    )
 
                 if st.button(
                     f'💾 {m_name} - PMSBY వివరాలు సేవ్ చేయండి',
                     key=f'save_pmsby_{idx}',
                 ):
-                  # Validation: తేదీలు ఏవీ ఇవ్వకపోతే సేవ్ అవ్వకూడదు
-                  if pmsby_sub_date is None and pmsby_b_date is None:
-                    st.error(
-                        '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
-                        ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక తేదీని'
-                        ' ఎంటర్ చేయండి!'
-                    )
-                  else:
-                    st.success(
-                        f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
-                        ' చేయబడ్డాయి!'
-                    )
+                  if pmsby_enrolled == 'Already Enrolled':
+                    if pmsby_b_date is None:
+                      st.error(
+                          '⚠️ దయచేసి "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" (Bank'
+                          ' Enrolled Date) ఎంటర్ చేయండి!'
+                      )
+                    else:
+                      st.success(
+                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
+                          ' చేయబడ్డాయి!'
+                      )
+                  else:  # Not Enrolled
+                    if pmsby_sub_date is None and pmsby_b_date is None:
+                      st.error(
+                          '⚠️ దయచేసి "అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ"'
+                          ' లేదా "బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ" లో ఏదో ఒక తేదీని'
+                          ' ఎంటర్ చేయండి!'
+                      )
+                    else:
+                      st.success(
+                          f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
+                          ' చేయబడ్డాయి!'
+                      )
 
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
