@@ -89,7 +89,7 @@ if df is not None:
         st.write('')
         st.markdown(f'### 👥 SHG Sabhyula Jabhita (Dashboard)')
 
-        # Prati member ki card (Account number removed from main card view)
+        # Prati member ki card
         for idx, row in members_df.reset_index().iterrows():
           m_name = str(row.get('MEMBER NAME', 'Unknown'))
           m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
@@ -114,7 +114,7 @@ if df is not None:
             pmjjby_elig = 'Eligible (Not Enrolled)'
             pmsby_elig = 'Eligible (Not Enrolled)'
 
-          # Member Card display (Account number removed)
+          # Member Card display
           st.markdown(
               f"""
                     <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
@@ -185,13 +185,14 @@ if df is not None:
                 )
                 if pmjjby_enrolled == 'Already Enrolled':
                   pmjjby_bank_date = st.date_input(
-                      'బ్యాంకులో ఎన్రోల్ అయిన తేది (Bank Enrolled Date)',
+                      'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
+                      ' - PMJJBY',
                       key=f'pmjjby_b_date_{idx}',
                   )
                 else:
                   pmjjby_sub_date = st.date_input(
-                      'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
-                      ' at Bank)',
+                      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                      ' Submitted at Bank) - PMJJBY',
                       key=f'pmjjby_sub_date_{idx}',
                   )
 
@@ -226,13 +227,14 @@ if df is not None:
               )
               if pmsby_enrolled == 'Already Enrolled':
                 pmsby_bank_date = st.date_input(
-                    'బ్యాంకులో ఎన్రోల్ అయిన తేది (Bank Enrolled Date) - PMSBY',
+                    'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
+                    ' - PMSBY',
                     key=f'pmsby_b_date_{idx}',
                 )
               else:
                 pmsby_sub_date = st.date_input(
-                    'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
-                    ' at Bank) - PMSBY',
+                    'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                    ' Submitted at Bank) - PMSBY',
                     key=f'pmsby_sub_date_{idx}',
                 )
 
