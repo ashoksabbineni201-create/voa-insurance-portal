@@ -16,6 +16,9 @@ def load_data():
   try:
     df = pd.read_csv(sheet_url)
     df.columns = df.columns.str.strip()
+    # Normalize MANDAL column to handle case sensitivity and extra spaces
+    if 'MANDAL' in df.columns:
+      df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
     return df
   except Exception as e:
     st.error(f'Data load avvadamlo lopam jarigindi: {e}')
@@ -248,7 +251,6 @@ if df is not None:
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    # Exact column matching from Google Sheet header
     col_pmjjby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
         ' Bank) - PMJJBY'
@@ -266,7 +268,6 @@ if df is not None:
         ' PMSBY'
     )
 
-    # Target eligibility calculation
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x < 50 else 0
     )
@@ -314,7 +315,6 @@ if df is not None:
         .reset_index()
     )
 
-    # Balance calculation: Target - (Already Enrolled + Bank Enrolled)
     abstract_df['PMJJBY_Balance'] = (
         abstract_df['PMJJBY_Eligible']
         - abstract_df['PMJJBY_Already_Enrolled']
@@ -326,7 +326,6 @@ if df is not None:
         - abstract_df['PMSBY_Bank_Enrolled']
     )
 
-    # Grand Total Row Calculation
     tot_row = {
         'MANDAL': 'GRAND TOTAL',
         'PMJJBY_Eligible': abstract_df['PMJJBY_Eligible'].sum(),
