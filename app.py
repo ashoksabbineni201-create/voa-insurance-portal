@@ -91,7 +91,8 @@ if df is not None:
 
         # Prati member ki card & eligibility rules
         for idx, row in members_df.reset_index().iterrows():
-          m_name = row.get('MEMBER NAME', 'Unknown')
+          m_name = str(row.get('MEMBER NAME', 'Unknown'))
+          m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
           m_age = row.get('AGE', 35)
           if pd.isna(m_age):
             m_age = 35
@@ -111,12 +112,12 @@ if df is not None:
             pmjjby_elig = 'Eligible (Not Enrolled)'
             pmsby_elig = 'Eligible (Not Enrolled)'
 
-          # Member Card display with Account Number and Status
+          # Member Card display with Member ID & Account Number
           st.markdown(
               f"""
                     <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
-                        🆔 <b>ID: {idx+1}</b> &nbsp;|&nbsp; 
-                        👤 <b>{m_name}</b> (వయస్సు: {m_age}) &nbsp;|&nbsp; 
+                        🆔 <b>Member ID: {m_id}</b> &nbsp;|&nbsp; 
+                        👤 <b>{m_name}</b> (వయస్సు: {m_age} - As per Aadhaar) &nbsp;|&nbsp; 
                         🏦 <b>అకౌంట్ నంబర్:</b> <span style="color: #333; font-weight: bold;">{account_no}</span><br>
                         <span style="font-size: 13px; color: #555;">
                             <b>PMJJBY:</b> <span style="color: #1f77b4;">{pmjjby_elig}</span> &nbsp;|&nbsp; 
@@ -128,9 +129,12 @@ if df is not None:
           )
 
           # Member Update & Verification Form (Expander)
-          with st.expander(f'✏️ {m_name} (ID: {idx+1}) వివరాలు సరిచూడండి / మార్చండి'):
+          with st.expander(
+              f'✏️ {m_name} (Member ID: {m_id}) వివరాలు సరిచూడండి / మార్చండి'
+          ):
             updated_age = st.number_input(
-                'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
+                'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
+                ' Aadhaar):',
                 min_value=18,
                 max_value=100,
                 value=m_age,
