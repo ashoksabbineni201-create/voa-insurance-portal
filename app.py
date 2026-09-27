@@ -11,7 +11,7 @@ sheet_id = '1vZqfSZmc24tEPCC-7D5B7oIGAujln7du'
 sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_data():
   try:
     df = pd.read_csv(sheet_url)
@@ -23,6 +23,10 @@ def load_data():
     st.error(f'Data load avvadamlo lopam jarigindi: {e}')
     return None
 
+
+# Initialize session state for updates if not exists
+if 'saved_data' not in st.session_state:
+  st.session_state['saved_data'] = {}
 
 df = load_data()
 
@@ -75,7 +79,6 @@ if df is not None:
             m_name = str(row.get('MEMBER NAME', 'Unknown'))
             m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
 
-            # Raw Age from Database/Sheet
             raw_age = row.get('AGE', 35)
             if pd.isna(raw_age):
               raw_age = 35
@@ -92,11 +95,9 @@ if df is not None:
                 unsafe_allow_html=True,
             )
 
-            # Member Age Confirmation & Update Form
             with st.expander(
                 f'✏️ {m_name} (Member ID: {m_id}) వయస్సు నిర్ధారణ & వివరాలు'
             ):
-              # Age Input Field
               entered_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
                   ' Aadhaar):',
@@ -106,18 +107,15 @@ if df is not None:
                   key=f'age_{idx}',
               )
 
-              # Age Confirmation Submit Button
               age_confirmed = st.button(
                   f'✔️ {m_name} వయస్సును నిర్ధారించండి (Confirm Age)',
                   key=f'confirm_age_btn_{idx}',
               )
 
-              # Session state to store confirmed age for this specific member
               session_key = f'confirmed_age_val_{idx}'
               if age_confirmed:
                 st.session_state[session_key] = entered_age
 
-              # Use confirmed age if submitted, otherwise default to database age
               active_age = st.session_state.get(session_key, raw_age)
 
               st.write('---')
@@ -125,7 +123,6 @@ if df is not None:
                   f'📌 ప్రస్తుతం పరిగణించబడిన వయస్సు: **{active_age} సంవత్సరాలు**'
               )
 
-              # Strict Age Rules Validation based on Active Age
               if active_age < 18:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
@@ -143,7 +140,7 @@ if df is not None:
                     ' వివరాలు కింద ఇవ్వబడ్డాయి.'
                 )
 
-                # 1. PMJJBY Section (Eligible strictly if 18 <= age <= 50)
+                # 1. PMJJBY Section
                 if active_age <= 50:
                   st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                   bc1, bc2, bc3 = st.columns(3)
@@ -199,6 +196,7 @@ if df is not None:
                       f'💾 {m_name} - PMJJBY వివరాలు సేవ్ చేయండి',
                       key=f'save_pmjjby_{idx}',
                   ):
+                    st.session_state['saved_data'][m_id] = 'Saved'
                     st.success(
                         f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                         ' చేయబడ్డాయి!'
@@ -211,7 +209,7 @@ if df is not None:
                   )
                   st.markdown('---')
 
-                # 2. PMSBY Section (Eligible if 18 <= age <= 70)
+                # 2. PMSBY Section
                 st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                 pc1, pc2, pc3 = st.columns(3)
                 with pc1:
@@ -259,13 +257,14 @@ if df is not None:
                         'బ్యాంకు వారు ఎన్రోల్ చేసిన తేదీ (Bank Enrolled Date -'
                         ' Optional) - PMSBY',
                         value=None,
-                        key=f'pmsby_bank_date_opt_{idx}',
+                        key=f'pmsby_b_date_opt_{idx}',
                     )
 
                 if st.button(
                     f'💾 {m_name} - PMSBY వివరాలు సేవ్ చేయండి',
                     key=f'save_pmsby_{idx}',
                 ):
+                  st.session_state['saved_data'][m_id] = 'Saved'
                   st.success(
                       f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                       ' చేయబడ్డాయి!'
