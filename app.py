@@ -239,7 +239,7 @@ if df is not None:
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
     st.write(
         'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY (18-50) మరియు PMSBY (18-70)'
-        ' ఎలిజిబిలిటీ టార్గెట్, ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు'
+        ' ఎలిజిబిలిటీ టార్గెట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు'
         ' బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా'
         ' కనిపిస్తుంది.'
     )
@@ -248,7 +248,7 @@ if df is not None:
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    # Correct Columns for PMJJBY & PMSBY
+    # Exact column matching from Google Sheet header
     col_pmjjby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
         ' Bank) - PMJJBY'
@@ -266,7 +266,7 @@ if df is not None:
         ' PMSBY'
     )
 
-    # Correct Eligibility Target calculation (PMJJBY: 18-50, PMSBY: 18-70)
+    # Target eligibility calculation
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x < 50 else 0
     )
@@ -314,7 +314,7 @@ if df is not None:
         .reset_index()
     )
 
-    # Balance calculations
+    # Balance calculation: Target - (Already Enrolled + Bank Enrolled)
     abstract_df['PMJJBY_Balance'] = (
         abstract_df['PMJJBY_Eligible']
         - abstract_df['PMJJBY_Already_Enrolled']
