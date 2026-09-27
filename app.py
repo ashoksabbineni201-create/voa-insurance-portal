@@ -49,7 +49,7 @@ if df is not None:
         members_df = df[
             (df['MANDAL'] == mandal)
             & (df['VO'] == vo)
-            & (df['SHG'] == shg)
+            & (df['SHG'] == shg]
         ]
 
         # సైడ్‌బార్‌లో ప్రస్తుత లొకేషన్ బాక్స్
@@ -91,26 +91,21 @@ if df is not None:
         st.write('')
         st.markdown(f'### 👥 SHG సభ్యుల జాబితా (Dashboard)')
 
-        # మెంబర్స్ అందరినీ స్టైలిష్ కార్డ్స్ లాగా చూపించడం
+        # అకౌంట్ నంబర్ తొలగించి, రెండవ ఇమేజ్ లాగా క్లీన్‌గా చూపించడం
         for idx, row in members_df.reset_index().iterrows():
-          m_id = row.get('MEMBER ID', f'ID {idx+1}')
           m_name = row.get('MEMBER NAME', 'Unknown')
           m_age = row.get('AGE', 'N/A')
-          bank_acc = row.get('MEMBER sb account number', 'N/A')
 
-          # నమూనాగా స్టేటస్ ఇవ్వడం (మీ షీట్‌లో కాలమ్స్ ఉంటే వాటిని ఇక్కడ వాడవచ్చు)
-          pmjjby_status = (
-              'Done' if idx % 2 == 0 else 'Pending at VOA'
-          )  # ఉదాహరణకు
+          # ఉదాహరణ స్టేటస్‌లు
+          pmjjby_status = 'Done' if idx % 2 == 0 else 'Pending at VOA'
           pmsby_status = 'Done' if idx % 3 == 0 else 'N/A'
 
           st.markdown(
               f"""
                     <div style="padding: 10px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
-                        <b>🆔 ID: {idx+1}</b> &nbsp;|&nbsp; 
-                        👤 <b>{m_name}</b> (వయస్సు: {m_age}) &nbsp;|&nbsp; 
-                        🏦 ఆకౌంట్: <span style="color: #555;">{bank_acc}</span><br>
-                        <span style="font-size: 13px; color: #666;">
+                        🆔 <b>ID: {idx+1}</b> &nbsp;|&nbsp; 
+                        👤 <b>{m_name}</b> (వయస్సు: {m_age})<br>
+                        <span style="font-size: 13px; color: #555;">
                             PMJJBY: <b style="color: #2e7d32;">{pmjjby_status}</b> &nbsp;|&nbsp; 
                             PMSBY: <b style="color: #c62828;">{pmsby_status}</b>
                         </span>
