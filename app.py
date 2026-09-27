@@ -99,10 +99,6 @@ if df is not None:
           else:
             m_age = int(m_age)
 
-          account_no = str(row.get('MEMBER SB ACCOUNT NUMBER', 'N/A'))
-          if account_no == 'nan' or not account_no:
-            account_no = 'N/A'
-
           # Age-based Eligibility rules
           if m_age > 70:
             pmjjby_elig = 'Not Applicable'
@@ -174,7 +170,7 @@ if df is not None:
                 with bc3:
                   pmjjby_acc = st.text_input(
                       'అకౌంట్ నంబర్ (PMJJBY Acc No)',
-                      value=account_no,
+                      value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
                       key=f'pmjjby_acc_{idx}',
                   )
 
@@ -183,6 +179,7 @@ if df is not None:
                     ['Not Enrolled', 'Already Enrolled'],
                     key=f'pmjjby_status_{idx}',
                 )
+
                 if pmjjby_enrolled == 'Already Enrolled':
                   pmjjby_bank_date = st.date_input(
                       'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
@@ -190,11 +187,20 @@ if df is not None:
                       key=f'pmjjby_b_date_{idx}',
                   )
                 else:
-                  pmjjby_sub_date = st.date_input(
-                      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                      ' Submitted at Bank) - PMJJBY',
-                      key=f'pmjjby_sub_date_{idx}',
-                  )
+                  col_d1, col_d2 = st.columns(2)
+                  with col_d1:
+                    pmjjby_sub_date = st.date_input(
+                        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                        ' Submitted at Bank) - PMJJBY',
+                        key=f'pmjjby_sub_date_{idx}',
+                    )
+                  with col_d2:
+                    pmjjby_bank_date_opt = st.date_input(
+                        'బ్యాంకు వారు ఎన్రోల్ చేసిన తేదీ (Bank Enrolled Date -'
+                        ' Optional if approved) - PMJJBY',
+                        value=None,
+                        key=f'pmjjby_b_date_opt_{idx}',
+                    )
 
               st.markdown('---')
 
@@ -216,7 +222,7 @@ if df is not None:
               with pc3:
                 pmsby_acc = st.text_input(
                     'అకౌంట్ నంబర్ (PMSBY Acc No)',
-                    value=account_no,
+                    value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
                     key=f'pmsby_acc_{idx}',
                 )
 
@@ -225,6 +231,7 @@ if df is not None:
                   ['Not Enrolled', 'Already Enrolled'],
                   key=f'pmsby_status_{idx}',
               )
+
               if pmsby_enrolled == 'Already Enrolled':
                 pmsby_bank_date = st.date_input(
                     'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
@@ -232,11 +239,20 @@ if df is not None:
                     key=f'pmsby_b_date_{idx}',
                 )
               else:
-                pmsby_sub_date = st.date_input(
-                    'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                    ' Submitted at Bank) - PMSBY',
-                    key=f'pmsby_sub_date_{idx}',
-                )
+                col_d3, col_d4 = st.columns(2)
+                with col_d3:
+                  pmsby_sub_date = st.date_input(
+                      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
+                      ' Submitted at Bank) - PMSBY',
+                      key=f'pmsby_sub_date_{idx}',
+                  )
+                with col_d4:
+                  pmsby_bank_date_opt = st.date_input(
+                      'బ్యాంకు వారు ఎన్రోల్ చేసిన తేదీ (Bank Enrolled Date -'
+                      ' Optional if approved) - PMSBY',
+                      value=None,
+                      key=f'pmsby_b_date_opt_{idx}',
+                  )
 
             if st.button(
                 f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_btn_{idx}'
