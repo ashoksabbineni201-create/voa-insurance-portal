@@ -10,7 +10,6 @@ st.markdown(
     """
     <style>
     .main-title { font-size: 24px; font-weight: bold; color: #1f77b4; text-align: center; }
-    .sub-title { font-size: 18px; font-weight: bold; color: #333333; }
     </style>
 """,
     unsafe_allow_html=True,
@@ -22,7 +21,7 @@ st.markdown(
 )
 st.write('---')
 
-# Google Sheet నుండి డేటాను లోడ్ చేయడం (CSV ఎక్స్పోర్ట్ లింక్)
+# Google Sheet నుండి డేటాను లోడ్ చేయడం
 sheet_id = '1vZqfSZmc24tEPCC-7D5B7oIGAujln7du'
 sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
 
@@ -31,6 +30,7 @@ sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=cs
 def load_data():
   try:
     df = pd.read_csv(sheet_url)
+    df.columns = df.columns.str.strip()  # అదనపు స్పేస్‌లను తొలగించడం
     return df
   except Exception as e:
     st.error(f'డేటా లోడ్ అవ్వడంలో లోపం ఏర్పడింది: {e}')
@@ -42,17 +42,15 @@ df = load_data()
 if df is not None:
   st.sidebar.header('📁 నావిగేషన్')
 
-  # 1. మండలం సెలెక్ట్ చేసుకోవడం (డేటాబేస్ నుండి)
+  # మండలం సెలెక్ట్ చేసుకోవడం
   mandals = sorted(df['MANDAL'].dropna().unique())
   mandal = st.sidebar.selectbox('మండలం ఎంచుకోండి', mandals)
 
   if mandal:
-    # 2. VO సెలెక్ట్ చేసుకోవడం (మండలం ఆధారంగా ఫిల్టర్ అవుతుంది)
     filtered_vos = sorted(df[df['MANDAL'] == mandal]['VO'].dropna().unique())
     vo = st.sidebar.selectbox('VO ఎంచుకోండి', filtered_vos)
 
     if vo:
-      # 3. SHG సెలెక్ట్ చేసుకోవడం (VO ఆధారంగా ఫిల్టర్ అవుతుంది)
       filtered_shgs = sorted(
           df[(df['MANDAL'] == mandal) & (df['VO'] == vo)]['SHG']
           .dropna()
@@ -61,7 +59,6 @@ if df is not None:
       shg = st.sidebar.selectbox('SHG ఎంచుకోండి', filtered_shgs)
 
       if shg:
-        # 4. సభ్యుల వివరాలు చూపించడం
         members_df = df[
             (df['MANDAL'] == mandal)
             & (df['VO'] == vo)
@@ -73,14 +70,5 @@ if df is not None:
         )
         st.subheader('📋 సభ్యుల జాబితా & వివరాలు')
 
-        st.dataframe(
-            members_df[[
-                's.no',
-                'MEMBER NAME',
-                'MEMBER ID',
-                'AGE',
-                'BANK NAME',
-                'BRANCH NAME',
-                'MEMBER sb account number',
-            ]]
-        )
+        # ఎర్రర్ రాకుండా నేరుగా డేటాను ప్రదర్శించడం
+        st.dataframe(members_df)
