@@ -96,7 +96,8 @@ if df is not None:
             with st.expander(
                 f'✏️ {m_name} (Member ID: {m_id}) వయస్సు నిర్ధారణ & వివరాలు'
             ):
-              confirmed_age = st.number_input(
+              # Age Input Field
+              entered_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
                   ' Aadhaar):',
                   min_value=1,
@@ -104,28 +105,46 @@ if df is not None:
                   value=raw_age,
                   key=f'age_{idx}',
               )
-              st.write('---')
 
-              # Strict Age Rules Validation
-              if confirmed_age < 18:
+              # Age Confirmation Submit Button
+              age_confirmed = st.button(
+                  f'✔️ {m_name} వయస్సును నిర్ధారించండి (Confirm Age)',
+                  key=f'confirm_age_btn_{idx}',
+              )
+
+              # Session state to store confirmed age for this specific member
+              session_key = f'confirmed_age_val_{idx}'
+              if age_confirmed:
+                st.session_state[session_key] = entered_age
+
+              # Use confirmed age if submitted, otherwise default to database age
+              active_age = st.session_state.get(session_key, raw_age)
+
+              st.write('---')
+              st.info(
+                  f'📌 ప్రస్తుతం పరిగణించబడిన వయస్సు: **{active_age} సంవత్సరాలు**'
+              )
+
+              # Strict Age Rules Validation based on Active Age
+              if active_age < 18:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
                     ' కాబట్టి నిబంధనల ప్రకారం ఎటువంటి స్కీమ్ ఎంట్రీకి అవకాశం'
                     ' లేదు.'
                 )
-              elif confirmed_age > 70:
+              elif active_age > 70:
                 st.error(
                     '❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది. కాబట్టి'
                     ' PMJJBY మరియు PMSBY ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు.'
                 )
               else:
                 st.success(
-                    f'✅ నిర్ధారించిన వయస్సు: {confirmed_age} సంవత్సరాలు.'
-                    ' నిబంధనల ప్రకారం వర్తించే స్కీమ్‌లు కింద చూపబడ్డాయి.'
+                    f'✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది. వర్తించే స్కీమ్‌ల'
+                    ' వివరాలు కింద ఇవ్వబడ్డాయి.'
                 )
 
                 # 1. PMJJBY Section (Eligible strictly if 18 <= age <= 50)
-                if confirmed_age <= 50:
+                if active_age <= 50:
                   st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                   bc1, bc2, bc3 = st.columns(3)
                   with bc1:
@@ -186,7 +205,7 @@ if df is not None:
                     )
                   st.markdown('---')
                 else:
-                  st.info(
+                  st.warning(
                       'ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు'
                       ' (Not Applicable).'
                   )
