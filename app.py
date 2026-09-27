@@ -238,16 +238,17 @@ if df is not None:
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
     st.write(
-        'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY మరియు PMSBY ఎలిజిబిలిటీ,'
-        ' ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు బ్యాలెన్స్'
-        ' వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా కనిపిస్తుంది.'
+        'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY (18-50) మరియు PMSBY (18-70)'
+        ' ఎలిజిబిలిటీ టార్గెట్, ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు'
+        ' బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా'
+        ' కనిపిస్తుంది.'
     )
     st.write('---')
 
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    # Correct Logic columns identification based on user prompt
+    # Correct Columns for PMJJBY & PMSBY
     col_pmjjby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
         ' Bank) - PMJJBY'
@@ -265,7 +266,7 @@ if df is not None:
         ' PMSBY'
     )
 
-    # Target eligibility flags
+    # Correct Eligibility Target calculation (PMJJBY: 18-50, PMSBY: 18-70)
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x < 50 else 0
     )
@@ -273,7 +274,6 @@ if df is not None:
         lambda x: 1 if 18 <= x <= 70 else 0
     )
 
-    # For demonstration/accuracy based on populated entries in sheet
     for c in [
         col_pmjjby_sub,
         col_pmjjby_bank,
@@ -283,15 +283,11 @@ if df is not None:
       if c not in temp_df.columns:
         temp_df[c] = None
 
-    # Dummy/Placeholder logic for Already Enrolled vs Bank Enrolled vs Submitted to be driven by actual entries if present
-    # Here we count non-null values in corresponding date columns as recorded entries
     temp_df['PMJJBY_Submitted_Count'] = (
         temp_df[col_pmjjby_sub].notna().astype(int)
     )
     temp_df['PMJJBY_Bank_Count'] = temp_df[col_pmjjby_bank].notna().astype(int)
-    temp_df['PMJJBY_Already_Count'] = (
-        0  # Can be split if a specific status column exists
-    )
+    temp_df['PMJJBY_Already_Count'] = 0
 
     temp_df['PMSBY_Submitted_Count'] = (
         temp_df[col_pmsby_sub].notna().astype(int)
@@ -318,7 +314,7 @@ if df is not None:
         .reset_index()
     )
 
-    # Balance calculation: Target - (Already Enrolled + Bank Enrolled)
+    # Balance calculations
     abstract_df['PMJJBY_Balance'] = (
         abstract_df['PMJJBY_Eligible']
         - abstract_df['PMJJBY_Already_Enrolled']
@@ -345,9 +341,7 @@ if df is not None:
         'PMSBY_Balance': abstract_df['PMSBY_Balance'].sum(),
     }
 
-    # Append Grand Total row
     abstract_df.loc[len(abstract_df)] = tot_row
-
     abstract_df.insert(0, 'S.NO', list(range(1, len(abstract_df))) + ['-'])
 
     abstract_df.columns = [
