@@ -1,5 +1,4 @@
 from datetime import date
-import io
 import pandas as pd
 import streamlit as st
 
@@ -29,7 +28,7 @@ if df is not None:
   st.sidebar.header('📁 నావిగేషన్')
   app_mode = st.sidebar.radio(
       'పేజీ ఎంచుకోండి:',
-      ['🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)', '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & ఎక్సెల్ రిపోర్ట్'],
+      ['🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)', '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్'],
   )
 
   if app_mode == '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)':
@@ -236,20 +235,17 @@ if df is not None:
                     f'✅ {m_name} యొక్క వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!'
                 )
 
-  elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & ఎక్సెల్ రిపోర్ట్':
+  elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
     st.write(
-        'ఇక్కడ మీరు కోరిన ఫార్మాట్ ప్రకారం మండలాల వారీగా PMJJBY మరియు PMSBY'
-        ' ఎలిజిబిలిటీ, ఎన్‌రోల్మెంట్, బ్యాంక్ సబ్మిటెడ్ మరియు బ్యాలెన్స్'
-        ' వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కనిపిస్తుంది.'
+        'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY మరియు PMSBY ఎలిజిబిలిటీ,'
+        ' ఎన్‌రోల్మెంట్ మరియు బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కనిపిస్తుంది.'
     )
     st.write('---')
 
-    # Prepare Abstract Data Calculation
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    # Calculate Eligibility
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x < 50 else 0
     )
@@ -257,7 +253,9 @@ if df is not None:
         lambda x: 1 if 18 <= x <= 70 else 0
     )
 
-    # Placeholder aggregations matching user requested format
+    # All unique mandals from dataset (will include all available mandals)
+    all_mandals = sorted(temp_df['MANDAL'].dropna().unique())
+
     abstract_df = (
         temp_df.groupby('MANDAL')
         .agg(
@@ -270,6 +268,8 @@ if df is not None:
             PMSBY_Submitted_Bank=('MEMBER NAME', lambda x: 0),
             PMSBY_Bank_Enrolled=('MEMBER NAME', lambda x: 0),
         )
+        .reindex(all_mandals)
+        .fillna(0)
         .reset_index()
     )
 
@@ -284,10 +284,8 @@ if df is not None:
         - abstract_df['PMSBY_Bank_Enrolled']
     )
 
-    # Insert S.NO
     abstract_df.insert(0, 'S.NO', range(1, len(abstract_df) + 1))
 
-    # Rename columns to match exact user format
     abstract_df.columns = [
         'S.NO',
         'MANDAL NAME',
@@ -303,24 +301,16 @@ if df is not None:
         'BALANCE (PMSBY)',
     ]
 
-    st.subheader('📋 Mandal-wise Abstract Summary')
+    st.subheader(
+        f'📋 Mandal-wise Abstract Summary (Total Mandals: {len(abstract_df)})'
+    )
     st.dataframe(abstract_df, use_container_width=True)
 
-    # Download Excel with multiple sheets (1. Abstract, 2. Full VOA Entered Data)
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-      abstract_df.to_excel(writer, index=False, sheet_name='Abstract_Summary')
-      df.to_excel(writer, index=False, sheet_name='Full_Data')
-    excel_data = output.getvalue()
-
+    # Safe CSV Download to avoid openpyxl dependency errors
+    csv_data = abstract_df.to_csv(index=False).encode('utf-8')
     st.download_button(
-        label=(
-            '📥 అబ్‌స్ట్రాక్ట్ మరియు పూర్తి డేటాతో కూడిన Excel ఫైల్‌ని'
-            ' డౌన్‌లోడ్ చేసుకోండి'
-        ),
-        data=excel_data,
-        file_name='District_Insurance_Abstract_Report.xlsx',
-        mime=(
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ),
+        label='📥 అబ్‌స్ట్రాక్ట్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్ చేసుకోండి',
+        data=csv_data,
+        file_name='District_Insurance_Abstract_Report.csv',
+        mime='text/csv',
     )
