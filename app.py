@@ -27,16 +27,49 @@ def load_data():
 df = load_data()
 
 if df is not None:
+  # డేటా ఫ్రేమ్‌లో అవసరమైన డేట్ కాలమ్స్ లేకపోతే నల్ (None) తో క్రియేట్ చేయడం
+  col_pmjjby_sub = (
+      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
+      ' Bank) - PMJJBY'
+  )
+  col_pmjjby_bank = (
+      'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
+  )
+  col_pmsby_sub = (
+      'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
+      ' Bank) - PMSBY'
+  )
+  col_pmsby_bank = (
+      'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
+  )
+
+  for c in [
+      col_pmjjby_sub,
+      col_pmjjby_bank,
+      col_pmsby_sub,
+      col_pmsby_bank,
+  ]:
+    if c not in df.columns:
+      df[c] = pd.NaT
+
   st.sidebar.header('📁 నావిగేషన్')
 
-  # సైడ్‌బార్‌లో ఎడమ వైపు పైన జిల్లా మొత్తానికి సంబంధించిన పూర్తి డేటా డౌన్‌లోడ్ ఆప్షన్
+  # --- కేవలం ఎంట్రీలు / అప్‌డేట్లు చేసిన డేటా మాత్రమే డౌన్‌లోడ్ అయ్యేలా ఫిల్టర్ ---
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
-  all_csv_report = df.to_csv(index=False).encode('utf-8')
+
+  entered_df = df[
+      df[col_pmjjby_sub].notna()
+      | df[col_pmjjby_bank].notna()
+      | df[col_pmsby_sub].notna()
+      | df[col_pmsby_bank].notna()
+  ]
+
+  entered_csv_report = entered_df.to_csv(index=False).encode('utf-8')
   st.sidebar.download_button(
-      label='📥 మొత్తం డేటాను డౌన్‌లోడ్ చేసుకోండి (CSV)',
-      data=all_csv_report,
-      file_name='District_Full_Enrollment_Report.csv',
+      label='📥 ఎంట్రీ చేసిన వివరాలు మాత్రమే డౌన్‌లోడ్ చేసుకోండి (CSV)',
+      data=entered_csv_report,
+      file_name='Enrolled_Members_Report.csv',
       mime='text/csv',
   )
   st.sidebar.markdown('---')
@@ -182,7 +215,6 @@ if df is not None:
                   pmjjby_b_date = None
 
                   if pmjjby_enrolled == 'Already Enrolled':
-                    # Already Enrolled aithe kevalam Bank Enrolled Date matrame chupinchali
                     pmjjby_b_date = st.date_input(
                         'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                         ' PMJJBY',
@@ -190,7 +222,6 @@ if df is not None:
                         key=f'pmjjby_b_date_already_{idx}',
                     )
                   else:
-                    # Not Enrolled aithe rendu dates option lo untayi (renditlo okkati enter cheyali)
                     col_d1, col_d2 = st.columns(2)
                     with col_d1:
                       pmjjby_sub_date = st.date_input(
@@ -222,6 +253,7 @@ if df is not None:
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
                         )
+                        st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
                     else:  # Not Enrolled
                       if pmjjby_sub_date is None and pmjjby_b_date is None:
                         st.error(
@@ -234,6 +266,7 @@ if df is not None:
                             f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
                             ' చేయబడ్డాయి!'
                         )
+                        st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
                   st.markdown('---')
                 else:
                   st.warning(
@@ -274,7 +307,6 @@ if df is not None:
                 pmsby_b_date = None
 
                 if pmsby_enrolled == 'Already Enrolled':
-                  # Already Enrolled aithe kevalam Bank Enrolled Date matrame chupinchali
                   pmsby_b_date = st.date_input(
                       'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                       ' PMSBY',
@@ -282,7 +314,6 @@ if df is not None:
                       key=f'pmsby_b_date_already_{idx}',
                   )
                 else:
-                  # Not Enrolled aithe rendu dates option lo untayi (renditlo okkati enter cheyali)
                   col_d3, col_d4 = st.columns(2)
                   with col_d3:
                     pmsby_sub_date = st.date_input(
@@ -314,6 +345,7 @@ if df is not None:
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
                       )
+                      st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
                   else:  # Not Enrolled
                     if pmsby_sub_date is None and pmsby_b_date is None:
                       st.error(
@@ -326,6 +358,7 @@ if df is not None:
                           f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
                           ' చేయబడ్డాయి!'
                       )
+                      st.rerun()  # సేవ్ అయిన వెంటనే ఆటోమేటిక్‌గా క్లోజ్/రిఫ్రెష్ అవ్వడానికి
 
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
@@ -340,32 +373,12 @@ if df is not None:
     temp_df = df.copy()
     temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-    col_pmjjby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
-        ' Bank) - PMJJBY'
-    )
-    col_pmjjby_bank = 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
-    col_pmsby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
-        ' Bank) - PMSBY'
-    )
-    col_pmsby_bank = 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
-
     temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x <= 50 else 0
     )
     temp_df['PMSBY_Eligible'] = temp_df['AGE'].apply(
         lambda x: 1 if 18 <= x <= 70 else 0
     )
-
-    for c in [
-        col_pmjjby_sub,
-        col_pmjjby_bank,
-        col_pmsby_sub,
-        col_pmsby_bank,
-    ]:
-      if c not in temp_df.columns:
-        temp_df[c] = None
 
     temp_df['PMJJBY_Submitted_Count'] = (
         temp_df[col_pmjjby_sub].notna().astype(int)
