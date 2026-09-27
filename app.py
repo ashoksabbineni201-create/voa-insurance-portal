@@ -47,9 +47,7 @@ if df is not None:
 
       if shg:
         members_df = df[
-            (df['MANDAL'] == mandal)
-            & (df['VO'] == vo)
-            & (df['SHG'] == shg]
+            (df['MANDAL'] == mandal) & (df['VO'] == vo) & (df['SHG'] == shg)
         ]
 
         # సైడ్‌బార్‌లో ప్రస్తుత లొకేషన్ బాక్స్
@@ -91,7 +89,7 @@ if df is not None:
         st.write('')
         st.markdown(f'### 👥 SHG సభ్యుల జాబితా (Dashboard)')
 
-        # అకౌంట్ నంబర్ తొలగించి, రెండవ ఇమేజ్ లాగా క్లీన్‌గా చూపించడం
+        # సభ్యుల వివరాలను కార్డ్స్ లాగా చూపించడం
         for idx, row in members_df.reset_index().iterrows():
           m_name = row.get('MEMBER NAME', 'Unknown')
           m_age = row.get('AGE', 'N/A')
