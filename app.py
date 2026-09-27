@@ -51,19 +51,17 @@ if df is not None:
     if c not in df.columns:
       df[c] = None
 
-  if 'saved_entries' not in st.session_state:
-    st.session_state.saved_entries = pd.DataFrame(columns=df.columns)
+  # Session State lo data persist avvadam kosam
+  if 'saved_entries_dict' not in st.session_state:
+    st.session_state.saved_entries_dict = {}
 
   st.sidebar.header('📁 నావిగేషన్')
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
-  if not st.session_state.saved_entries.empty:
-    report_df = st.session_state.saved_entries.drop_duplicates(
-        subset=['MEMBER ID']
-        if 'MEMBER ID' in st.session_state.saved_entries.columns
-        else None
-    )
+  if len(st.session_state.saved_entries_dict) > 0:
+    saved_rows_list = list(st.session_state.saved_entries_dict.values())
+    report_df = pd.DataFrame(saved_rows_list)
   else:
     report_df = pd.DataFrame(columns=df.columns)
 
@@ -80,9 +78,9 @@ if df is not None:
 
   export_df = export_df.rename(columns=rename_dict)
 
-  if 's.no' not in export_df.columns:
+  if 's.no' not in export_df.columns and not export_df.empty:
     export_df.insert(0, 's.no', range(1, len(export_df) + 1))
-  if 'age correction' not in export_df.columns:
+  if 'age correction' not in export_df.columns and not export_df.empty:
     export_df['age correction'] = ''
 
   entered_csv_report = export_df.to_csv(index=False).encode('utf-8')
@@ -156,20 +154,28 @@ if df is not None:
             else:
               eligibility_status = 'Not Eligible (>70)'
 
-            saved_mask = False
-            if (
-                not st.session_state.saved_entries.empty
-                and 'MEMBER ID' in st.session_state.saved_entries.columns
-            ):
-              saved_mask = (
-                  m_id in st.session_state.saved_entries['MEMBER ID'].values
-              )
+            # Check if already saved in session state dictionary
+            saved_data = st.session_state.saved_entries_dict.get(m_id, None)
 
-            if saved_mask:
-              status_badge = (
-                  '<span style="color: green; font-weight: bold;">[ Enrolled'
-                  ' / Submitted ]</span>'
+            if saved_data is not None:
+              # Check specific status descriptions
+              status_texts = []
+              if pd.notna(saved_data.get(col_pmjjby_bank)):
+                status_texts.append('PMJJBY: Already Enrolled')
+              elif pd.notna(saved_data.get(col_pmjjby_sub)):
+                status_texts.append('PMJJBY: App Submitted')
+
+              if pd.notna(saved_data.get(col_pmsby_bank)):
+                status_texts.append('PMSBY: Already Enrolled')
+              elif pd.notna(saved_data.get(col_pmsby_sub)):
+                status_texts.append('PMSBY: App Submitted')
+
+              status_str = (
+                  ' | '.join(status_texts)
+                  if status_texts
+                  else 'Enrolled / Submitted'
               )
+              status_badge = f'<span style="color: green; font-weight: bold;">[ {status_str} ]</span>'
             else:
               status_badge = f'<span style="color: #d9534f;">[ {eligibility_status} ]</span>'
 
@@ -301,10 +307,10 @@ if df is not None:
                 )
 
                 pmsby_sub_date = None
-                pmsby_b_date = None
+                pmsby_b_date_pmsby = None
 
                 if pmsby_enrolled == 'Already Enrolled':
-                  pmsby_b_date = st.date_input(
+                  pmsby_b_date_pmsby = st.date_input(
                       'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                       ' PMSBY',
                       value=None,
@@ -320,7 +326,7 @@ if df is not None:
                         key=f'pmsby_sub_date_{idx}',
                     )
                   with col_d4:
-                    pmsby_b_date = st.date_input(
+                    pmsby_b_date_pmsby = st.date_input(
                         'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
                         ' PMSBY',
                         value=None,
@@ -328,16 +334,16 @@ if df is not None:
                     )
 
                 st.write('---')
-                # ఒకే సింగిల్ సేవ్ బటన్ (రెండు స్కీమ్‌ల డేటా ఒకేసారి సేవ్ అవుతుంది)
                 if st.button(
                     f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                     key=f'save_all_{idx}',
                 ):
-                  updated_row = row.copy()
+                  # Base row dictionary create chesi dictionary lo store chesthamu
+                  updated_row = row.to_dict()
                   updated_row['AGE'] = active_age
                   updated_row['age correction'] = active_age
 
-                  # PMJJBY Data assignment
+                  # PMJJBY Data
                   if active_age <= 50:
                     if pmjjby_enrolled == 'Already Enrolled':
                       if pmjjby_b_date is not None:
@@ -348,26 +354,18 @@ if df is not None:
                       if pmjjby_b_date is not None:
                         updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
 
-                  # PMSBY Data assignment
+                  # PMSBY Data
                   if pmsby_enrolled == 'Already Enrolled':
-                    if pmjjby_b_date is not None or pmsby_b_date is not None:
-                      pass
-                    if pmsby_b_date is not None:
-                      updated_row[col_pmsby_bank] = str(pmsby_b_date)
+                    if pmsby_b_date_pmsby is not None:
+                      updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
                   else:
                     if pmsby_sub_date is not None:
                       updated_row[col_pmsby_sub] = str(pmsby_sub_date)
-                    if pmsby_b_date is not None:
-                      updated_row[col_pmsby_bank] = str(pmsby_b_date)
+                    if pmsby_b_date_pmsby is not None:
+                      updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
-                  # Save to session state
-                  st.session_state.saved_entries = pd.concat(
-                      [
-                          st.session_state.saved_entries,
-                          pd.DataFrame([updated_row]),
-                      ],
-                      ignore_index=True,
-                  )
+                  # Store persistently in dictionary using member ID as key
+                  st.session_state.saved_entries_dict[m_id] = updated_row
                   st.success(
                       f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్'
                       ' చేయబడ్డాయి!'
@@ -376,6 +374,7 @@ if df is not None:
                       f'✅ {m_name} - All Details Saved Successfully!',
                       icon='🎉',
                   )
+                  st.rerun()
 
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
