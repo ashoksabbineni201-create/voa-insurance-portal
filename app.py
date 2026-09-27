@@ -27,6 +27,7 @@ def load_data():
 df = load_data()
 
 if df is not None:
+  # PMJJBY మరియు PMSBY కాలమ్స్ సరిగ్గా సెట్ చేయడం
   col_pmjjby_sub = (
       'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
       ' Bank) - PMJJBY'
@@ -67,7 +68,7 @@ if df is not None:
   else:
     report_df = pd.DataFrame(columns=df.columns)
 
-  # మీరు స్క్రీన్‌షాట్‌లో కోరిన హెడ్డింగ్ పేర్లతో రీనేమ్ చేయడం
+  # ఎక్సెల్ డౌన్‌లోడ్ కోసం హెడ్డింగ్‌లను సరిగ్గా మ్యాప్ చేయడం
   export_df = report_df.copy()
   rename_dict = {}
   if col_pmjjby_sub in export_df.columns:
@@ -81,7 +82,6 @@ if df is not None:
 
   export_df = export_df.rename(columns=rename_dict)
 
-  # సీరియల్ నంబర్ (s.no) మరియు age correction కాలమ్స్ లేకపోతే యాడ్ చేయడం
   if 's.no' not in export_df.columns:
     export_df.insert(0, 's.no', range(1, len(export_df) + 1))
   if 'age correction' not in export_df.columns:
@@ -149,6 +149,7 @@ if df is not None:
             else:
               raw_age = int(raw_age)
 
+            # వయస్సు ఆధారంగా ఎలిజిబిలిటీ స్టేటస్
             if raw_age < 18:
               eligibility_status = 'Not Eligible (<18)'
             elif 18 <= raw_age <= 50:
@@ -279,6 +280,10 @@ if df is not None:
                         )
                       else:
                         updated_row = row.copy()
+                        updated_row['AGE'] = active_age
+                        updated_row['age correction'] = (
+                            active_age  # వయస్సు మార్పు సేవ్ అవ్వడానికి
+                        )
                         updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
                         st.session_state.saved_entries = pd.concat(
                             [
@@ -303,6 +308,8 @@ if df is not None:
                         )
                       else:
                         updated_row = row.copy()
+                        updated_row['AGE'] = active_age
+                        updated_row['age correction'] = active_age
                         if pmjjby_sub_date is not None:
                           updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
                         if pmjjby_b_date is not None:
@@ -396,6 +403,8 @@ if df is not None:
                       )
                     else:
                       updated_row = row.copy()
+                      updated_row['AGE'] = active_age
+                      updated_row['age correction'] = active_age
                       updated_row[col_pmsby_bank] = str(pmsby_b_date)
                       st.session_state.saved_entries = pd.concat(
                           [
@@ -419,6 +428,8 @@ if df is not None:
                       )
                     else:
                       updated_row = row.copy()
+                      updated_row['AGE'] = active_age
+                      updated_row['age correction'] = active_age
                       if pmsby_sub_date is not None:
                         updated_row[col_pmsby_sub] = str(pmsby_sub_date)
                       if pmsby_b_date is not None:
