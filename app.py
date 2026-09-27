@@ -256,10 +256,10 @@ if df is not None:
                 )
 
   elif app_mode == '📊 సమ్మరీ & ఎక్సెల్ రిపోర్ట్స్':
-    st.markdown('## 📊 నా లొకేషన్ రిపోర్ట్ & ఎక్సెల్ డౌన్‌లోడ్')
+    st.markdown('## 📊 నా లొకేషన్ రిపోర్ట్ & CSV డౌన్‌లోడ్')
     st.write(
         'ఇక్కడ మీరు మీ మండలం లేదా VO పరిధిలోని సభ్యుల ఎన్‌రోల్మెంట్ వివరాలను'
-        ' పరిశీలించి, ఎక్సెల్ ఫైల్‌గా డౌన్‌లోడ్ చేసుకోవచ్చు.'
+        ' పరిశీలించి, రిపోర్ట్‌ను డౌన్‌లోడ్ చేసుకోవచ్చు.'
     )
     st.write('---')
 
@@ -282,18 +282,14 @@ if df is not None:
       st.subheader(f'📋 {sel_mandal} - {sel_vo} సభ్యుల జాబితా & స్టేటస్')
       st.dataframe(report_df, use_container_width=True)
 
-      output = io.BytesIO()
-      with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        report_df.to_excel(
-            writer, index=False, sheet_name='My_Enrollment_Report'
-        )
-      excel_data = output.getvalue()
+      # CSV Download (Works without extra library dependencies)
+      csv_data = report_df.to_csv(index=False).encode('utf-8')
 
       st.download_button(
-          label='📥 ఈ రిపోర్ట్‌ని Excel రూపంలో డౌన్‌లోడ్ చేసుకోండి',
-          data=excel_data,
+          label='📥 ఈ రిపోర్ట్‌ని CSV/Excel రూపంలో డౌన్‌లోడ్ చేసుకోండి',
+          data=csv_data,
           file_name=(
-              f'VOA_Report_{sel_mandal}_{sel_vo.replace(" ", "_")}.xlsx'
+              f'VOA_Report_{sel_mandal}_{sel_vo.replace(" ", "_")}.csv'
           ),
-          mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          mime='text/csv',
       )
