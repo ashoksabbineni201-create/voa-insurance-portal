@@ -89,7 +89,7 @@ if df is not None:
         st.write('')
         st.markdown(f'### 👥 SHG Sabhyula Jabhita (Dashboard)')
 
-        # Prati member ki card & eligibility rules
+        # Prati member ki card (Account number removed from main card view)
         for idx, row in members_df.reset_index().iterrows():
           m_name = str(row.get('MEMBER NAME', 'Unknown'))
           m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
@@ -99,7 +99,6 @@ if df is not None:
           else:
             m_age = int(m_age)
 
-          # Google Sheet లో ఉన్న సరికొత్త కాలమ్ పేరు 'MEMBER SB ACCOUNT NUMBER'
           account_no = str(row.get('MEMBER SB ACCOUNT NUMBER', 'N/A'))
           if account_no == 'nan' or not account_no:
             account_no = 'N/A'
@@ -115,13 +114,12 @@ if df is not None:
             pmjjby_elig = 'Eligible (Not Enrolled)'
             pmsby_elig = 'Eligible (Not Enrolled)'
 
-          # Member Card display with Member ID & Account Number
+          # Member Card display (Account number removed)
           st.markdown(
               f"""
                     <div style="padding: 12px 15px; margin-bottom: 8px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 6px;">
                         🆔 <b>Member ID: {m_id}</b> &nbsp;|&nbsp; 
-                        👤 <b>{m_name}</b> (వయస్సు: {m_age} - As per Aadhaar) &nbsp;|&nbsp; 
-                        🏦 <b>అకౌంట్ నంబర్:</b> <span style="color: #333; font-weight: bold;">{account_no}</span><br>
+                        👤 <b>{m_name}</b> (వయస్సు: {m_age} - As per Aadhaar)<br>
                         <span style="font-size: 13px; color: #555;">
                             <b>PMJJBY:</b> <span style="color: #1f77b4;">{pmjjby_elig}</span> &nbsp;|&nbsp; 
                             <b>PMSBY:</b> <span style="color: #1f77b4;">{pmsby_elig}</span>
@@ -191,18 +189,11 @@ if df is not None:
                       key=f'pmjjby_b_date_{idx}',
                   )
                 else:
-                  col_d1, col_d2 = st.columns(2)
-                  with col_d1:
-                    pmjjby_sub_date = st.date_input(
-                        'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
-                        ' at Bank)',
-                        key=f'pmjjby_sub_date_{idx}',
-                    )
-                  with col_d2:
-                    pmjjby_bank_date = st.date_input(
-                        'బ్యాంకులో ఎన్రోల్ అయిన తేది (Bank Enrolled Date)',
-                        key=f'pmjjby_b_date_new_{idx}',
-                    )
+                  pmjjby_sub_date = st.date_input(
+                      'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
+                      ' at Bank)',
+                      key=f'pmjjby_sub_date_{idx}',
+                  )
 
               st.markdown('---')
 
@@ -239,18 +230,11 @@ if df is not None:
                     key=f'pmsby_b_date_{idx}',
                 )
               else:
-                col_d3, col_d4 = st.columns(2)
-                with col_d3:
-                  pmsby_sub_date = st.date_input(
-                      'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
-                      ' at Bank) - PMSBY',
-                      key=f'pmsby_sub_date_{idx}',
-                  )
-                with col_d4:
-                  pmsby_bank_date = st.date_input(
-                      'బ్యాంకులో ఎన్రోల్ అయిన తేది (Bank Enrolled Date) - PMSBY',
-                      key=f'pmsby_b_date_new_{idx}',
-                  )
+                pmsby_sub_date = st.date_input(
+                    'అప్లికేషన్ సబ్మిట్ చేసిన తేది (Application Submitted'
+                    ' at Bank) - PMSBY',
+                    key=f'pmsby_sub_date_{idx}',
+                )
 
             if st.button(
                 f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_btn_{idx}'
