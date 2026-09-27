@@ -81,14 +81,11 @@ if df is not None:
               m_age = int(m_age)
 
             if m_age > 70:
-              pmjjby_elig = 'Not Applicable'
-              pmsby_elig = 'Not Applicable'
-            elif 50 <= m_age <= 70:
-              pmjjby_elig = 'Not Applicable'
-              pmsby_elig = 'Eligible (Not Enrolled)'
+              elig_status = '🚫 Age > 70: ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు'
+            elif m_age < 18:
+              elig_status = '⚠️ Age < 18: ఎంట్రీ చేయడానికి వయస్సు సరిపోదు'
             else:
-              pmjjby_elig = 'Eligible (Not Enrolled)'
-              pmsby_elig = 'Eligible (Not Enrolled)'
+              elig_status = '✅ ఎంట్రీకి అర్హులు'
 
             st.markdown(
                 f"""
@@ -96,8 +93,7 @@ if df is not None:
                             🆔 <b>Member ID: {m_id}</b> &nbsp;|&nbsp; 
                             👤 <b>{m_name}</b> (వయస్సు: {m_age} - As per Aadhaar)<br>
                             <span style="font-size: 13px; color: #555;">
-                                <b>PMJJBY:</b> <span style="color: #1f77b4;">{pmjjby_elig}</span> &nbsp;|&nbsp; 
-                                <b>PMSBY:</b> <span style="color: #1f77b4;">{pmsby_elig}</span>
+                                <b>Status:</b> <span style="color: #1f77b4;">{elig_status}</span>
                             </span>
                         </div>
                         """,
@@ -108,8 +104,7 @@ if df is not None:
             with st.expander(
                 f'✏️ {m_name} (Member ID: {m_id}) వివరాలు సరిచూడండి / మార్చండి'
             ):
-              # Fixed minimum value to 1 to handle any data entries safely
-              safe_val = m_age if m_age >= 1 else 1
+              safe_val = m_age if m_age >= 1 else 18
               updated_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
                   ' Aadhaar):',
@@ -120,17 +115,28 @@ if df is not None:
               )
               st.write('---')
 
-              if updated_age > 70:
+              if updated_age < 18:
                 st.error(
-                    '⚠️ ఈ మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది కాబట్టి ఏ స్కీమ్‌కూ'
-                    ' ఎలిజిబిలిటీ లేదు (Not Applicable).'
+                    '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
+                    ' కాబట్టి ఎటువంటి ఎంట్రీ చేయడానికి నిబంధనల ప్రకారం'
+                    ' అనుమతి లేదు.'
+                )
+              elif updated_age > 70:
+                st.error(
+                    '❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది. కాబట్టి'
+                    ' PMJJBY మరియు PMSBY ఏ స్కీమ్‌కూ ఎలిజిబిలిటీ లేదు.'
                 )
               else:
-                # PMJJBY
-                st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు & బ్యాంక్ అకౌంట్')
+                st.success(
+                    '✅ వయస్సు నిబంధనల ప్రకారం సముచితమైన స్కీమ్‌లకు వివరాలు'
+                    ' నమోదు చేసుకోవచ్చు.'
+                )
+
+                # PMJJBY Section (Eligible only if 18 <= age < 50)
+                st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
                 if updated_age >= 50:
-                  st.info(
-                      'ℹ️ 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు (Not'
+                  st.warning(
+                      'ℹ️ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు (Not'
                       ' Applicable).'
                   )
                 else:
@@ -160,9 +166,10 @@ if df is not None:
                       key=f'pmjjby_status_{idx}',
                   )
                   if pmjjby_enrolled == 'Already Enrolled':
-                    pmjjby_bank_date = st.date_input(
+                    pmjjby_b_date = st.date_input(
                         'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
                         ' - PMJJBY',
+                        value=None,
                         key=f'pmjjby_b_date_{idx}',
                     )
                   else:
@@ -171,6 +178,7 @@ if df is not None:
                       pmjjby_sub_date = st.date_input(
                           'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
                           ' Submitted at Bank) - PMJJBY',
+                          value=None,
                           key=f'pmjjby_sub_date_{idx}',
                       )
                     with col_d2:
@@ -181,10 +189,19 @@ if df is not None:
                           key=f'pmjjby_b_date_opt_{idx}',
                       )
 
+                  if st.button(
+                      f'💾 {m_name} - PMJJBY వివరాలు సేవ్ చేయండి',
+                      key=f'save_pmjjby_{idx}',
+                  ):
+                    st.success(
+                        f'✅ {m_name} యొక్క PMJJBY వివరాలు విజయవంతంగా సేవ్'
+                        ' చేయబడ్డాయి!'
+                    )
+
                 st.markdown('---')
 
-                # PMSBY
-                st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు & బ్యాంక్ అకౌంట్')
+                # PMSBY Section (Eligible if 18 <= age <= 70)
+                st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                 pc1, pc2, pc3 = st.columns(3)
                 with pc1:
                   pmsby_bank = st.text_input(
@@ -211,9 +228,10 @@ if df is not None:
                     key=f'pmsby_status_{idx}',
                 )
                 if pmsby_enrolled == 'Already Enrolled':
-                  pmsby_bank_date = st.date_input(
+                  pmsby_b_date = st.date_input(
                       'బ్యాంకు వారు ఎన్రోల్ చేసిన తేది (Bank Enrolled Date)'
                       ' - PMSBY',
+                      value=None,
                       key=f'pmsby_b_date_{idx}',
                   )
                 else:
@@ -222,6 +240,7 @@ if df is not None:
                     pmsby_sub_date = st.date_input(
                         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
                         ' Submitted at Bank) - PMSBY',
+                        value=None,
                         key=f'pmsby_sub_date_{idx}',
                     )
                   with col_d4:
@@ -232,12 +251,14 @@ if df is not None:
                         key=f'pmsby_b_date_opt_{idx}',
                     )
 
-              if st.button(
-                  f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_btn_{idx}'
-              ):
-                st.success(
-                    f'✅ {m_name} యొక్క వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!'
-                )
+                if st.button(
+                    f'💾 {m_name} - PMSBY వివరాలు సేవ్ చేయండి',
+                    key=f'save_pmsby_{idx}',
+                ):
+                  st.success(
+                      f'✅ {m_name} యొక్క PMSBY వివరాలు విజయవంతంగా సేవ్'
+                      ' చేయబడ్డాయి!'
+                  )
 
   elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
     st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
