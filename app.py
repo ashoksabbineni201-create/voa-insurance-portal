@@ -99,7 +99,10 @@ if df is not None:
           else:
             m_age = int(m_age)
 
-          account_no = str(row.get('MEMBER sb account number', 'N/A'))
+          # Google Sheet లో ఉన్న సరికొత్త కాలమ్ పేరు 'MEMBER SB ACCOUNT NUMBER'
+          account_no = str(row.get('MEMBER SB ACCOUNT NUMBER', 'N/A'))
+          if account_no == 'nan' or not account_no:
+            account_no = 'N/A'
 
           # Age-based Eligibility rules
           if m_age > 70:
