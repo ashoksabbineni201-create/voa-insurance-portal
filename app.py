@@ -16,7 +16,6 @@ def load_data():
   try:
     df = pd.read_csv(sheet_url)
     df.columns = df.columns.str.strip()
-    # Normalize MANDAL column to handle case sensitivity and extra spaces
     if 'MANDAL' in df.columns:
       df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
     return df
@@ -109,12 +108,14 @@ if df is not None:
             with st.expander(
                 f'✏️ {m_name} (Member ID: {m_id}) వివరాలు సరిచూడండి / మార్చండి'
             ):
+              # Fixed minimum value to 1 to handle any data entries safely
+              safe_val = m_age if m_age >= 1 else 1
               updated_age = st.number_input(
                   'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
                   ' Aadhaar):',
-                  min_value=18,
+                  min_value=1,
                   max_value=100,
-                  value=m_age,
+                  value=safe_val,
                   key=f'age_{idx}',
               )
               st.write('---')
