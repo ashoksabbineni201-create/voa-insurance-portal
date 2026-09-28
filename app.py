@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - బటన్ రంగులు అమర్చడానికి
+# Custom CSS - బటన్ రంగుల కోసం
 st.markdown("""
     <style>
     /* 1. Confirm Age Button (Blue / Primary) */
@@ -210,15 +210,6 @@ if df is not None:
                         else:
                             raw_age = int(raw_age)
 
-                        if raw_age < 18:
-                            eligibility_status = 'Not Eligible (<18)'
-                        elif 18 <= raw_age <= 50:
-                            eligibility_status = 'PMJJBY & PMSBY Eligible'
-                        elif 51 <= raw_age <= 70:
-                            eligibility_status = 'PMSBY Eligible Only'
-                        else:
-                            eligibility_status = 'Not Eligible (>70)'
-
                         status_texts = []
                         if pd.notna(current_row.get(col_pmjjby_bank)):
                             status_texts.append('PMJJBY: Enrolled')
@@ -230,10 +221,7 @@ if df is not None:
                         elif pd.notna(current_row.get(col_pmsby_sub)):
                             status_texts.append('PMSBY: Submitted')
 
-                        if status_texts:
-                            status_badge = ' | '.join(status_texts)
-                        else:
-                            status_badge = eligibility_status
+                        status_badge = ' | '.join(status_texts) if status_texts else "ఎంట్రీ పెండింగ్"
 
                         with st.expander(
                             f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | Status: {status_badge}'
@@ -253,181 +241,187 @@ if df is not None:
                             )
 
                             session_key = f'confirmed_age_val_{idx}'
+                            is_confirmed_key = f'is_age_confirmed_{idx}'
+
                             if age_confirmed:
                                 st.session_state[session_key] = entered_age
+                                st.session_state[is_confirmed_key] = True
 
-                            active_age = st.session_state.get(session_key, raw_age)
+                            # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే మిగిలిన ఫారమ్ కనిపిస్తుంది
+                            if st.session_state.get(is_confirmed_key, False):
+                                active_age = st.session_state.get(session_key, raw_age)
 
-                            st.info(
-                                f'📌 ప్రస్తుతం పరిగణించబడిన వయస్సు: **{active_age} సంవత్సరాలు**'
-                            )
-
-                            if active_age < 18:
-                                st.error(
-                                    '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
+                                st.info(
+                                    f'📌 ప్రస్తుతం పరిగణించబడిన వయస్సు: **{active_age} సంవత్సరాలు**'
                                 )
-                            elif active_age > 70:
-                                st.error('❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది.')
-                            else:
-                                st.success('✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది.')
 
-                                # Variable Initializations
-                                pmjjby_sub_date = None
-                                pmjjby_b_date = None
-                                pmjjby_enrolled = 'Not Enrolled'
-
-                                pmsby_sub_date = None
-                                pmsby_b_date_pmsby = None
-                                pmsby_enrolled = 'Not Enrolled'
-
-                                # ================= 1. PMJJBY SECTION (18-50) =================
-                                if 18 <= active_age <= 50:
-                                    st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
-                                    bc1, bc2, bc3 = st.columns(3)
-                                    with bc1:
-                                        st.text_input(
-                                            'బ్యాంక్ పేరు (PMJJBY Bank)',
-                                            value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
-                                            key=f'pmjjby_bank_{idx}',
-                                        )
-                                    with bc2:
-                                        st.text_input(
-                                            'బ్రాంచ్ (PMJJBY Branch)',
-                                            value=str(row.get('BRANCH NAME', 'VEJENDLA')),
-                                            key=f'pmjjby_branch_{idx}',
-                                        )
-                                    with bc3:
-                                        st.text_input(
-                                            'అకౌంట్ నంబర్ (PMJJBY Acc No)',
-                                            value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
-                                            key=f'pmjjby_acc_{idx}',
-                                        )
-
-                                    pmjjby_enrolled = st.radio(
-                                        'PMJJBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
-                                        ['Not Enrolled', 'Already Enrolled'],
-                                        key=f'pmjjby_status_{idx}',
+                                if active_age < 18:
+                                    st.error(
+                                        '❌ హెచ్చరిక: మెంబర్ వయస్సు 18 సంవత్సరాల కంటే తక్కువగా ఉంది.'
                                     )
+                                elif active_age > 70:
+                                    st.error('❌ హెచ్చరిక: మెంబర్ వయస్సు 70 సంవత్సరాలు దాటింది.')
+                                else:
+                                    st.success('✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది.')
 
-                                    if pmjjby_enrolled == 'Already Enrolled':
-                                        pmjjby_b_date = st.date_input(
-                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
-                                            value=None,
-                                            key=f'pmjjby_b_date_already_{idx}',
-                                        )
-                                    else:
-                                        col_d1, col_d2 = st.columns(2)
-                                        with col_d1:
-                                            pmjjby_sub_date = st.date_input(
-                                                'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY',
-                                                value=None,
-                                                key=f'pmjjby_sub_date_{idx}',
+                                    pmjjby_sub_date = None
+                                    pmjjby_b_date = None
+                                    pmjjby_enrolled = 'Not Enrolled'
+
+                                    pmsby_sub_date = None
+                                    pmsby_b_date_pmsby = None
+                                    pmsby_enrolled = 'Not Enrolled'
+
+                                    # ================= 1. PMJJBY SECTION (18-50) =================
+                                    if 18 <= active_age <= 50:
+                                        st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
+                                        bc1, bc2, bc3 = st.columns(3)
+                                        with bc1:
+                                            st.text_input(
+                                                'బ్యాంక్ పేరు (PMJJBY Bank)',
+                                                value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
+                                                key=f'pmjjby_bank_{idx}',
                                             )
-                                        with col_d2:
+                                        with bc2:
+                                            st.text_input(
+                                                'బ్రాంచ్ (PMJJBY Branch)',
+                                                value=str(row.get('BRANCH NAME', 'VEJENDLA')),
+                                                key=f'pmjjby_branch_{idx}',
+                                            )
+                                        with bc3:
+                                            st.text_input(
+                                                'అకౌంట్ నంబర్ (PMJJBY Acc No)',
+                                                value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
+                                                key=f'pmjjby_acc_{idx}',
+                                            )
+
+                                        pmjjby_enrolled = st.radio(
+                                            'PMJJBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
+                                            ['Not Enrolled', 'Already Enrolled'],
+                                            key=f'pmjjby_status_{idx}',
+                                        )
+
+                                        if pmjjby_enrolled == 'Already Enrolled':
                                             pmjjby_b_date = st.date_input(
                                                 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
                                                 value=None,
-                                                key=f'pmjjby_b_date_opt_{idx}',
+                                                key=f'pmjjby_b_date_already_{idx}',
                                             )
-                                    st.markdown('---')
-                                else:
-                                    st.warning('ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు.')
-                                    st.markdown('---')
-
-                                # ================= 2. PMSBY SECTION (18-70) =================
-                                if 18 <= active_age <= 70:
-                                    st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
-                                    pc1, pc2, pc3 = st.columns(3)
-                                    with pc1:
-                                        st.text_input(
-                                            'బ్యాంక్ పేరు (PMSBY Bank)',
-                                            value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
-                                            key=f'pmsby_bank_{idx}',
-                                        )
-                                    with pc2:
-                                        st.text_input(
-                                            'బ్రాంచ్ (PMSBY Branch)',
-                                            value=str(row.get('BRANCH NAME', 'VEJENDLA')),
-                                            key=f'pmsby_branch_{idx}',
-                                        )
-                                    with pc3:
-                                        st.text_input(
-                                            'అకౌంట్ నంబర్ (PMSBY Acc No)',
-                                            value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
-                                            key=f'pmsby_acc_{idx}',
-                                        )
-
-                                    pmsby_enrolled = st.radio(
-                                        'PMSBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
-                                        ['Not Enrolled', 'Already Enrolled'],
-                                        key=f'pmsby_status_{idx}',
-                                    )
-
-                                    if pmsby_enrolled == 'Already Enrolled':
-                                        pmsby_b_date_pmsby = st.date_input(
-                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
-                                            value=None,
-                                            key=f'pmsby_b_date_already_{idx}',
-                                        )
+                                        else:
+                                            col_d1, col_d2 = st.columns(2)
+                                            with col_d1:
+                                                pmjjby_sub_date = st.date_input(
+                                                    'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY',
+                                                    value=None,
+                                                    key=f'pmjjby_sub_date_{idx}',
+                                                )
+                                            with col_d2:
+                                                pmjjby_b_date = st.date_input(
+                                                    'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
+                                                    value=None,
+                                                    key=f'pmjjby_b_date_opt_{idx}',
+                                                )
+                                        st.markdown('---')
                                     else:
-                                        col_d3, col_d4 = st.columns(2)
-                                        with col_d3:
-                                            pmsby_sub_date = st.date_input(
-                                                'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY',
-                                                value=None,
-                                                key=f'pmsby_sub_date_{idx}',
+                                        st.warning('ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు.')
+                                        st.markdown('---')
+
+                                    # ================= 2. PMSBY SECTION (18-70) =================
+                                    if 18 <= active_age <= 70:
+                                        st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
+                                        pc1, pc2, pc3 = st.columns(3)
+                                        with pc1:
+                                            st.text_input(
+                                                'బ్యాంక్ పేరు (PMSBY Bank)',
+                                                value=str(row.get('BANK NAME', 'Indian Overseas Bank')),
+                                                key=f'pmsby_bank_{idx}',
                                             )
-                                        with col_d4:
+                                        with pc2:
+                                            st.text_input(
+                                                'బ్రాంచ్ (PMSBY Branch)',
+                                                value=str(row.get('BRANCH NAME', 'VEJENDLA')),
+                                                key=f'pmsby_branch_{idx}',
+                                            )
+                                        with pc3:
+                                            st.text_input(
+                                                'అకౌంట్ నంబర్ (PMSBY Acc No)',
+                                                value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')),
+                                                key=f'pmsby_acc_{idx}',
+                                            )
+
+                                        pmsby_enrolled = st.radio(
+                                            'PMSBY కింద మెంబర్ ఎన్రోల్ అయ్యారా?',
+                                            ['Not Enrolled', 'Already Enrolled'],
+                                            key=f'pmsby_status_{idx}',
+                                        )
+
+                                        if pmsby_enrolled == 'Already Enrolled':
                                             pmsby_b_date_pmsby = st.date_input(
                                                 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
                                                 value=None,
-                                                key=f'pmsby_b_date_opt_{idx}',
+                                                key=f'pmsby_b_date_already_{idx}',
                                             )
-                                    st.markdown('---')
-
-                                # ================= SAVE BUTTON =================
-                                save_btn = st.button(
-                                    f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
-                                    key=f'save_all_{idx}',
-                                    type='secondary',
-                                )
-
-                                if save_btn:
-                                    updated_row = row.to_dict()
-                                    updated_row['AGE'] = active_age
-                                    updated_row['age correction'] = active_age
-
-                                    # Save PMJJBY Data
-                                    if active_age <= 50:
-                                        if pmjjby_enrolled == 'Already Enrolled':
-                                            if pmjjby_b_date is not None:
-                                                updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
                                         else:
-                                            if pmjjby_sub_date is not None:
-                                                updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
-                                            if pmjjby_b_date is not None:
-                                                updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                                            col_d3, col_d4 = st.columns(2)
+                                            with col_d3:
+                                                pmsby_sub_date = st.date_input(
+                                                    'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY',
+                                                    value=None,
+                                                    key=f'pmsby_sub_date_{idx}',
+                                                )
+                                            with col_d4:
+                                                pmsby_b_date_pmsby = st.date_input(
+                                                    'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
+                                                    value=None,
+                                                    key=f'pmsby_b_date_opt_{idx}',
+                                                )
+                                        st.markdown('---')
 
-                                    # Save PMSBY Data
-                                    if active_age <= 70:
-                                        if pmsby_enrolled == 'Already Enrolled':
-                                            if pmsby_b_date_pmsby is not None:
-                                                updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
-                                        else:
-                                            if pmsby_sub_date is not None:
-                                                updated_row[col_pmsby_sub] = str(pmsby_sub_date)
-                                            if pmsby_b_date_pmsby is not None:
-                                                updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+                                    # ================= SAVE BUTTON =================
+                                    save_btn = st.button(
+                                        f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
+                                        key=f'save_all_{idx}',
+                                        type='secondary',
+                                    )
 
-                                    st.session_state.saved_entries_dict[m_id] = updated_row
-                                    st.success(
-                                        f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
-                                    )
-                                    st.toast(
-                                        f'✅ {m_name} - All Details Saved Successfully!',
-                                        icon='🎉',
-                                    )
-                                    st.rerun()
+                                    if save_btn:
+                                        updated_row = row.to_dict()
+                                        updated_row['AGE'] = active_age
+                                        updated_row['age correction'] = active_age
+
+                                        # Save PMJJBY Data
+                                        if active_age <= 50:
+                                            if pmjjby_enrolled == 'Already Enrolled':
+                                                if pmjjby_b_date is not None:
+                                                    updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                                            else:
+                                                if pmjjby_sub_date is not None:
+                                                    updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
+                                                if pmjjby_b_date is not None:
+                                                    updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+
+                                        # Save PMSBY Data
+                                        if active_age <= 70:
+                                            if pmsby_enrolled == 'Already Enrolled':
+                                                if pmsby_b_date_pmsby is not None:
+                                                    updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+                                            else:
+                                                if pmsby_sub_date is not None:
+                                                    updated_row[col_pmsby_sub] = str(pmsby_sub_date)
+                                                if pmsby_b_date_pmsby is not None:
+                                                    updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+
+                                        st.session_state.saved_entries_dict[m_id] = updated_row
+                                        st.success(
+                                            f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                                        )
+                                        st.toast(
+                                            f'✅ {m_name} - All Details Saved Successfully!',
+                                            icon='🎉',
+                                        )
+                                        st.rerun()
+                            else:
+                                st.warning('⚠️ దయచేసి వివరాలు నమోదు చేయడానికి ముందు "వయస్సును నిర్ధారించండి" బటన్ నొక్కండి.')
 
     elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
         st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
