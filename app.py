@@ -6,35 +6,106 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - బటన్ రంగులు అమర్చడానికి
+# Custom CSS - యాప్ మొత్తం ఆకర్షణీయమైన రంగులు మరియు స్టైల్స్ కోసం
 st.markdown("""
     <style>
-    /* 1. Confirm Age Button (Blue / Primary) */
-    div[data-testid="stButton"] > button[kind="primary"] {
-        background-color: #1E88E5 !important;
+    /* 1. Main Background & Font Enhancement */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    
+    /* 2. Top Header Styling */
+    .portal-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
         color: white !important;
-        border-radius: 6px !important;
+        margin-bottom: 25px;
+    }
+    .portal-header h1 {
+        color: #ffffff !important;
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        margin: 0 !important;
+    }
+
+    /* 3. Dropdown Cards Container */
+    div[data-testid="stForm"], div[data-testid="stExpander"] {
+        background-color: #ffffff !important;
+        border-radius: 10px !important;
+        border: 1px solid #e0e0e0 !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+    }
+
+    /* 4. Expander Header Styling */
+    .streamlit-expanderHeader {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        color: #1e3c72 !important;
+        background-color: #f0f4f8 !important;
+        border-radius: 8px !important;
+    }
+
+    /* 5. Custom Button Styles */
+    /* Confirm Age Button (Blue / Gradient) */
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background: linear-gradient(90deg, #1E88E5 0%, #1565C0 100%) !important;
+        color: white !important;
+        border-radius: 8px !important;
         font-weight: bold !important;
         border: none !important;
         width: 100% !important;
+        padding: 8px 16px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 5px rgba(21, 101, 192, 0.3) !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
-        background-color: #1565C0 !important;
+        background: linear-gradient(90deg, #1565C0 0%, #0D47A1 100%) !important;
+        box-shadow: 0 4px 10px rgba(13, 71, 161, 0.4) !important;
     }
 
-    /* 2. Save All Button (Green / Success) */
+    /* Save All Button (Green / Gradient) */
     div[data-testid="stButton"] > button[kind="secondary"] {
-        background-color: #2E7D32 !important;
+        background: linear-gradient(90deg, #2E7D32 0%, #1B5E20 100%) !important;
         color: white !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         font-weight: bold !important;
-        border: 1px solid #2E7D32 !important;
+        border: none !important;
         width: 100% !important;
+        padding: 8px 16px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 5px rgba(27, 94, 32, 0.3) !important;
     }
     div[data-testid="stButton"] > button[kind="secondary"]:hover {
-        background-color: #1B5E20 !important;
+        background: linear-gradient(90deg, #1B5E20 0%, #0A3B0E 100%) !important;
         color: white !important;
-        border-color: #1B5E20 !important;
+        box-shadow: 0 4px 10px rgba(10, 59, 14, 0.4) !important;
+    }
+
+    /* 6. Sidebar Customization */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #e0e0e0;
+    }
+
+    /* Section Sub-headings */
+    .section-title-pmjjby {
+        color: #1565C0;
+        border-bottom: 2px solid #1565C0;
+        padding-bottom: 5px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    .section-title-pmsby {
+        color: #2E7D32;
+        border-bottom: 2px solid #2E7D32;
+        padding-bottom: 5px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        font-weight: 600;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -47,13 +118,13 @@ sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=cs
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        df = pd.read_csv(sheet_url, dtype=str)  # Column data types sync కోసం string గా లోడ్ చేస్తున్నాం
+        df = pd.read_csv(sheet_url, dtype=str)
         df.columns = df.columns.str.strip()
         if 'MANDAL' in df.columns:
             df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
         return df
     except Exception as e:
-        st.error(f'Data load avvadamlo lopam jarigindi: {e}')
+        st.error(f'డేటా లోడ్ చేయడంలో విఫలమైంది: {e}')
         return None
 
 
@@ -165,14 +236,12 @@ if df is not None:
     )
 
     if app_mode == '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)':
+        # Header Box with Gradient Background
         st.markdown(
-            '<div style="text-align: center; color: #1f77b4; font-weight:'
-            ' bold; font-size: 24px;">🔑 VOA & SHG Insurance Enrollment Portal</div>',
+            '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
         )
-        st.write('---')
 
-        # Mandal, VO, SHG Selection Variables Initialization
         mandals = ['-- ఎంచుకోండి --'] + sorted(df['MANDAL'].dropna().unique().tolist())
         selected_mandal = st.selectbox('1. మండలం ఎంచుకోండి (Select Mandal):', mandals)
 
@@ -196,19 +265,19 @@ if df is not None:
 
         st.sidebar.markdown('---')
 
-        # PAGE 1: ఎంపికలు మాత్రమే పూర్తి కానప్పుడు
+        # PAGE 1: ఎంపికలు పూర్తవ్వనప్పుడు
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info('👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.')
-            st.warning('⚠️ SHG గ్రూప్‌ను ఎంచుకున్న తర్వాత 2వ పేజీలో SHG సభ్యుల పేర్లు మరియు వివరాలు ప్రత్యక్షమవుతాయి.')
+            st.warning('⚠️ SHG గ్రూప్‌ను ఎంచుకున్న తర్వాత 2వ పేజీలో SHG సభ్యుల పేర్లు మరియు వివరాలు కనిపించును.')
 
-        # PAGE 2: SHG ఎంచుకున్న తర్వాత సభ్యుల వివరాలు ప్రదర్శించడం
+        # PAGE 2: సభ్యుల వివరాల ఎంట్రీ
         else:
             st.sidebar.success(
                 f'📍 **ఎంచుకున్న వివరాలు:**\n\n- **మండలం:** {selected_mandal}\n- **VO:** {selected_vo}\n- **SHG:** {selected_shg}'
             )
 
-            st.markdown(f'## 📄 పేజీ 2: SHG సభ్యుల జాబితా ({selected_shg})')
-            st.success(f'నమోదు నమోదు చేయడానికి క్రింది సభ్యుల వివరాలను పూరించండి.')
+            st.markdown(f'### 📄 పేజీ 2: SHG సభ్యుల జాబితా ({selected_shg})')
+            st.success('నమోదు ప్రారంభించడానికి క్రింది సభ్యుల వివరాలను పూరించండి.')
 
             members_df = df[
                 (df['MANDAL'] == selected_mandal)
@@ -242,7 +311,7 @@ if df is not None:
                 status_badge = ' | '.join(status_texts) if status_texts else "ఎంట్రీ పెండింగ్"
 
                 with st.expander(
-                    f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | Status: {status_badge}'
+                    f'👤 {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | Status: {status_badge}'
                 ):
                     entered_age = st.number_input(
                         'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per Aadhaar):',
@@ -265,7 +334,6 @@ if df is not None:
                         st.session_state[session_key] = entered_age
                         st.session_state[is_confirmed_key] = True
 
-                    # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే ఫారమ్ కనిపిస్తుంది
                     if st.session_state.get(is_confirmed_key, False):
                         active_age = st.session_state.get(session_key, raw_age)
 
@@ -292,7 +360,7 @@ if df is not None:
 
                             # ================= 1. PMJJBY SECTION (18-50) =================
                             if 18 <= active_age <= 50:
-                                st.markdown('### 📌 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)')
+                                st.markdown('<h4 class="section-title-pmjjby">🛡️ 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)</h4>', unsafe_allow_html=True)
                                 bc1, bc2, bc3 = st.columns(3)
                                 with bc1:
                                     st.text_input(
@@ -346,7 +414,7 @@ if df is not None:
 
                             # ================= 2. PMSBY SECTION (18-70) =================
                             if 18 <= active_age <= 70:
-                                st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
+                                st.markdown('<h4 class="section-title-pmsby">🚑 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)</h4>', unsafe_allow_html=True)
                                 pc1, pc2, pc3 = st.columns(3)
                                 with pc1:
                                     st.text_input(
@@ -417,7 +485,6 @@ if df is not None:
                                     updated_row['AGE'] = str(active_age)
                                     updated_row['age correction'] = str(active_age)
 
-                                    # Save PMJJBY Data
                                     if active_age <= 50:
                                         if pmjjby_enrolled == 'Already Enrolled':
                                             if pmjjby_b_date is not None:
@@ -428,7 +495,6 @@ if df is not None:
                                             if pmjjby_b_date is not None:
                                                 updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
 
-                                    # Save PMSBY Data
                                     if active_age <= 70:
                                         if pmsby_enrolled == 'Already Enrolled':
                                             if pmsby_b_date_pmsby is not None:
@@ -453,33 +519,4 @@ if df is not None:
 
     elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
         st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
-        st.write(
-            'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY (18-50) మరియు PMSBY (18-70)'
-            ' ఎలిజిబిలిటీ టార్గెట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు'
-            ' బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా కనిపిస్తుంది.'
-        )
         st.write('---')
-
-        # ఎర్రర్ రాకుండా నివారించడానికి export_df_base లేదా df లో నుండి డేటా ని క్లీన్ గా సిద్ధం చేయడం
-        temp_df = export_df_base.copy()
-        
-        # Age column ని సంఖ్యగా మార్చడం
-        temp_df['NUM_AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
-
-        # అర్హత కాలమ్స్ లెక్కించడం
-        temp_df['PMJJBY_Eligible'] = temp_df['NUM_AGE'].apply(
-            lambda x: 1 if 18 <= x <= 50 else 0
-        )
-        temp_df['PMSBY_Eligible'] = temp_df['NUM_AGE'].apply(
-            lambda x: 1 if 18 <= x <= 70 else 0
-        )
-
-        temp_df['PMJJBY_Submitted_Count'] = (
-            temp_df[col_pmjjby_sub].notna().astype(int)
-        )
-        temp_df['PMJJBY_Bank_Count'] = temp_df[col_pmjjby_bank].notna().astype(int)
-        temp_df['PMJJBY_Already_Count'] = 0
-
-        temp_df['PMSBY_Submitted_Count'] = (
-            temp_df[col_pmsby_sub].notna().astype(int)
-        )
