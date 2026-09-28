@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - బటన్ రంగులు అమర్చడానికి
+# Custom CSS - బటన్ రంగుల కోసం
 st.markdown("""
     <style>
     /* 1. Confirm Age Button (Blue / Primary) */
@@ -240,8 +240,7 @@ if df is not None:
                             f'✏️ {m_name} (ID: {m_id}) | వయస్సు: {raw_age} | Status: {status_badge}'
                         ):
                             entered_age = st.number_input(
-                                'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per'
-                                ' Aadhaar):',
+                                'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age - As per Aadhaar):',
                                 min_value=1,
                                 max_value=100,
                                 value=raw_age,
@@ -273,6 +272,7 @@ if df is not None:
                             else:
                                 st.success('✅ వయస్సు నిబంధనలకు అనుగుణంగా ఉంది.')
 
+                                # ----------------- 1. PMJJBY SECTION -----------------
                                 pmjjby_sub_date = None
                                 pmjjby_b_date = None
                                 pmjjby_enrolled = 'Not Enrolled'
@@ -307,8 +307,7 @@ if df is not None:
 
                                     if pmjjby_enrolled == 'Already Enrolled':
                                         pmjjby_b_date = st.date_input(
-                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
-                                            ' PMJJBY',
+                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
                                             value=None,
                                             key=f'pmjjby_b_date_already_{idx}',
                                         )
@@ -316,25 +315,24 @@ if df is not None:
                                         col_d1, col_d2 = st.columns(2)
                                         with col_d1:
                                             pmjjby_sub_date = st.date_input(
-                                                'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                                                ' Submitted at Bank) - PMJJBY',
+                                                'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY',
                                                 value=None,
                                                 key=f'pmjjby_sub_date_{idx}',
                                             )
                                         with col_d2:
                                             pmjjby_b_date = st.date_input(
-                                                'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
-                                                ' PMJJBY',
+                                                'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY',
                                                 value=None,
                                                 key=f'pmjjby_b_date_opt_{idx}',
                                             )
-                                    st.markdown('---')
                                 else:
                                     st.warning(
                                         'ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు.'
                                     )
-                                    st.markdown('---')
 
+                                st.markdown('---')
+
+                                # ----------------- 2. PMSBY SECTION -----------------
                                 st.markdown('### 📌 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)')
                                 pc1, pc2, pc3 = st.columns(3)
                                 with pc1:
@@ -367,8 +365,7 @@ if df is not None:
 
                                 if pmsby_enrolled == 'Already Enrolled':
                                     pmsby_b_date_pmsby = st.date_input(
-                                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
-                                        ' PMSBY',
+                                        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
                                         value=None,
                                         key=f'pmsby_b_date_already_{idx}',
                                     )
@@ -376,21 +373,20 @@ if df is not None:
                                     col_d3, col_d4 = st.columns(2)
                                     with col_d3:
                                         pmsby_sub_date = st.date_input(
-                                            'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application'
-                                            ' Submitted at Bank) - PMSBY',
+                                            'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY',
                                             value=None,
                                             key=f'pmsby_sub_date_{idx}',
                                         )
                                     with col_d4:
                                         pmsby_b_date_pmsby = st.date_input(
-                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) -'
-                                            ' PMSBY',
+                                            'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY',
                                             value=None,
                                             key=f'pmsby_b_date_opt_{idx}',
                                         )
 
-                                st.write('---')
+                                st.markdown('---')
 
+                                # ----------------- SAVE BUTTON -----------------
                                 save_btn = st.button(
                                     f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                                     key=f'save_all_{idx}',
@@ -423,8 +419,7 @@ if df is not None:
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
                                     st.success(
-                                        f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్'
-                                        ' చేయబడ్డాయి!'
+                                        f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
                                     )
                                     st.toast(
                                         f'✅ {m_name} - All Details Saved Successfully!',
@@ -437,8 +432,7 @@ if df is not None:
         st.write(
             'ఇక్కడ జిల్లాలోని అన్ని మండలాల వారీగా PMJJBY (18-50) మరియు PMSBY (18-70)'
             ' ఎలిజిబిలిటీ టార్గెట్, బ్యాంక్ సబ్మిటెడ్, బ్యాంక్ ఎన్‌రోల్డ్ మరియు'
-            ' బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా'
-            ' కనిపిస్తుంది.'
+            ' బ్యాలెన్స్ వివరాల అబ్‌స్ట్రాక్ట్ టేబుల్ కింద గ్రాండ్ టోటల్‌తో సహా కనిపిస్తుంది.'
         )
         st.write('---')
 
@@ -527,16 +521,14 @@ if df is not None:
         ]
 
         st.subheader(
-            f'📋 Mandal-wise Abstract Summary with Grand Total (Total Mandals:'
-            f' {len(abstract_df)-1})'
+            f'📋 Mandal-wise Abstract Summary with Grand Total (Total Mandals: {len(abstract_df)-1})'
         )
         st.dataframe(abstract_df, use_container_width=True)
 
         csv_data = abstract_df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label=(
-                '📥 అబ్‌స్ట్రాక్ట్ గ్రాండ్ టోటల్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్'
-                ' చేసుకోండి'
+                '📥 అబ్‌స్ట్రాక్ట్ గ్రాండ్ టోటల్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్ చేసుకోండి'
             ),
             data=csv_data,
             file_name='District_Insurance_Abstract_With_Total.csv',
