@@ -6,6 +6,36 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
+# Custom CSS for button styling
+st.markdown("""
+    <style>
+    /* Confirm Age Button Styling (Blue) */
+    div[data-testid="stButton"] > button[kind="primary"] {
+        background-color: #1E88E5 !important;
+        color: white !important;
+        border-radius: 6px !important;
+        font-weight: bold !important;
+        border: none !important;
+    }
+    div[data-testid="stButton"] > button[kind="primary"]:hover {
+        background-color: #1565C0 !important;
+    }
+
+    /* Save All Button Styling (Green) */
+    div.save-btn-container > div[data-testid="stButton"] > button {
+        background-color: #2E7D32 !important;
+        color: white !important;
+        border-radius: 6px !important;
+        font-weight: bold !important;
+        border: none !important;
+        width: 100% !important;
+    }
+    div.save-btn-container > div[data-testid="stButton"] > button:hover {
+        background-color: #1B5E20 !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Google Sheet link
 sheet_id = '1vZqfSZmc24tEPCC-7D5B7oIGAujln7du'
 sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
@@ -51,7 +81,6 @@ if df is not None:
     if c not in df.columns:
       df[c] = None
 
-  # Session State lo data persist avvadam kosam dictionary
   if 'saved_entries_dict' not in st.session_state:
     st.session_state.saved_entries_dict = {}
 
@@ -59,7 +88,6 @@ if df is not None:
   st.sidebar.markdown('---')
   st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
-  # Merge session state data back to df if entries exist
   export_df_base = df.copy()
   if len(st.session_state.saved_entries_dict) > 0:
     for m_id, saved_row in st.session_state.saved_entries_dict.items():
@@ -145,13 +173,12 @@ if df is not None:
           )
           st.write('---')
 
-          st.markdown(f'### 👥 SHG Sabhyula Jabhita (Dashboard)')
+          st.markdown('### 👥 SHG Sabhyula Jabhita (Dashboard)')
 
           for idx, row in members_df.reset_index().iterrows():
             m_name = str(row.get('MEMBER NAME', 'Unknown'))
             m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
 
-            # Check if updated in session state
             current_row = st.session_state.saved_entries_dict.get(m_id, row)
 
             raw_age = current_row.get('AGE', 35)
@@ -169,7 +196,6 @@ if df is not None:
             else:
               eligibility_status = 'Not Eligible (>70)'
 
-            # Status check for display
             status_texts = []
             if pd.notna(current_row.get(col_pmjjby_bank)):
               status_texts.append('PMJJBY: Enrolled')
@@ -198,9 +224,11 @@ if df is not None:
                   key=f'age_{idx}',
               )
 
+              # 1. వయస్సు నిర్ధారణ బటన్ (Primary / Blue Color)
               age_confirmed = st.button(
                   f'✔️ {m_name} వయస్సును నిర్ధారించండి',
                   key=f'confirm_age_btn_{idx}',
+                  type='primary'
               )
 
               session_key = f'confirmed_age_val_{idx}'
@@ -341,10 +369,16 @@ if df is not None:
                     )
 
                 st.write('---')
-                if st.button(
+
+                # 2. సేవ్ బటన్ (Green Color)
+                st.markdown('<div class="save-btn-container">', unsafe_allow_html=True)
+                save_btn = st.button(
                     f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                     key=f'save_all_{idx}',
-                ):
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                if save_btn:
                   updated_row = row.to_dict()
                   updated_row['AGE'] = active_age
                   updated_row['age correction'] = active_age
