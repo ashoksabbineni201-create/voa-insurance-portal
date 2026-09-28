@@ -47,7 +47,7 @@ sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=cs
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        df = pd.read_csv(sheet_url, dtype=str) # Import all as string to avoid dtype conflict
+        df = pd.read_csv(sheet_url, dtype=str) # Column data types sync kosam string ga load chestunnam
         df.columns = df.columns.str.strip()
         if 'MANDAL' in df.columns:
             df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
@@ -99,7 +99,8 @@ if df is not None:
             ].index
             if not idx_match.empty:
                 for k, v in saved_row.items():
-                    # Columns dtype mismatch ni nivarinchadaniki object/string type ki convert chestunnam
+                    if k not in export_df_base.columns:
+                        export_df_base[k] = None
                     export_df_base[k] = export_df_base[k].astype(object)
                     export_df_base.loc[idx_match, k] = str(v) if v is not None else None
 
@@ -477,7 +478,7 @@ if df is not None:
                 PMJJBY_Bank_Enrolled=('PMJJBY_Bank_Count', 'sum'),
                 PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
                 PMSBY_Already_Enrolled=('PMSBY_Already_Count', 'sum'),
-                PMSBY_Submitted_Bank=('PMSBY_Submitted_Count', 'sum'),
+                PMSBY_Submitted_Bank=('PMSBY_Submitted_Bank', 'sum'),
                 PMSBY_Bank_Enrolled=('PMSBY_Bank_Count', 'sum'),
             )
             .reindex(all_mandals)
