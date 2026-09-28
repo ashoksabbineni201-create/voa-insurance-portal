@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - Button colors kosam
+# Custom CSS - బటన్ రంగులు అమర్చడానికి
 st.markdown("""
     <style>
     /* 1. Confirm Age Button (Blue / Primary) */
@@ -47,7 +47,7 @@ sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=cs
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        df = pd.read_csv(sheet_url, dtype=str) # Column data types sync kosam string ga load chestunnam
+        df = pd.read_csv(sheet_url, dtype=str) # Column data types sync కోసం string గా లోడ్ చేస్తున్నాం
         df.columns = df.columns.str.strip()
         if 'MANDAL' in df.columns:
             df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
@@ -250,7 +250,7 @@ if df is not None:
                                 st.session_state[session_key] = entered_age
                                 st.session_state[is_confirmed_key] = True
 
-                            # Vayassu nirdharinchina tarvata matrame form kanipistundi
+                            # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే ఫారమ్ కనిపిస్తుంది
                             if st.session_state.get(is_confirmed_key, False):
                                 active_age = st.session_state.get(session_key, raw_age)
 
@@ -445,13 +445,17 @@ if df is not None:
         )
         st.write('---')
 
-        temp_df = df.copy()
-        temp_df['AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
+        # ఎర్రర్ రాకుండా నివారించడానికి export_df_base లేదా df లో నుండి డేటా ని క్లీన్ గా సిద్ధం చేయడం
+        temp_df = export_df_base.copy()
+        
+        # Age column ని సంఖ్యగా మార్చడం
+        temp_df['NUM_AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
-        temp_df['PMJJBY_Eligible'] = temp_df['AGE'].apply(
+        # అర్హత కాలమ్స్ లెక్కించడం
+        temp_df['PMJJBY_Eligible'] = temp_df['NUM_AGE'].apply(
             lambda x: 1 if 18 <= x <= 50 else 0
         )
-        temp_df['PMSBY_Eligible'] = temp_df['AGE'].apply(
+        temp_df['PMSBY_Eligible'] = temp_df['NUM_AGE'].apply(
             lambda x: 1 if 18 <= x <= 70 else 0
         )
 
@@ -469,6 +473,7 @@ if df is not None:
 
         all_mandals = sorted(temp_df['MANDAL'].dropna().unique())
 
+        # Groupby లాజిక్ క్లియర్ గా మార్చడం జరిగింది
         abstract_df = (
             temp_df.groupby('MANDAL')
             .agg(
@@ -478,7 +483,7 @@ if df is not None:
                 PMJJBY_Bank_Enrolled=('PMJJBY_Bank_Count', 'sum'),
                 PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
                 PMSBY_Already_Enrolled=('PMSBY_Already_Count', 'sum'),
-                PMSBY_Submitted_Bank=('PMSBY_Submitted_Bank', 'sum'),
+                PMSBY_Submitted_Bank=('PMSBY_Submitted_Count', 'sum'),
                 PMSBY_Bank_Enrolled=('PMSBY_Bank_Count', 'sum'),
             )
             .reindex(all_mandals)
