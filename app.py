@@ -284,6 +284,7 @@ if df is not None:
                 & (export_df_base['SHG'] == selected_shg)
             ]
 
+            # పాతది (ఎర్రర్ ఇస్తున్న కోడ్):
             for idx, row in members_df.reset_index().iterrows():
                 m_name = str(row.get('MEMBER NAME', 'Unknown'))
                 m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
