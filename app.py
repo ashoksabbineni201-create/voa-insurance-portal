@@ -6,32 +6,35 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for button styling
+# Custom CSS - బటన్ కీలు (keys) వర్తించేలా ప్రత్యక్షంగా స్టైలింగ్ చేయడం
 st.markdown("""
     <style>
-    /* Confirm Age Button Styling (Blue) */
+    /* 1. Confirm Age Button (Blue / Primary) */
     div[data-testid="stButton"] > button[kind="primary"] {
         background-color: #1E88E5 !important;
         color: white !important;
         border-radius: 6px !important;
         font-weight: bold !important;
         border: none !important;
+        width: 100% !important;
     }
     div[data-testid="stButton"] > button[kind="primary"]:hover {
         background-color: #1565C0 !important;
     }
 
-    /* Save All Button Styling (Green) */
-    div.save-btn-container > div[data-testid="stButton"] > button {
+    /* 2. Save All Button (Green / Success) */
+    div[data-testid="stButton"] > button[kind="secondary"] {
         background-color: #2E7D32 !important;
         color: white !important;
         border-radius: 6px !important;
         font-weight: bold !important;
-        border: none !important;
+        border: 1px solid #2E7D32 !important;
         width: 100% !important;
     }
-    div.save-btn-container > div[data-testid="stButton"] > button:hover {
+    div[data-testid="stButton"] > button[kind="secondary"]:hover {
         background-color: #1B5E20 !important;
+        color: white !important;
+        border-color: #1B5E20 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -224,11 +227,11 @@ if df is not None:
                   key=f'age_{idx}',
               )
 
-              # 1. వయస్సు నిర్ధారణ బటన్ (Primary / Blue Color)
+              # 1. వయస్సు నిర్ధారణ బటన్ (Primary - Blue Color)
               age_confirmed = st.button(
                   f'✔️ {m_name} వయస్సును నిర్ధారించండి',
                   key=f'confirm_age_btn_{idx}',
-                  type='primary'
+                  type='primary',
               )
 
               session_key = f'confirmed_age_val_{idx}'
@@ -370,13 +373,12 @@ if df is not None:
 
                 st.write('---')
 
-                # 2. సేవ్ బటన్ (Green Color)
-                st.markdown('<div class="save-btn-container">', unsafe_allow_html=True)
+                # 2. సేవ్ బటన్ (Secondary type - Green Color via CSS)
                 save_btn = st.button(
                     f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                     key=f'save_all_{idx}',
+                    type='secondary',
                 )
-                st.markdown('</div>', unsafe_allow_html=True)
 
                 if save_btn:
                   updated_row = row.to_dict()
@@ -458,7 +460,7 @@ if df is not None:
             PMJJBY_Bank_Enrolled=('PMJJBY_Bank_Count', 'sum'),
             PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
             PMSBY_Already_Enrolled=('PMSBY_Already_Count', 'sum'),
-            PMSBY_Submitted_Bank=('PMSBY_Submitted_Count', 'sum'),
+            PMSBY_Submitted_Bank=('PMSBY_Submitted_Bank', 'sum'),
             PMSBY_Bank_Enrolled=('PMSBY_Bank_Count', 'sum'),
         )
         .reindex(all_mandals)
