@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - బటన్ రంగుల కోసం
+# Custom CSS - Button colors kosam
 st.markdown("""
     <style>
     /* 1. Confirm Age Button (Blue / Primary) */
@@ -47,7 +47,7 @@ sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=cs
 @st.cache_data(ttl=60)
 def load_data():
     try:
-        df = pd.read_csv(sheet_url)
+        df = pd.read_csv(sheet_url, dtype=str) # Import all as string to avoid dtype conflict
         df.columns = df.columns.str.strip()
         if 'MANDAL' in df.columns:
             df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
@@ -99,7 +99,9 @@ if df is not None:
             ].index
             if not idx_match.empty:
                 for k, v in saved_row.items():
-                    export_df_base.loc[idx_match, k] = v
+                    # Columns dtype mismatch ni nivarinchadaniki object/string type ki convert chestunnam
+                    export_df_base[k] = export_df_base[k].astype(object)
+                    export_df_base.loc[idx_match, k] = str(v) if v is not None else None
 
     report_df = export_df_base[
         export_df_base[col_pmjjby_sub].notna()
@@ -205,10 +207,10 @@ if df is not None:
                         current_row = st.session_state.saved_entries_dict.get(m_id, row)
 
                         raw_age = current_row.get('AGE', 35)
-                        if pd.isna(raw_age):
+                        try:
+                            raw_age = int(float(raw_age))
+                        except Exception:
                             raw_age = 35
-                        else:
-                            raw_age = int(raw_age)
 
                         status_texts = []
                         if pd.notna(current_row.get(col_pmjjby_bank)):
@@ -247,7 +249,7 @@ if df is not None:
                                 st.session_state[session_key] = entered_age
                                 st.session_state[is_confirmed_key] = True
 
-                            # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే ఫారమ్ కనిపిస్తుంది
+                            # Vayassu nirdharinchina tarvata matrame form kanipistundi
                             if st.session_state.get(is_confirmed_key, False):
                                 active_age = st.session_state.get(session_key, raw_age)
 
@@ -385,7 +387,6 @@ if df is not None:
                                     )
 
                                     if save_btn:
-                                        # కనీసం ఒక తేదీ ఎంటర్ చేశారో లేదో తనిఖీ చేయడం
                                         has_entered_any_date = (
                                             (pmjjby_sub_date is not None) or
                                             (pmjjby_b_date is not None) or
@@ -397,8 +398,8 @@ if df is not None:
                                             st.error('❌ దయచేసి వివరాలు సేవ్ చేయడానికి PMJJBY లేదా PMSBY లో కనీసం ఒక తేదీని నమోదు చేయండి!')
                                         else:
                                             updated_row = row.to_dict()
-                                            updated_row['AGE'] = active_age
-                                            updated_row['age correction'] = active_age
+                                            updated_row['AGE'] = str(active_age)
+                                            updated_row['age correction'] = str(active_age)
 
                                             # Save PMJJBY Data
                                             if active_age <= 50:
