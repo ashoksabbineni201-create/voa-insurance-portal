@@ -247,7 +247,7 @@ if df is not None:
                                 st.session_state[session_key] = entered_age
                                 st.session_state[is_confirmed_key] = True
 
-                            # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే మిగిలిన ఫారమ్ కనిపిస్తుంది
+                            # వయస్సు నిర్ధారించిన తర్వాత మాత్రమే ఫారమ్ కనిపిస్తుంది
                             if st.session_state.get(is_confirmed_key, False):
                                 active_age = st.session_state.get(session_key, raw_age)
 
@@ -385,41 +385,52 @@ if df is not None:
                                     )
 
                                     if save_btn:
-                                        updated_row = row.to_dict()
-                                        updated_row['AGE'] = active_age
-                                        updated_row['age correction'] = active_age
-
-                                        # Save PMJJBY Data
-                                        if active_age <= 50:
-                                            if pmjjby_enrolled == 'Already Enrolled':
-                                                if pmjjby_b_date is not None:
-                                                    updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
-                                            else:
-                                                if pmjjby_sub_date is not None:
-                                                    updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
-                                                if pmjjby_b_date is not None:
-                                                    updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
-
-                                        # Save PMSBY Data
-                                        if active_age <= 70:
-                                            if pmsby_enrolled == 'Already Enrolled':
-                                                if pmsby_b_date_pmsby is not None:
-                                                    updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
-                                            else:
-                                                if pmsby_sub_date is not None:
-                                                    updated_row[col_pmsby_sub] = str(pmsby_sub_date)
-                                                if pmsby_b_date_pmsby is not None:
-                                                    updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
-
-                                        st.session_state.saved_entries_dict[m_id] = updated_row
-                                        st.success(
-                                            f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                                        # కనీసం ఒక తేదీ ఎంటర్ చేశారో లేదో తనిఖీ చేయడం
+                                        has_entered_any_date = (
+                                            (pmjjby_sub_date is not None) or
+                                            (pmjjby_b_date is not None) or
+                                            (pmsby_sub_date is not None) or
+                                            (pmsby_b_date_pmsby is not None)
                                         )
-                                        st.toast(
-                                            f'✅ {m_name} - All Details Saved Successfully!',
-                                            icon='🎉',
-                                        )
-                                        st.rerun()
+
+                                        if not has_entered_any_date:
+                                            st.error('❌ దయచేసి వివరాలు సేవ్ చేయడానికి PMJJBY లేదా PMSBY లో కనీసం ఒక తేదీని నమోదు చేయండి!')
+                                        else:
+                                            updated_row = row.to_dict()
+                                            updated_row['AGE'] = active_age
+                                            updated_row['age correction'] = active_age
+
+                                            # Save PMJJBY Data
+                                            if active_age <= 50:
+                                                if pmjjby_enrolled == 'Already Enrolled':
+                                                    if pmjjby_b_date is not None:
+                                                        updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                                                else:
+                                                    if pmjjby_sub_date is not None:
+                                                        updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
+                                                    if pmjjby_b_date is not None:
+                                                        updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+
+                                            # Save PMSBY Data
+                                            if active_age <= 70:
+                                                if pmsby_enrolled == 'Already Enrolled':
+                                                    if pmsby_b_date_pmsby is not None:
+                                                        updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+                                                else:
+                                                    if pmsby_sub_date is not None:
+                                                        updated_row[col_pmsby_sub] = str(pmsby_sub_date)
+                                                    if pmsby_b_date_pmsby is not None:
+                                                        updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+
+                                            st.session_state.saved_entries_dict[m_id] = updated_row
+                                            st.success(
+                                                f'✅ {m_name} యొక్క అన్ని వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!'
+                                            )
+                                            st.toast(
+                                                f'✅ {m_name} - All Details Saved Successfully!',
+                                                icon='🎉',
+                                            )
+                                            st.rerun()
                             else:
                                 st.warning('⚠️ దయచేసి వివరాలు నమోదు చేయడానికి ముందు "వయస్సును నిర్ధారించండి" బటన్ నొక్కండి.')
 
