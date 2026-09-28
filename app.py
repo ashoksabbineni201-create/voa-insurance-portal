@@ -167,133 +167,23 @@ if df is not None:
                     export_df_base[k] = export_df_base[k].astype(object)
                     export_df_base.loc[idx_match, k] = str(v) if v is not None else None
 
+    # Helper columns for scheme status & numeric age
+    export_df_base['NUM_AGE'] = pd.to_numeric(export_df_base['AGE'], errors='coerce').fillna(0)
+    
+    export_df_base['PMJJBY_STATUS'] = 'Pending'
+    export_df_base.loc[
+        export_df_base[col_pmjjby_sub].notna() | export_df_base[col_pmjjby_bank].notna(),
+        'PMJJBY_STATUS'
+    ] = 'Done'
+
+    export_df_base['PMSBY_STATUS'] = 'Pending'
+    export_df_base.loc[
+        export_df_base[col_pmsby_sub].notna() | export_df_base[col_pmsby_bank].notna(),
+        'PMSBY_STATUS'
+    ] = 'Done'
+
     # Sidebar Header and Downloads
     st.sidebar.header('📁 నావిగేషన్')
-    st.sidebar.markdown('---')
-    st.sidebar.markdown('### 📥 రిపోర్ట్‌లు డౌన్‌లోడ్')
-
-    # 1. Entry chesina vivaralu (Entered Report)
-    report_df = export_df_base[
-        export_df_base[col_pmjjby_sub].notna()
-        | export_df_base[col_pmjjby_bank].notna()
-        | export_df_base[col_pmsby_sub].notna()
-        | export_df_base[col_pmsby_bank].notna()
-    ]
-
-    export_df = report_df.copy()
-    rename_dict = {}
-    if col_pmjjby_sub in export_df.columns:
-        rename_dict[col_pmjjby_sub] = 'Application Submitted at Bank - PMJJBY'
-    if col_pmsby_sub in export_df.columns:
-        rename_dict[col_pmsby_sub] = 'Application Submitted at Bank - PMSBY'
-    if col_pmjjby_bank in export_df.columns:
-        rename_dict[col_pmjjby_bank] = 'Bank Enrolled Date - PMJJBY'
-    if col_pmsby_bank in export_df.columns:
-        rename_dict[col_pmsby_bank] = 'Bank Enrolled Date - PMSBY'
-
-    export_df = export_df.rename(columns=rename_dict)
-
-    if 's.no' not in export_df.columns and not export_df.empty:
-        export_df.insert(0, 's.no', range(1, len(export_df) + 1))
-    if 'AGE' in export_df.columns:
-        export_df['age correction'] = export_df['AGE']
-
-    desired_columns = [
-        's.no',
-        'MANDAL',
-        'VO',
-        'SHG',
-        'MEMBER NAME',
-        'MEMBER ID',
-        'AGE',
-        'BANK NAME',
-        'BRANCH NAME',
-        'MEMBER SB ACCOUNT NUMBER',
-        'Application Submitted at Bank - PMJJBY',
-        'Bank Enrolled Date - PMJJBY',
-        'Application Submitted at Bank - PMSBY',
-        'Bank Enrolled Date - PMSBY',
-        'age correction',
-    ]
-
-    final_columns = [c for c in desired_columns if c in export_df.columns]
-    export_df = export_df[final_columns]
-
-    entered_csv_report = export_df.to_csv(index=False).encode('utf-8-sig')
-    st.sidebar.download_button(
-        label='📥 1. నమోదు చేసిన వివరాలు (Entered)',
-        data=entered_csv_report,
-        file_name='Enrolled_Members_Report.csv',
-        mime='text/csv',
-        use_container_width=True,
-    )
-
-    # 2. Scheme-wise Done & Pending Reports
-    temp_df = export_df_base.copy()
-    temp_df['NUM_AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(0)
-
-    # PMJJBY Done
-    pmjjby_done_df = temp_df[
-        temp_df[col_pmjjby_sub].notna() | temp_df[col_pmjjby_bank].notna()
-    ]
-    pmjjby_done_csv = pmjjby_done_df.to_csv(index=False).encode('utf-8-sig')
-
-    # PMJJBY Pending (Age 18 to 50 & Not Done)
-    pmjjby_pending_df = temp_df[
-        (temp_df['NUM_AGE'] >= 18)
-        & (temp_df['NUM_AGE'] <= 50)
-        & (temp_df[col_pmjjby_sub].isna())
-        & (temp_df[col_pmjjby_bank].isna())
-    ]
-    pmjjby_pending_csv = pmjjby_pending_df.to_csv(index=False).encode('utf-8-sig')
-
-    # PMSBY Done
-    pmsby_done_df = temp_df[
-        temp_df[col_pmsby_sub].notna() | temp_df[col_pmsby_bank].notna()
-    ]
-    pmsby_done_csv = pmsby_done_df.to_csv(index=False).encode('utf-8-sig')
-
-    # PMSBY Pending (Age 18 to 70 & Not Done)
-    pmsby_pending_df = temp_df[
-        (temp_df['NUM_AGE'] >= 18)
-        & (temp_df['NUM_AGE'] <= 70)
-        & (temp_df[col_pmsby_sub].isna())
-        & (temp_df[col_pmsby_bank].isna())
-    ]
-    pmsby_pending_csv = pmsby_pending_df.to_csv(index=False).encode('utf-8-sig')
-
-    with st.sidebar.expander('🛡️ PMJJBY రిపోర్ట్‌లు'):
-        st.download_button(
-            label='✅ PMJJBY చేసినవి (Done)',
-            data=pmjjby_done_csv,
-            file_name='PMJJBY_Done_Report.csv',
-            mime='text/csv',
-            use_container_width=True,
-        )
-        st.download_button(
-            label='⏳ PMJJBY చేయవలసినవి (Pending)',
-            data=pmjjby_pending_csv,
-            file_name='PMJJBY_Pending_Report.csv',
-            mime='text/csv',
-            use_container_width=True,
-        )
-
-    with st.sidebar.expander('🚑 PMSBY రిపోర్ట్‌లు'):
-        st.download_button(
-            label='✅ PMSBY చేసినవి (Done)',
-            data=pmsby_done_csv,
-            file_name='PMSBY_Done_Report.csv',
-            mime='text/csv',
-            use_container_width=True,
-        )
-        st.download_button(
-            label='⏳ PMSBY చేయవలసినవి (Pending)',
-            data=pmsby_pending_csv,
-            file_name='PMSBY_Pending_Report.csv',
-            mime='text/csv',
-            use_container_width=True,
-        )
-
     st.sidebar.markdown('---')
 
     # Page Navigation Radio Options
@@ -306,6 +196,8 @@ if df is not None:
             '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)',
         ],
     )
+
+    st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Portal
     if app_mode == '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)':
@@ -344,8 +236,6 @@ if df is not None:
                     .tolist()
                 )
                 selected_shg = st.selectbox('3. SHG group ఎంచుకోండి:', filtered_shgs)
-
-        st.sidebar.markdown('---')
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
@@ -636,36 +526,56 @@ if df is not None:
                             '⚠️ దయచేసి వివరాలు నమోదు చేయడానికి ముందు "వయస్సును నిర్ధారించండి" బటన్ నొక్కండి.'
                         )
 
-    # PAGE 2: Mandal Wise Abstract Report
+    # PAGE 2: Mandal Wise Abstract Report (Scheme-Wise Filter Added)
     elif app_mode == '🏠 మండల్ వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal Wise Report)':
-        st.markdown(
-            '## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)'
-        )
+        st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)')
         st.write('---')
+
+        scheme_choice = st.radio(
+            'స్కీమ్‌ను ఎంచుకోండి (Select Scheme):',
+            ['అన్ని స్కీమ్‌లు (All)', '🛡️ PMJJBY', '🚑 PMSBY'],
+            horizontal=True,
+        )
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
             total_members = len(group)
-            pmjjby_sub = group[col_pmjjby_sub].notna().sum()
-            pmjjby_enr = group[col_pmjjby_bank].notna().sum()
-            pmsby_sub = group[col_pmsby_sub].notna().sum()
-            pmsby_enr = group[col_pmsby_bank].notna().sum()
-            total_enrolled = group[
-                group[col_pmjjby_sub].notna()
-                | group[col_pmjjby_bank].notna()
-                | group[col_pmsby_sub].notna()
-                | group[col_pmsby_bank].notna()
-            ].shape[0]
+            
+            # Eligible Counts based on Age limits
+            pmjjby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)].shape[0]
+            pmsby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)].shape[0]
 
-            mandal_summary.append({
-                'Mandal': m_name,
-                'Total Members': total_members,
-                'PMJJBY Submitted': pmjjby_sub,
-                'PMJJBY Enrolled': pmjjby_enr,
-                'PMSBY Submitted': pmsby_sub,
-                'PMSBY Enrolled': pmsby_enr,
-                'Total Total Updated': total_enrolled,
-            })
+            pmjjby_done = group[group['PMJJBY_STATUS'] == 'Done'].shape[0]
+            pmjjby_pending = pmjjby_eligible - pmjjby_done
+
+            pmsby_done = group[group['PMSBY_STATUS'] == 'Done'].shape[0]
+            pmsby_pending = pmsby_eligible - pmsby_done
+
+            if scheme_choice == '🛡️ PMJJBY':
+                mandal_summary.append({
+                    'Mandal': m_name,
+                    'Total Members': total_members,
+                    'PMJJBY Eligible (18-50)': pmjjby_eligible,
+                    'PMJJBY Done': pmjjby_done,
+                    'PMJJBY Pending': max(0, pmjjby_pending),
+                })
+            elif scheme_choice == '🚑 PMSBY':
+                mandal_summary.append({
+                    'Mandal': m_name,
+                    'Total Members': total_members,
+                    'PMSBY Eligible (18-70)': pmsby_eligible,
+                    'PMSBY Done': pmsby_done,
+                    'PMSBY Pending': max(0, pmsby_pending),
+                })
+            else:
+                mandal_summary.append({
+                    'Mandal': m_name,
+                    'Total Members': total_members,
+                    'PMJJBY Done': pmjjby_done,
+                    'PMJJBY Pending': max(0, pmjjby_pending),
+                    'PMSBY Done': pmsby_done,
+                    'PMSBY Pending': max(0, pmsby_pending),
+                })
 
         summary_df = pd.DataFrame(mandal_summary)
         st.dataframe(summary_df, use_container_width=True)
@@ -674,17 +584,24 @@ if df is not None:
         st.download_button(
             '📥 డౌన్‌లోడ్ మండల్ రిపోర్ట్ (CSV)',
             data=csv_data,
-            file_name='Mandal_Wise_Report.csv',
+            file_name=f'Mandal_Wise_{scheme_choice}_Report.csv',
             mime='text/csv',
         )
 
-    # PAGE 3: Mandal & VO Wise Report
+    # PAGE 3: Mandal & VO Wise Report (Scheme-Wise Filter Added)
     elif app_mode == '📊 VO వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal & VO Wise Report)':
         st.markdown('## 📊 VO వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (VO Wise Summary)')
         st.write('---')
 
         m_list = sorted(export_df_base['MANDAL'].dropna().unique().tolist())
         sel_m = st.selectbox('మండలం ఎంచుకోండి:', ['-- All Mandals --'] + m_list)
+
+        scheme_choice_vo = st.radio(
+            'స్కీమ్‌ను ఎంచుకోండి (Select Scheme):',
+            ['అన్ని స్కీమ్‌లు (All)', '🛡️ PMJJBY', '🚑 PMSBY'],
+            horizontal=True,
+            key='vo_scheme_choice',
+        )
 
         filtered_data = export_df_base.copy()
         if sel_m != '-- All Mandals --':
@@ -693,27 +610,44 @@ if df is not None:
         vo_summary = []
         for (m_name, v_name), group in filtered_data.groupby(['MANDAL', 'VO']):
             total_members = len(group)
-            pmjjby_sub = group[col_pmjjby_sub].notna().sum()
-            pmjjby_enr = group[col_pmjjby_bank].notna().sum()
-            pmsby_sub = group[col_pmsby_sub].notna().sum()
-            pmsby_enr = group[col_pmsby_bank].notna().sum()
-            total_updated = group[
-                group[col_pmjjby_sub].notna()
-                | group[col_pmjjby_bank].notna()
-                | group[col_pmsby_sub].notna()
-                | group[col_pmsby_bank].notna()
-            ].shape[0]
+            
+            pmjjby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)].shape[0]
+            pmsby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)].shape[0]
 
-            vo_summary.append({
-                'Mandal': m_name,
-                'VO Name': v_name,
-                'Total Members': total_members,
-                'PMJJBY Submitted': pmjjby_sub,
-                'PMJJBY Enrolled': pmjjby_enr,
-                'PMSBY Submitted': pmsby_sub,
-                'PMSBY Enrolled': pmsby_enr,
-                'Total Updated': total_updated,
-            })
+            pmjjby_done = group[group['PMJJBY_STATUS'] == 'Done'].shape[0]
+            pmjjby_pending = pmjjby_eligible - pmjjby_done
+
+            pmsby_done = group[group['PMSBY_STATUS'] == 'Done'].shape[0]
+            pmsby_pending = pmsby_eligible - pmsby_done
+
+            if scheme_choice_vo == '🛡️ PMJJBY':
+                vo_summary.append({
+                    'Mandal': m_name,
+                    'VO Name': v_name,
+                    'Total Members': total_members,
+                    'PMJJBY Eligible (18-50)': pmjjby_eligible,
+                    'PMJJBY Done': pmjjby_done,
+                    'PMJJBY Pending': max(0, pmjjby_pending),
+                })
+            elif scheme_choice_vo == '🚑 PMSBY':
+                vo_summary.append({
+                    'Mandal': m_name,
+                    'VO Name': v_name,
+                    'Total Members': total_members,
+                    'PMSBY Eligible (18-70)': pmsby_eligible,
+                    'PMSBY Done': pmsby_done,
+                    'PMSBY Pending': max(0, pmsby_pending),
+                })
+            else:
+                vo_summary.append({
+                    'Mandal': m_name,
+                    'VO Name': v_name,
+                    'Total Members': total_members,
+                    'PMJJBY Done': pmjjby_done,
+                    'PMJJBY Pending': max(0, pmjjby_pending),
+                    'PMSBY Done': pmsby_done,
+                    'PMSBY Pending': max(0, pmsby_pending),
+                })
 
         vo_summary_df = pd.DataFrame(vo_summary)
         st.dataframe(vo_summary_df, use_container_width=True)
@@ -722,15 +656,13 @@ if df is not None:
         st.download_button(
             '📥 డౌన్‌లోడ్ VO రిపోర్ట్ (CSV)',
             data=vo_csv,
-            file_name='VO_Wise_Report.csv',
+            file_name=f'VO_Wise_{scheme_choice_vo}_Report.csv',
             mime='text/csv',
         )
 
-    # PAGE 4: SHG & Member Level Detail
+    # PAGE 4: SHG & Member Level Detail (Scheme & Status Filter Added)
     elif app_mode == '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)':
-        st.markdown(
-            '## 👥 SHG & మెంబర్ స్థాయి వివరాలు (SHG / Member Level Detail)'
-        )
+        st.markdown('## 👥 SHG & మెంబర్ స్థాయి వివరాలు (SHG / Member Level Detail)')
         st.write('---')
 
         c1, c2, c3 = st.columns(3)
@@ -766,13 +698,52 @@ if df is not None:
         with c3:
             s_opt = st.selectbox('SHG Group:', shg_opts)
 
+        # Scheme & Status Filter
+        filter_col1, filter_col2 = st.columns(2)
+        with filter_col1:
+            scheme_filter = st.selectbox(
+                '🛡️ స్కీమ్ ఎంచుకోండి (Scheme Filter):',
+                ['All Schemes', 'PMJJBY Only', 'PMSBY Only'],
+            )
+        with filter_col2:
+            status_filter = st.selectbox(
+                '📌 స్టేటస్ ఎంచుకోండి (Status Filter):',
+                ['All Status', 'Done (పూర్తయినవి)', 'Pending (చేయవలసినవి)'],
+            )
+
         detail_df = export_df_base.copy()
+
         if m_opt != '-- All Mandals --':
             detail_df = detail_df[detail_df['MANDAL'] == m_opt]
         if v_opt != '-- All VOs --':
             detail_df = detail_df[detail_df['VO'] == v_opt]
         if s_opt != '-- All SHGs --':
             detail_df = detail_df[detail_df['SHG'] == s_opt]
+
+        # Apply Scheme & Status Filtering
+        if scheme_filter == 'PMJJBY Only':
+            detail_df = detail_df[(detail_df['NUM_AGE'] >= 18) & (detail_df['NUM_AGE'] <= 50)]
+            if status_filter == 'Done (పూర్తయినవి)':
+                detail_df = detail_df[detail_df['PMJJBY_STATUS'] == 'Done']
+            elif status_filter == 'Pending (చేయవలసినవి)':
+                detail_df = detail_df[detail_df['PMJJBY_STATUS'] == 'Pending']
+
+        elif scheme_filter == 'PMSBY Only':
+            detail_df = detail_df[(detail_df['NUM_AGE'] >= 18) & (detail_df['NUM_AGE'] <= 70)]
+            if status_filter == 'Done (పూర్తయినవి)':
+                detail_df = detail_df[detail_df['PMSBY_STATUS'] == 'Done']
+            elif status_filter == 'Pending (చేయవలసినవి)':
+                detail_df = detail_df[detail_df['PMSBY_STATUS'] == 'Pending']
+
+        else:  # All Schemes
+            if status_filter == 'Done (పూర్తయినవి)':
+                detail_df = detail_df[
+                    (detail_df['PMJJBY_STATUS'] == 'Done') | (detail_df['PMSBY_STATUS'] == 'Done')
+                ]
+            elif status_filter == 'Pending (చేయవలసినవి)':
+                detail_df = detail_df[
+                    (detail_df['PMJJBY_STATUS'] == 'Pending') & (detail_df['PMSBY_STATUS'] == 'Pending')
+                ]
 
         st.write(f'మొత్తం మెంబర్లు: **{len(detail_df)}**')
         st.dataframe(detail_df, use_container_width=True)
@@ -781,6 +752,6 @@ if df is not None:
         st.download_button(
             '📥 వివరాల డేటా డౌన్‌లోడ్ చేసుకోండి (CSV)',
             data=member_csv,
-            file_name='Member_Level_Detail_Report.csv',
+            file_name=f'Member_Detail_{scheme_filter}_{status_filter}.csv',
             mime='text/csv',
         )
