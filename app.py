@@ -447,7 +447,7 @@ if df is not None:
 
         # ఎర్రర్ రాకుండా నివారించడానికి export_df_base లేదా df లో నుండి డేటా ని క్లీన్ గా సిద్ధం చేయడం
         temp_df = export_df_base.copy()
-        
+
         # Age column ని సంఖ్యగా మార్చడం
         temp_df['NUM_AGE'] = pd.to_numeric(temp_df['AGE'], errors='coerce').fillna(35)
 
@@ -463,88 +463,66 @@ if df is not None:
             temp_df[col_pmjjby_sub].notna().astype(int)
         )
         temp_df['PMJJBY_Bank_Count'] = temp_df[col_pmjjby_bank].notna().astype(int)
-        temp_df['PMJJBY_Already_Count'] = 0
 
         temp_df['PMSBY_Submitted_Count'] = (
             temp_df[col_pmsby_sub].notna().astype(int)
         )
         temp_df['PMSBY_Bank_Count'] = temp_df[col_pmsby_bank].notna().astype(int)
-        temp_df['PMSBY_Already_Count'] = 0
 
-        all_mandals = sorted(temp_df['MANDAL'].dropna().unique())
-
-        # Groupby లాజిక్ క్లియర్ గా మార్చడం జరిగింది
+        # మండలాల వారీగా గ్రూప్ చేసి అగ్రికేషన్ చేయడం
         abstract_df = (
             temp_df.groupby('MANDAL')
             .agg(
-                PMJJBY_Eligible=('PMJJBY_Eligible', 'sum'),
-                PMJJBY_Already_Enrolled=('PMJJBY_Already_Count', 'sum'),
-                PMJJBY_Submitted_Bank=('PMJJBY_Submitted_Count', 'sum'),
-                PMJJBY_Bank_Enrolled=('PMJJBY_Bank_Count', 'sum'),
-                PMSBY_Eligible=('PMSBY_Eligible', 'sum'),
-                PMSBY_Already_Enrolled=('PMSBY_Already_Count', 'sum'),
-                PMSBY_Submitted_Bank=('PMSBY_Submitted_Count', 'sum'),
-                PMSBY_Bank_Enrolled=('PMSBY_Bank_Count', 'sum'),
+                Total_Members=('MEMBER ID', 'count'),
+                PMJJBY_Target=('PMJJBY_Eligible', 'sum'),
+                PMJJBY_Submitted=('PMJJBY_Submitted_Count', 'sum'),
+                PMJJBY_Enrolled=('PMJJBY_Bank_Count', 'sum'),
+                PMSBY_Target=('PMSBY_Eligible', 'sum'),
+                PMSBY_Submitted=('PMSBY_Submitted_Count', 'sum'),
+                PMSBY_Enrolled=('PMSBY_Bank_Count', 'sum')
             )
-            .reindex(all_mandals)
-            .fillna(0)
             .reset_index()
         )
 
-        abstract_df['PMJJBY_Balance'] = (
-            abstract_df['PMJJBY_Eligible']
-            - abstract_df['PMJJBY_Already_Enrolled']
-            - abstract_df['PMJJBY_Bank_Enrolled']
+        # PMJJBY & PMSBY బ్యాలెన్స్ వివరాలను లెక్కించడం
+        abstract_df['PMJJBY_Balance'] = abstract_df['PMJJBY_Target'] - (
+            abstract_df['PMJJBY_Submitted'] + abstract_df['PMJJBY_Enrolled']
         )
-        abstract_df['PMSBY_Balance'] = (
-            abstract_df['PMSBY_Eligible']
-            - abstract_df['PMSBY_Already_Enrolled']
-            - abstract_df['PMSBY_Bank_Enrolled']
+        abstract_df['PMSBY_Balance'] = abstract_df['PMSBY_Target'] - (
+            abstract_df['PMSBY_Submitted'] + abstract_df['PMSBY_Enrolled']
         )
 
-        tot_row = {
-            'MANDAL': 'GRAND TOTAL',
-            'PMJJBY_Eligible': abstract_df['PMJJBY_Eligible'].sum(),
-            'PMJJBY_Already_Enrolled': abstract_df['PMJJBY_Already_Enrolled'].sum(),
-            'PMJJBY_Submitted_Bank': abstract_df['PMJJBY_Submitted_Bank'].sum(),
-            'PMJJBY_Bank_Enrolled': abstract_df['PMJJBY_Bank_Enrolled'].sum(),
-            'PMJJBY_Balance': abstract_df['PMJJBY_Balance'].sum(),
-            'PMSBY_Eligible': abstract_df['PMSBY_Eligible'].sum(),
-            'PMSBY_Already_Enrolled': abstract_df['PMSBY_Already_Enrolled'].sum(),
-            'PMSBY_Submitted_Bank': abstract_df['PMSBY_Submitted_Bank'].sum(),
-            'PMSBY_Bank_Enrolled': abstract_df['PMSBY_Bank_Enrolled'].sum(),
-            'PMSBY_Balance': abstract_df['PMSBY_Balance'].sum(),
-        }
-
-        abstract_df.loc[len(abstract_df)] = tot_row
-        abstract_df.insert(0, 'S.NO', list(range(1, len(abstract_df))) + ['-'])
-
-        abstract_df.columns = [
-            'S.NO',
-            'MANDAL NAME',
-            'NO OF MEMBERS ELEGIBLE FOR PMJJBY(18-50)',
-            'Already Enrolled (PMJJBY)',
-            'Not Enrolled-అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసినవి - PMJJBY',
-            'బ్యాంకు వారు ఎన్‌రోల్ చేసినవి - PMJJBY',
-            'BALANCE (PMJJBY)',
-            'NO OF MEMBERS ELEGIBLE FOR PMSBY(18-70)',
-            'Already Enrolled (PMSBY)',
-            'Not Enrolled-అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసినవి - PMSBY',
-            'బ్యాంకు వారు ఎన్‌రోల్ చేసినవి - PMSBY',
-            'BALANCE (PMSBY)',
-        ]
-
-        st.subheader(
-            f'📋 Mandal-wise Abstract Summary with Grand Total (Total Mandals: {len(abstract_df)-1})'
+        # నిలువు వరుసల (Columns) పేర్లను సులభంగా అర్థమయ్యేలా మార్చడం
+        abstract_df = abstract_df.rename(
+            columns={
+                'MANDAL': 'మండలం',
+                'Total_Members': 'మొత్తం సభ్యులు',
+                'PMJJBY_Target': 'PMJJBY టార్గెట్',
+                'PMJJBY_Submitted': 'PMJJBY సబ్మిట్ చేసినవి',
+                'PMJJBY_Enrolled': 'PMJJBY ఎన్‌రోల్ అయినవి',
+                'PMJJBY_Balance': 'PMJJBY బ్యాలెన్స్',
+                'PMSBY_Target': 'PMSBY టార్గెట్',
+                'PMSBY_Submitted': 'PMSBY సబ్మిట్ చేసినవి',
+                'PMSBY_Enrolled': 'PMSBY ఎన్‌రోల్ అయినవి',
+                'PMSBY_Balance': 'PMSBY బ్యాలెన్స్',
+            }
         )
-        st.dataframe(abstract_df, use_container_width=True)
 
-        csv_data = abstract_df.to_csv(index=False).encode('utf-8-sig')
+        # గ్రాండ్ టోటల్ రో (Grand Total Row) లెక్కించి చివరన జత చేయడం
+        numeric_cols = abstract_df.columns.drop('మండలం')
+        total_row = abstract_df[numeric_cols].sum().to_dict()
+        total_row['మండలం'] = 'Grand Total'
+        
+        abstract_summary_df = pd.concat([abstract_df, pd.DataFrame([total_row])], ignore_index=True)
+
+        # Streamlit లో డేటా టేబుల్ ప్రదర్శించడం
+        st.dataframe(abstract_summary_df, use_container_width=True)
+
+        # అబ్‌స్ట్రాక్ట్ రిపోర్ట్ CSV ని డౌన్‌లోడ్ చేసుకునే సౌకర్యం
+        abstract_csv = abstract_summary_df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
-            label=(
-                '📥 అబ్‌స్ట్రాక్ట్ గ్రాండ్ టోటల్ రిపోర్ట్‌ని CSV రూపంలో డౌన్‌లోడ్ చేసుకోండి'
-            ),
-            data=csv_data,
-            file_name='District_Insurance_Abstract_With_Total.csv',
+            label='📥 అబ్‌స్ట్రాక్ట్ రిపోర్ట్ డౌన్‌లోడ్ చేసుకోండి (CSV)',
+            data=abstract_csv,
+            file_name='District_Insurance_Abstract_Report.csv',
             mime='text/csv',
         )
