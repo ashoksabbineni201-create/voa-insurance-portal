@@ -226,7 +226,7 @@ if df is not None:
     )
     st.sidebar.markdown('---')
 
-    # Updated Radio Options as requested
+    # Radio Options
     app_mode = st.sidebar.radio(
         'పేజీ ఎంచుకోండి:',
         [
@@ -284,8 +284,8 @@ if df is not None:
                 & (export_df_base['SHG'] == selected_shg)
             ]
 
-            # పాతది (ఎర్రర్ ఇస్తున్న కోడ్):
-            for idx, row in members_df.reset_index().iterrows():
+            # సవరించిన కోడ్ (drop=True చేర్చబడింది):
+            for idx, row in members_df.reset_index(drop=True).iterrows():
                 m_name = str(row.get('MEMBER NAME', 'Unknown'))
                 m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
 
