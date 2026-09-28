@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - యాప్ మొత్తం ఆకర్షణీయమైన రంగులు మరియు స్టైల్స్ కోసం
+# Custom CSS - App styling
 st.markdown("""
     <style>
     /* 1. Main Background & Font Enhancement */
@@ -49,7 +49,6 @@ st.markdown("""
     }
 
     /* 5. Custom Button Styles */
-    /* Confirm Age Button (Blue / Gradient) */
     div[data-testid="stButton"] > button[kind="primary"] {
         background: linear-gradient(90deg, #1E88E5 0%, #1565C0 100%) !important;
         color: white !important;
@@ -66,7 +65,6 @@ st.markdown("""
         box-shadow: 0 4px 10px rgba(13, 71, 161, 0.4) !important;
     }
 
-    /* Save All Button (Green / Gradient) */
     div[data-testid="stButton"] > button[kind="secondary"] {
         background: linear-gradient(90deg, #2E7D32 0%, #1B5E20 100%) !important;
         color: white !important;
@@ -90,7 +88,6 @@ st.markdown("""
         border-right: 1px solid #e0e0e0;
     }
 
-    /* Section Sub-headings */
     .section-title-pmjjby {
         color: #1565C0;
         border-bottom: 2px solid #1565C0;
@@ -132,15 +129,13 @@ df = load_data()
 
 if df is not None:
     col_pmjjby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
-        ' Bank) - PMJJBY'
+        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY'
     )
     col_pmjjby_bank = (
         'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
     )
     col_pmsby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at'
-        ' Bank) - PMSBY'
+        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
     )
     col_pmsby_bank = (
         'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
@@ -158,10 +153,7 @@ if df is not None:
     if 'saved_entries_dict' not in st.session_state:
         st.session_state.saved_entries_dict = {}
 
-    st.sidebar.header('📁 నావిగేషన్')
-    st.sidebar.markdown('---')
-    st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
-
+    # Update Data with Session Saved Entries
     export_df_base = df.copy()
     if len(st.session_state.saved_entries_dict) > 0:
         for m_id, saved_row in st.session_state.saved_entries_dict.items():
@@ -174,6 +166,10 @@ if df is not None:
                         export_df_base[k] = None
                     export_df_base[k] = export_df_base[k].astype(object)
                     export_df_base.loc[idx_match, k] = str(v) if v is not None else None
+
+    st.sidebar.header('📁 నావిగేషన్')
+    st.sidebar.markdown('---')
+    st.sidebar.markdown('### 📥 రిపోర్ట్ డౌన్‌లోడ్')
 
     report_df = export_df_base[
         export_df_base[col_pmjjby_sub].notna()
@@ -230,19 +226,25 @@ if df is not None:
     )
     st.sidebar.markdown('---')
 
+    # Updated Radio Options as requested
     app_mode = st.sidebar.radio(
         'పేజీ ఎంచుకోండి:',
-        ['🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)', '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్'],
+        [
+            '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)',
+            '🏠 మండల్ వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal Wise Report)',
+            '📊 VO వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal & VO Wise Report)',
+            '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)',
+        ],
     )
 
+    # PAGE 1: Enrollment Portal
     if app_mode == '🏠 ఎన్‌రోల్మెంట్ డాష్‌బోర్డ్ (Portal)':
-        # Header Box with Gradient Background
         st.markdown(
             '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
         )
 
-        mandals = ['-- ఎంచుకోండి --'] + sorted(df['MANDAL'].dropna().unique().tolist())
+        mandals = ['-- ఎంచుకోండి --'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
         selected_mandal = st.selectbox('1. మండలం ఎంచుకోండి (Select Mandal):', mandals)
 
         selected_vo = None
@@ -250,13 +252,13 @@ if df is not None:
 
         if selected_mandal and selected_mandal != '-- ఎంచుకోండి --':
             filtered_vos = ['-- ఎంచుకోండి --'] + sorted(
-                df[df['MANDAL'] == selected_mandal]['VO'].dropna().unique().tolist()
+                export_df_base[export_df_base['MANDAL'] == selected_mandal]['VO'].dropna().unique().tolist()
             )
             selected_vo = st.selectbox('2. VO (Village Organization) పేరు ఎంచుకోండి:', filtered_vos)
 
             if selected_vo and selected_vo != '-- ఎంచుకోండి --':
                 filtered_shgs = ['-- ఎంచుకోండి --'] + sorted(
-                    df[(df['MANDAL'] == selected_mandal) & (df['VO'] == selected_vo)]['SHG']
+                    export_df_base[(export_df_base['MANDAL'] == selected_mandal) & (export_df_base['VO'] == selected_vo)]['SHG']
                     .dropna()
                     .unique()
                     .tolist()
@@ -265,12 +267,9 @@ if df is not None:
 
         st.sidebar.markdown('---')
 
-        # PAGE 1: ఎంపికలు పూర్తవ్వనప్పుడు
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info('👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.')
             st.warning('⚠️ SHG గ్రూప్‌ను ఎంచుకున్న తర్వాత 2వ పేజీలో SHG సభ్యుల పేర్లు మరియు వివరాలు కనిపించును.')
-
-        # PAGE 2: సభ్యుల వివరాల ఎంట్రీ
         else:
             st.sidebar.success(
                 f'📍 **ఎంచుకున్న వివరాలు:**\n\n- **మండలం:** {selected_mandal}\n- **VO:** {selected_vo}\n- **SHG:** {selected_shg}'
@@ -279,10 +278,10 @@ if df is not None:
             st.markdown(f'### 📄 పేజీ 2: SHG సభ్యుల జాబితా ({selected_shg})')
             st.success('నమోదు ప్రారంభించడానికి క్రింది సభ్యుల వివరాలను పూరించండి.')
 
-            members_df = df[
-                (df['MANDAL'] == selected_mandal)
-                & (df['VO'] == selected_vo)
-                & (df['SHG'] == selected_shg)
+            members_df = export_df_base[
+                (export_df_base['MANDAL'] == selected_mandal)
+                & (export_df_base['VO'] == selected_vo)
+                & (export_df_base['SHG'] == selected_shg)
             ]
 
             for idx, row in members_df.reset_index().iterrows():
@@ -358,7 +357,7 @@ if df is not None:
                             pmsby_b_date_pmsby = None
                             pmsby_enrolled = 'Not Enrolled'
 
-                            # ================= 1. PMJJBY SECTION (18-50) =================
+                            # 1. PMJJBY SECTION (18-50)
                             if 18 <= active_age <= 50:
                                 st.markdown('<h4 class="section-title-pmjjby">🛡️ 1. PMJJBY స్కీమ్ వివరాలు (18 నుండి 50 లోపు)</h4>', unsafe_allow_html=True)
                                 bc1, bc2, bc3 = st.columns(3)
@@ -412,7 +411,7 @@ if df is not None:
                                 st.warning('ℹ️ మెంబర్ వయస్సు 50 సంవత్సరాలు దాటడం వలన PMJJBY వర్తించదు.')
                                 st.markdown('---')
 
-                            # ================= 2. PMSBY SECTION (18-70) =================
+                            # 2. PMSBY SECTION (18-70)
                             if 18 <= active_age <= 70:
                                 st.markdown('<h4 class="section-title-pmsby">🚑 2. PMSBY స్కీమ్ వివరాలు (18 నుండి 70 లోపు)</h4>', unsafe_allow_html=True)
                                 pc1, pc2, pc3 = st.columns(3)
@@ -463,7 +462,7 @@ if df is not None:
                                         )
                                 st.markdown('---')
 
-                            # ================= SAVE BUTTON =================
+                            # SAVE BUTTON
                             save_btn = st.button(
                                 f'💾 {m_name} - అన్ని వివరాలు సేవ్ చేయండి (Save All)',
                                 key=f'save_all_{idx}',
@@ -517,6 +516,112 @@ if df is not None:
                     else:
                         st.warning('⚠️ దయచేసి వివరాలు నమోదు చేయడానికి ముందు "వయస్సును నిర్ధారించండి" బటన్ నొక్కండి.')
 
-    elif app_mode == '📊 జిల్లా అబ్‌స్ట్రాక్ట్ & రిపోర్ట్':
-        st.markdown('## 📊 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Abstract Summary)')
+    # PAGE 2: Mandal Wise Abstract Report
+    elif app_mode == '🏠 మండల్ వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal Wise Report)':
+        st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)')
         st.write('---')
+
+        # Mandal Level Aggregation
+        mandal_summary = []
+        for m_name, group in export_df_base.groupby('MANDAL'):
+            total_members = len(group)
+            pmjjby_sub = group[col_pmjjby_sub].notna().sum()
+            pmjjby_enr = group[col_pmjjby_bank].notna().sum()
+            pmsby_sub = group[col_pmsby_sub].notna().sum()
+            pmsby_enr = group[col_pmsby_bank].notna().sum()
+            total_enrolled = group[
+                group[col_pmjjby_sub].notna() | group[col_pmjjby_bank].notna() | 
+                group[col_pmsby_sub].notna() | group[col_pmsby_bank].notna()
+            ].shape[0]
+
+            mandal_summary.append({
+                'Mandal': m_name,
+                'Total Members': total_members,
+                'PMJJBY Submitted': pmjjby_sub,
+                'PMJJBY Enrolled': pmjjby_enr,
+                'PMSBY Submitted': pmsby_sub,
+                'PMSBY Enrolled': pmsby_enr,
+                'Total Total Updated': total_enrolled
+            })
+
+        summary_df = pd.DataFrame(mandal_summary)
+        st.dataframe(summary_df, use_container_width=True)
+
+        csv_data = summary_df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button('📥 డౌన్‌లోడ్ మండల్ రిపోర్ట్ (CSV)', data=csv_data, file_name='Mandal_Wise_Report.csv', mime='text/csv')
+
+    # PAGE 3: Mandal & VO Wise Report
+    elif app_mode == '📊 VO వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal & VO Wise Report)':
+        st.markdown('## 📊 VO వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (VO Wise Summary)')
+        st.write('---')
+
+        m_list = sorted(export_df_base['MANDAL'].dropna().unique().tolist())
+        sel_m = st.selectbox('మండలం ఎంచుకోండి:', ['-- All Mandals --'] + m_list)
+
+        filtered_data = export_df_base.copy()
+        if sel_m != '-- All Mandals --':
+            filtered_data = filtered_data[filtered_data['MANDAL'] == sel_m]
+
+        vo_summary = []
+        for (m_name, v_name), group in filtered_data.groupby(['MANDAL', 'VO']):
+            total_members = len(group)
+            pmjjby_sub = group[col_pmjjby_sub].notna().sum()
+            pmjjby_enr = group[col_pmjjby_bank].notna().sum()
+            pmsby_sub = group[col_pmsby_sub].notna().sum()
+            pmsby_enr = group[col_pmsby_bank].notna().sum()
+            total_updated = group[
+                group[col_pmjjby_sub].notna() | group[col_pmjjby_bank].notna() | 
+                group[col_pmsby_sub].notna() | group[col_pmsby_bank].notna()
+            ].shape[0]
+
+            vo_summary.append({
+                'Mandal': m_name,
+                'VO Name': v_name,
+                'Total Members': total_members,
+                'PMJJBY Submitted': pmjjby_sub,
+                'PMJJBY Enrolled': pmjjby_enr,
+                'PMSBY Submitted': pmsby_sub,
+                'PMSBY Enrolled': pmsby_enr,
+                'Total Updated': total_updated
+            })
+
+        vo_summary_df = pd.DataFrame(vo_summary)
+        st.dataframe(vo_summary_df, use_container_width=True)
+
+        vo_csv = vo_summary_df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button('📥 డౌన్‌లోడ్ VO రిపోర్ట్ (CSV)', data=vo_csv, file_name='VO_Wise_Report.csv', mime='text/csv')
+
+    # PAGE 4: SHG & Member Level Detail
+    elif app_mode == '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)':
+        st.markdown('## 👥 SHG & మెంబర్ స్థాయి వివరాలు (SHG / Member Level Detail)')
+        st.write('---')
+
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            m_opt = st.selectbox('మండలం:', ['-- All Mandals --'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
+        
+        vo_opts = ['-- All VOs --']
+        if m_opt != '-- All Mandals --':
+            vo_opts += sorted(export_df_base[export_df_base['MANDAL'] == m_opt]['VO'].dropna().unique().tolist())
+        with c2:
+            v_opt = st.selectbox('VO:', vo_opts)
+
+        shg_opts = ['-- All SHGs --']
+        if v_opt != '-- All VOs --':
+            shg_opts += sorted(export_df_base[(export_df_base['MANDAL'] == m_opt) & (export_df_base['VO'] == v_opt)]['SHG'].dropna().unique().tolist())
+        with c3:
+            s_opt = st.selectbox('SHG Group:', shg_opts)
+
+        detail_df = export_df_base.copy()
+        if m_opt != '-- All Mandals --':
+            detail_df = detail_df[detail_df['MANDAL'] == m_opt]
+        if v_opt != '-- All VOs --':
+            detail_df = detail_df[detail_df['VO'] == v_opt]
+        if s_opt != '-- All SHGs --':
+            detail_df = detail_df[detail_df['SHG'] == s_opt]
+
+        st.write(f"మొత్తం మెంబర్లు: **{len(detail_df)}**")
+        st.dataframe(detail_df, use_container_width=True)
+
+        member_csv = detail_df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button('📥 వివరాల డేటా డౌన్‌లోడ్ చేసుకోండి (CSV)', data=member_csv, file_name='Member_Level_Detail_Report.csv', mime='text/csv')
