@@ -15,37 +15,24 @@ st.markdown("""
     }
     .portal-header {
         background: linear-gradient(135deg, #fff176 0%, #ffee58 100%);
-        padding: 30px;
+        padding: 25px;
         border-radius: 20px;
         color: #d32f2f !important;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         border: 2px solid #fbc02d;
     }
     .portal-header h1 { 
         color: #c62828 !important; 
-        font-size: 28px !important; 
+        font-size: 26px !important; 
         font-weight: 800; 
     }
     .portal-header p { 
         color: #b71c1c !important; 
-        font-size: 16px !important; 
+        font-size: 15px !important; 
         margin-top: 5px;
         font-weight: 600;
-    }
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
-        border-right: 2px solid #bbf7d0;
-        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-    }
-    section[data-testid="stSidebar"] .stRadio label p {
-        font-size: 15.5px !important;
-        font-weight: 700 !important;
-        color: #14532d;
-    }
-    .stDataFrame div {
-        font-size: 14.5px !important;
     }
     .section-title-pmjjby {
         color: #15803d;
@@ -140,38 +127,34 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation
-    st.sidebar.markdown("<h2 style='color: #14532d; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
-    st.sidebar.markdown('---')
-    st.sidebar.markdown("<h3 style='color: #b45309; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
+    # Header Title
+    st.markdown(
+        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
+        unsafe_allow_html=True,
+    )
 
+    # Top Mobile-Friendly Navigation Selector
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌‌బోర్డ్': 'Dashboard',
-        '2️⃣ 📍 మండలం వారీగా': 'Mandal Wise',
-        '3️⃣ 📊 వి.ఓ (VO) వారీగా': 'VO Wise',
-        '4️⃣ 🏛️ బ్యాంక్ వారీగా': 'Bank Wise',
-        '5️⃣ 📈 బ్రాంచ్ వారీగా': 'Branch Wise',
-        '6️⃣ 📥 పెండింగ్ జాబితా': 'Pending Reports',
-        '7️⃣ 👥 సభ్యుల జాబితా': 'Member Level'
+        '1️⃣ 🏠 డాష్‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
+        '2️⃣ 📍 మండలం వారీగా రిపోర్ట్ (Mandal Wise)': 'Mandal Wise',
+        '3️⃣ 📊 వి.ఓ (VO) వారీగా రిపోర్ట్ (VO Wise)': 'VO Wise',
+        '4️⃣ 🏛️ బ్యాంక్ వారీగా రిపోర్ట్ (Bank Wise)': 'Bank Wise',
+        '5️⃣ 📈 బ్రాంచ్ వారీగా రిపోర్ట్ (Branch Wise)': 'Branch Wise',
+        '6️⃣ 📥 పెండింగ్ జాబితా (Pending Reports)': 'Pending Reports',
+        '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level'
     }
 
-    selected_display_opt = st.sidebar.radio(
-        'Select Report Option',
+    selected_display_opt = st.selectbox(
+        '📌 దయచేసి క్రింది మెను నుండి కావలసిన సెక్షన్ లేదా రిపోర్ట్ ఎంచుకోండి:',
         list(nav_options_mapping.keys()),
-        key='exact_ordered_sidebar_nav',
-        label_visibility='collapsed'
+        key='mobile_friendly_main_nav'
     )
     
     app_mode = nav_options_mapping[selected_display_opt]
-    st.sidebar.markdown('---')
+    st.markdown('---')
 
     # PAGE 1: DASHBOARD
     if app_mode == 'Dashboard':
-        st.markdown(
-            '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
-            unsafe_allow_html=True,
-        )
-
         mandals = ['-- ఎంచుకోండి --'] + sorted(
             export_df_base['MANDAL'].dropna().unique().tolist()
         )
@@ -226,7 +209,7 @@ if df is not None:
                 except Exception:
                     raw_age = 35
 
-                # Determine Status for Header Label
+                # Determine Status for Header Label (Without ID)
                 p_sub = current_row.get(col_pmjjby_sub)
                 p_bank = current_row.get(col_pmjjby_bank)
                 s_sub = current_row.get(col_pmsby_sub)
@@ -251,7 +234,7 @@ if df is not None:
 
                 status_str = " | ".join(status_tags)
 
-                with st.expander(f'👤 {m_name} (ID: {m_id}) | వయస్సు: {raw_age} -- [{status_str}]'):
+                with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
                     entered_age = st.number_input(
                         'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
                         min_value=1,
@@ -310,7 +293,7 @@ if df is not None:
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
-                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
+                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY (అప్లికేషన్ తేదీ ఇవ్వాలి)', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
                                 with col_d2:
                                     pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=existing_pm_bank, key=f'pmjjby_b_opt_{idx}')
 
@@ -329,19 +312,28 @@ if df is not None:
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
-                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
+                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY (అప్లికేషన్ తేదీ ఇవ్వాలి)', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
                                 with col_d4:
                                     pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
 
                             if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
                                 date_error = False
                                 
-                                if pmjjby_sub_date and pmjjby_b_date:
+                                # Validation: Direct Bank Enrolled check without application submission date
+                                if pmjjby_b_date and not pmjjby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMJJBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                
+                                if pmsby_b_date_pmsby and not pmsby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+
+                                if not date_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
                                         date_error = True
                                         st.error("❌ PMJJBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
 
-                                if pmsby_sub_date and pmsby_b_date_pmsby:
+                                if not date_error and pmsby_sub_date and pmsby_b_date_pmsby:
                                     if pmsby_b_date_pmsby < pmsby_sub_date:
                                         date_error = True
                                         st.error("❌ PMSBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
@@ -360,7 +352,6 @@ if df is not None:
                                         updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
-                                    # Reset confirmation state to auto-close/collapse the expander view
                                     st.session_state[is_confirmed_key] = False
                                     st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
                                     st.rerun()
@@ -369,7 +360,7 @@ if df is not None:
     elif app_mode == 'Mandal Wise':
         st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -543,7 +534,7 @@ if df is not None:
                 label='📥 ఈ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
                 data=csv_data,
                 file_name=f'Insurance_Report_{report_type[:3]}_{scheme_filter[2:]}.csv',
-                mime='text/csv',
+                mime='text/css',
                 type='primary'
             )
         else:
