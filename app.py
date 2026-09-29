@@ -6,16 +6,13 @@ st.set_page_config(
     page_title='Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS: Removed all Blue tones, using Green & Amber theme, Yellow header with Red text
+# Custom CSS: Green & Amber Theme, No Blue tones, Custom styled Save buttons
 st.markdown("""
     <style>
-    /* Main App Background & Font (Neutral/Soft Gray-Green tint, NO BLUE) */
     .stApp { 
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
-    /* Portal Header Styling: Yellow Backdrop with Red Letters */
     .portal-header {
         background: linear-gradient(135deg, #fff176 0%, #ffee58 100%);
         padding: 30px;
@@ -37,8 +34,6 @@ st.markdown("""
         margin-top: 5px;
         font-weight: 600;
     }
-
-    /* Sidebar Styling & Increased Telugu Text Font Size (Green Theme) */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
         border-right: 2px solid #bbf7d0;
@@ -49,13 +44,9 @@ st.markdown("""
         font-weight: 700 !important;
         color: #14532d;
     }
-
-    /* Increase Font Size inside Dataframes / Tables & Reports */
     .stDataFrame div {
         font-size: 14.5px !important;
     }
-    
-    /* Section Titles (Green & Amber tones instead of Blue) */
     .section-title-pmjjby {
         color: #15803d;
         background: #f0fdf4;
@@ -78,24 +69,17 @@ st.markdown("""
         font-weight: 700;
         font-size: 18px;
     }
-
-    /* Info Box Styling Overrides (Avoiding Blue, using Amber/Green tint) */
     div.stAlert {
         background-color: #fefce8 !important;
         color: #854d0e !important;
         border: 1px solid #fef08a !important;
     }
-
-    /* Buttons Styling */
+    /* Custom styling for Save Button */
     div.stButton > button {
         border-radius: 10px;
         font-weight: 600;
         transition: all 0.3s ease;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    div.stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -163,7 +147,7 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation - Pure Telugu Menu Names
+    # Sidebar Navigation
     st.sidebar.markdown("<h2 style='color: #14532d; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
     st.sidebar.markdown("<h3 style='color: #b45309; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
@@ -277,6 +261,20 @@ if df is not None:
                         pmjjby_sub_date, pmjjby_b_date = None, None
                         pmsby_sub_date, pmsby_b_date_pmsby = None, None
 
+                        # Parsing existing saved dates if available to preset in date inputs
+                        def safe_parse_date(val):
+                            if pd.isna(val) or not val or str(val).lower() == 'nan':
+                                return None
+                            try:
+                                return pd.to_datetime(val).date()
+                            except:
+                                return None
+
+                        existing_pm_sub = safe_parse_date(current_row.get(col_pmjjby_sub))
+                        existing_pm_bank = safe_parse_date(current_row.get(col_pmjjby_bank))
+                        existing_ps_sub = safe_parse_date(current_row.get(col_pmsby_sub))
+                        existing_ps_bank = safe_parse_date(current_row.get(col_pmsby_bank))
+
                         if 18 <= active_age <= 50:
                             st.markdown(
                                 '<div class="section-title-pmjjby">🛡 1. PMJJBY స్కీమ్ వివరాలు (18-50 సంవత్సరాలు)</div>',
@@ -292,9 +290,9 @@ if df is not None:
 
                             col_d1, col_d2 = st.columns(2)
                             with col_d1:
-                                pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=None, key=f'pmjjby_sub_{idx}')
+                                pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
                             with col_d2:
-                                pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=None, key=f'pmjjby_b_opt_{idx}')
+                                pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=existing_pm_bank, key=f'pmjjby_b_opt_{idx}')
 
                         if 18 <= active_age <= 70:
                             st.markdown(
@@ -311,21 +309,41 @@ if df is not None:
 
                             col_d3, col_d4 = st.columns(2)
                             with col_d3:
-                                pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=None, key=f'pmsby_sub_{idx}')
+                                pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
                             with col_d4:
-                                pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=None, key=f'pmsby_b_opt_{idx}')
+                                pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
 
-                        if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='secondary'):
-                            updated_row = row.to_dict()
-                            updated_row['AGE'] = str(active_age)
-                            if pmjjby_sub_date: updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
-                            if pmjjby_b_date: updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
-                            if pmsby_sub_date: updated_row[col_pmsby_sub] = str(pmsby_sub_date)
-                            if pmsby_b_date_pmsby: updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+                        # Save button with custom primary look
+                        if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
+                            # Date Validation logic: Bank Enrolled Date cannot be before Application Submitted Date
+                            date_error = False
+                            
+                            if pmjjby_sub_date and pmjjby_b_date:
+                                if pmjjby_b_date < pmjjby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMJJBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
 
-                            st.session_state.saved_entries_dict[m_id] = updated_row
-                            st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
-                            st.rerun()
+                            if pmsby_sub_date and pmsby_b_date_pmsby:
+                                if pmsby_b_date_pmsby < pmsby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMSBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
+
+                            if not date_error:
+                                updated_row = row.to_dict()
+                                updated_row['AGE'] = str(active_age)
+                                
+                                if pmjjby_sub_date: 
+                                    updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
+                                if pmjjby_b_date: 
+                                    updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                                if pmsby_sub_date: 
+                                    updated_row[col_pmsby_sub] = str(pmsby_sub_date)
+                                if pmsby_b_date_pmsby: 
+                                    updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+
+                                st.session_state.saved_entries_dict[m_id] = updated_row
+                                st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
+                                st.rerun()
 
     # 2. MANDAL WISE
     elif app_mode == 'Mandal Wise':
@@ -363,7 +381,7 @@ if df is not None:
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
         selected_mandal_filter = st.selectbox('మండలం ఎంచుకోండి (Select Mandal):', mandals_list)
         
-        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
         
         filtered_df = export_df_base.copy()
         if selected_mandal_filter != 'అన్నీ (All Mandals)':
