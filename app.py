@@ -3,15 +3,15 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
+    page_title='Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for Modern UI, Yellow Background with Red Letters for Portal Header
+# Custom CSS: Removed all Blue tones, using Green & Amber theme, Yellow header with Red text
 st.markdown("""
     <style>
-    /* Main App Background & Font */
+    /* Main App Background & Font (Neutral/Soft Gray-Green tint, NO BLUE) */
     .stApp { 
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
@@ -28,7 +28,7 @@ st.markdown("""
     }
     .portal-header h1 { 
         color: #c62828 !important; 
-        font-size: 32px !important; 
+        font-size: 28px !important; 
         font-weight: 800; 
     }
     .portal-header p { 
@@ -38,16 +38,16 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Sidebar Styling & Increased Telugu Text Font Size */
+    /* Sidebar Styling & Increased Telugu Text Font Size (Green Theme) */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-        border-right: 2px solid #e2e8f0;
+        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+        border-right: 2px solid #bbf7d0;
         box-shadow: 4px 0 15px rgba(0,0,0,0.05);
     }
     section[data-testid="stSidebar"] .stRadio label p {
         font-size: 15.5px !important;
         font-weight: 700 !important;
-        color: #1f2937;
+        color: #14532d;
     }
 
     /* Increase Font Size inside Dataframes / Tables & Reports */
@@ -55,11 +55,11 @@ st.markdown("""
         font-size: 14.5px !important;
     }
     
-    /* Section Titles */
+    /* Section Titles (Green & Amber tones instead of Blue) */
     .section-title-pmjjby {
-        color: #1d4ed8;
-        background: #eff6ff;
-        border-left: 5px solid #1d4ed8;
+        color: #15803d;
+        background: #f0fdf4;
+        border-left: 5px solid #15803d;
         padding: 10px 15px;
         border-radius: 0 8px 8px 0;
         margin-top: 20px;
@@ -68,15 +68,22 @@ st.markdown("""
         font-size: 18px;
     }
     .section-title-pmsby {
-        color: #047857;
-        background: #ecfdf5;
-        border-left: 5px solid #047857;
+        color: #b45309;
+        background: #fef3c7;
+        border-left: 5px solid #b45309;
         padding: 10px 15px;
         border-radius: 0 8px 8px 0;
         margin-top: 20px;
         margin-bottom: 15px;
         font-weight: 700;
         font-size: 18px;
+    }
+
+    /* Info Box Styling Overrides (Avoiding Blue, using Amber/Green tint) */
+    div.stAlert {
+        background-color: #fefce8 !important;
+        color: #854d0e !important;
+        border: 1px solid #fef08a !important;
     }
 
     /* Buttons Styling */
@@ -157,9 +164,9 @@ if df is not None:
     ).fillna(0)
 
     # Sidebar Navigation - Pure Telugu Menu Names
-    st.sidebar.markdown("<h2 style='color: #1e3c72; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h2 style='color: #14532d; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
-    st.sidebar.markdown("<h3 style='color: #d97706; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h3 style='color: #b45309; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
         '1️⃣ 🏠 డాష్‌‌బోర్డ్': 'Dashboard',
@@ -184,7 +191,7 @@ if df is not None:
     # PAGE 1: DASHBOARD
     if app_mode == 'Dashboard':
         st.markdown(
-            '<div class="portal-header"><h1>🔑 VOA & SHG ఇన్సూరెన్స్ ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>మీ బీమా స్థితిని సులభంగా నిర్వహించండి మరియు ట్రాక్ చేయండి</p></div>',
+            '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
             unsafe_allow_html=True,
         )
 
@@ -224,7 +231,7 @@ if df is not None:
                 '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్ను** వరుసగా ఎంచుకోండి.'
             )
         else:
-            st.markdown(f'### 📄 SHG సభ్యుల జాబితా: <span style="color: #2563eb;">{selected_shg}</span>', unsafe_allow_html=True)
+            st.markdown(f'### 📄 SHG సభ్యుల జాబితా: <span style="color: #15803d;">{selected_shg}</span>', unsafe_allow_html=True)
             members_df = export_df_base[
                 (export_df_base['MANDAL'] == selected_mandal)
                 & (export_df_base['VO'] == selected_vo)
@@ -356,7 +363,7 @@ if df is not None:
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
         selected_mandal_filter = st.selectbox('మండలం ఎంచుకోండి (Select Mandal):', mandals_list)
         
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
         
         filtered_df = export_df_base.copy()
         if selected_mandal_filter != 'అన్నీ (All Mandals)':
