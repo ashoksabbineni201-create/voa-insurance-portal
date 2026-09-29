@@ -122,10 +122,10 @@ if df is not None:
 
     # Track corrections for reports
     if 'name_corrections_log' not in st.session_state:
-        st.session_state.name_corrections_log = {} # {m_id: {'mandal': ..., 'vo': ..., 'shg': ..., 'member': ..., 'old_name': ..., 'new_name': ...}}
+        st.session_state.name_corrections_log = {}
 
     if 'age_corrections_log' not in st.session_state:
-        st.session_state.age_corrections_log = {} # {m_id: {'mandal': ..., 'vo': ..., 'shg': ..., 'member': ..., 'old_age': ..., 'new_age': ...}}
+        st.session_state.age_corrections_log = {}
 
     export_df_base = df.copy()
     if len(st.session_state.saved_entries_dict) > 0:
@@ -146,7 +146,7 @@ if df is not None:
 
     # Header Title
     st.markdown(
-        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌‌‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
+        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
         unsafe_allow_html=True,
     )
 
@@ -375,26 +375,26 @@ if df is not None:
                                     updated_row['MEMBER NAME'] = cleaned_new_name
                                     updated_row['AGE'] = str(active_age)
                                     
-                                    # Log Name Correction if changed
+                                    # Log Name Correction if changed (Using Member ID instead of Member Name)
                                     if cleaned_new_name != orig_name:
                                         st.session_state.name_corrections_log[m_id] = {
                                             'మండలము': str(row.get('MANDAL', '')),
                                             'వి.ఓ (VO)': str(row.get('VO', '')),
                                             'ఎస్‌.హెచ్.జి పేరు (SHG Name)': str(row.get('SHG', '')),
-                                            'సభ్యురాలి పేరు': cleaned_new_name,
+                                            'సభ్యురాలు ఐడి (Member ID)': str(m_id),
                                             'పాత పేరు': orig_name,
                                             'కొత్త పేరు': cleaned_new_name
                                         }
                                     elif m_id in st.session_state.name_corrections_log:
                                         del st.session_state.name_corrections_log[m_id]
 
-                                    # Log Age Correction if changed
+                                    # Log Age Correction if changed (Using Member ID instead of Member Name)
                                     if str(active_age) != str(orig_age):
                                         st.session_state.age_corrections_log[m_id] = {
                                             'మండలము': str(row.get('MANDAL', '')),
                                             'వి.ఓ (VO)': str(row.get('VO', '')),
                                             'ఎస్‌.హెచ్.జి పేరు (SHG Name)': str(row.get('SHG', '')),
-                                            'సభ్యురాలి పేరు': cleaned_new_name,
+                                            'సభ్యురాలు ఐడి (Member ID)': str(m_id),
                                             'పాత ఏజ్': orig_age,
                                             'కొత్త ఏజ్': str(active_age)
                                         }
@@ -618,7 +618,6 @@ if df is not None:
         if len(st.session_state.name_corrections_log) > 0:
             name_corr_df = pd.DataFrame(list(st.session_state.name_corrections_log.values()))
             
-            # Mandal Filter for Name Corrections
             mandal_list_nc = ['అన్నీ (All)'] + sorted(name_corr_df['మండలము'].dropna().unique().tolist())
             chosen_m_nc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_nc, key='nc_mandal_filter')
             
@@ -626,7 +625,7 @@ if df is not None:
                 name_corr_df = name_corr_df[name_corr_df['మండలము'] == chosen_m_nc]
             
             st.markdown(f'### 📋 మొత్తం సవరించిన పేర్లు: {len(name_corr_df)}')
-            st.dataframe(name_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలి పేరు', 'పాత పేరు', 'కొత్త పేరు']], use_container_width=True)
+            st.dataframe(name_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలు ఐడి (Member ID)', 'పాత పేరు', 'కొత్త పేరు']], use_container_width=True)
             
             csv_nc = name_corr_df.to_csv(index=False).encode('utf-8')
             st.download_button(
@@ -647,7 +646,6 @@ if df is not None:
         if len(st.session_state.age_corrections_log) > 0:
             age_corr_df = pd.DataFrame(list(st.session_state.age_corrections_log.values()))
             
-            # Mandal Filter for Age Corrections
             mandal_list_ac = ['అన్నీ (All)'] + sorted(age_corr_df['మండలము'].dropna().unique().tolist())
             chosen_m_ac = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_ac, key='ac_mandal_filter')
             
@@ -655,7 +653,7 @@ if df is not None:
                 age_corr_df = age_corr_df[age_corr_df['మండలము'] == chosen_m_ac]
             
             st.markdown(f'### 📋 మొత్తం సవరించిన వయస్సులు: {len(age_corr_df)}')
-            st.dataframe(age_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలి పేరు', 'పాత ఏజ్', 'కొత్త ఏజ్']], use_container_width=True)
+            st.dataframe(age_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలు ఐడి (Member ID)', 'పాత ఏజ్', 'కొత్త ఏజ్']], use_container_width=True)
             
             csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
             st.download_button(
