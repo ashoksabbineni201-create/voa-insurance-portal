@@ -199,17 +199,17 @@ if df is not None:
             ]
 
             for idx, row in members_df.reset_index(drop=True).iterrows():
-                m_name = str(row.get('MEMBER NAME', 'Unknown'))
                 m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
-
                 current_row = st.session_state.saved_entries_dict.get(m_id, row)
+                
+                m_name = str(current_row.get('MEMBER NAME', 'Unknown'))
                 raw_age = current_row.get('AGE', 35)
                 try:
                     raw_age = int(float(raw_age))
                 except Exception:
                     raw_age = 35
 
-                # Determine Status for Header Label (Without ID)
+                # Determine Status for Header Label
                 p_sub = current_row.get(col_pmjjby_sub)
                 p_bank = current_row.get(col_pmjjby_bank)
                 s_sub = current_row.get(col_pmsby_sub)
@@ -235,29 +235,41 @@ if df is not None:
                 status_str = " | ".join(status_tags)
 
                 with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
-                    entered_age = st.number_input(
-                        'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
-                        min_value=1,
-                        max_value=100,
-                        value=raw_age,
-                        key=f'age_{idx}',
-                    )
+                    
+                    # 1. Name Correction (ఆధార్ ప్రకారం పేరు సవరణ) & Age Confirmation Persistence Check
+                    col_nc1, col_nc2 = st.columns([2, 1])
+                    with col_nc1:
+                        entered_name = st.text_input(
+                            'సభ్యురాలి పేరు (ఆధార్ ప్రకారం సరిచూసుకోండి):',
+                            value=m_name,
+                            key=f'name_{idx}'
+                        )
+                    with col_nc2:
+                        entered_age = st.number_input(
+                            'వయస్సు (Age):',
+                            min_value=1,
+                            max_value=100,
+                            value=raw_age,
+                            key=f'age_{idx}',
+                        )
 
-                    age_confirmed = st.button(
-                        f'✔️ {m_name} వయస్సును నిర్ధారించండి',
-                        key=f'confirm_age_btn_{idx}',
-                        type='primary',
-                    )
-
-                    session_key = f'confirmed_age_val_{idx}'
                     is_confirmed_key = f'is_age_confirmed_{idx}'
-
-                    if age_confirmed:
-                        st.session_state[session_key] = entered_age
-                        st.session_state[is_confirmed_key] = True
-
-                    if st.session_state.get(is_confirmed_key, False):
-                        active_age = st.session_state.get(session_key, raw_age)
+                    
+                    # ఒకసారి సేవ్ చేసినట్లయితే లేదా కన్ఫర్మ్ అయితే నేరుగా ఫారమ్ కనిపిస్తుంది
+                    has_saved_before = m_id in st.session_state.saved_entries_dict
+                    
+                    if not st.session_state.get(is_confirmed_key, False) and not has_saved_before:
+                        age_confirmed = st.button(
+                            f'✔️ {m_name} పేరు మరియు వయస్సు నిర్ధారించండి',
+                            key=f'confirm_age_btn_{idx}',
+                            type='primary',
+                        )
+                        if age_confirmed:
+                            st.session_state[is_confirmed_key] = True
+                            st.rererun() if hasattr(st, 'rerun') else st.experimental_rerun()
+                    
+                    if st.session_state.get(is_confirmed_key, False) or has_saved_before:
+                        active_age = entered_age
 
                         if active_age > 70:
                             st.error("❌ ఈ సభ్యురాలు 70 సంవత్సరాలు దాటినందున బీమా పథకాలకు అర్హులు కాదు (Not Eligible).")
@@ -316,10 +328,9 @@ if df is not None:
                                 with col_d4:
                                     pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
 
-                            if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
+                            if st.button(f'💾 {entered_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
                                 date_error = False
                                 
-                                # Validation: Direct Bank Enrolled check without application submission date
                                 if pmjjby_b_date and not pmjjby_sub_date:
                                     date_error = True
                                     st.error("❌ PMJJBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
@@ -340,6 +351,7 @@ if df is not None:
 
                                 if not date_error:
                                     updated_row = row.to_dict()
+                                    updated_row['MEMBER NAME'] = str(entered_name).strip().upper()
                                     updated_row['AGE'] = str(active_age)
                                     
                                     if pmjjby_sub_date: 
@@ -352,8 +364,7 @@ if df is not None:
                                         updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
-                                    st.session_state[is_confirmed_key] = False
-                                    st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
+                                    st.success(f'✅ {entered_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
                                     st.rerun()
 
     # 2. MANDAL WISE
@@ -364,7 +375,7 @@ if df is not None:
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -421,7 +432,7 @@ if df is not None:
     elif app_mode == 'Bank Wise':
         st.markdown("## 🏛️ బ్యాంక్ వారీగా సారాంశం")
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
         bank_summary = []
         for bank, group in export_df_base.groupby('BANK NAME'):
