@@ -120,6 +120,13 @@ if df is not None:
     if 'saved_entries_dict' not in st.session_state:
         st.session_state.saved_entries_dict = {}
 
+    # Track corrections for reports
+    if 'name_corrections_log' not in st.session_state:
+        st.session_state.name_corrections_log = {} # {m_id: {'mandal': ..., 'vo': ..., 'shg': ..., 'member': ..., 'old_name': ..., 'new_name': ...}}
+
+    if 'age_corrections_log' not in st.session_state:
+        st.session_state.age_corrections_log = {} # {m_id: {'mandal': ..., 'vo': ..., 'shg': ..., 'member': ..., 'old_age': ..., 'new_age': ...}}
+
     export_df_base = df.copy()
     if len(st.session_state.saved_entries_dict) > 0:
         for m_id, saved_row in st.session_state.saved_entries_dict.items():
@@ -139,11 +146,11 @@ if df is not None:
 
     # Header Title
     st.markdown(
-        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
+        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌‌‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
         unsafe_allow_html=True,
     )
 
-    # Top Mobile-Friendly Navigation Selector
+    # Top Mobile-Friendly Navigation Selector (9 Options)
     nav_options_mapping = {
         '1️⃣ 🏠 డాష్‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
         '2️⃣ 📍 మండలం వారీగా రిపోర్ట్ (Mandal Wise)': 'Mandal Wise',
@@ -151,7 +158,9 @@ if df is not None:
         '4️⃣ 🏛️ బ్యాంక్ వారీగా రిపోర్ట్ (Bank Wise)': 'Bank Wise',
         '5️⃣ 📈 బ్రాంచ్ వారీగా రిపోర్ట్ (Branch Wise)': 'Branch Wise',
         '6️⃣ 📥 పెండింగ్ జాబితా (Pending Reports)': 'Pending Reports',
-        '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level'
+        '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level',
+        '8️⃣ ✏️ నేమ్ కరెక్షన్ నివేదిక (Name Corrections)': 'Name Corrections',
+        '9️⃣ 🔢 ఏజ్ కరెక్షన్ నివేదిక (Age Corrections)': 'Age Corrections'
     }
 
     selected_display_opt = st.selectbox(
@@ -212,6 +221,10 @@ if df is not None:
                 m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
                 current_row = st.session_state.saved_entries_dict.get(m_id, row)
                 
+                original_row_data = df[df['MEMBER ID'].astype(str) == str(m_id)]
+                orig_name = str(original_row_data.iloc[0]['MEMBER NAME']).strip().upper() if not original_row_data.empty else str(row.get('MEMBER NAME', '')).strip().upper()
+                orig_age = str(original_row_data.iloc[0]['AGE']).strip() if not original_row_data.empty else str(row.get('AGE', '35')).strip()
+
                 m_name = str(current_row.get('MEMBER NAME', 'Unknown'))
                 raw_age = current_row.get('AGE', 35)
                 try:
@@ -246,7 +259,6 @@ if df is not None:
 
                 with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
                     
-                    # 1. Name Correction & Age Confirmation Persistence Check
                     col_nc1, col_nc2 = st.columns([2, 1])
                     with col_nc1:
                         entered_name = st.text_input(
@@ -359,8 +371,35 @@ if df is not None:
 
                                 if not date_error:
                                     updated_row = row.to_dict()
-                                    updated_row['MEMBER NAME'] = str(entered_name).strip().upper()
+                                    cleaned_new_name = str(entered_name).strip().upper()
+                                    updated_row['MEMBER NAME'] = cleaned_new_name
                                     updated_row['AGE'] = str(active_age)
+                                    
+                                    # Log Name Correction if changed
+                                    if cleaned_new_name != orig_name:
+                                        st.session_state.name_corrections_log[m_id] = {
+                                            'మండలము': str(row.get('MANDAL', '')),
+                                            'వి.ఓ (VO)': str(row.get('VO', '')),
+                                            'ఎస్‌.హెచ్.జి పేరు (SHG Name)': str(row.get('SHG', '')),
+                                            'సభ్యురాలి పేరు': cleaned_new_name,
+                                            'పాత పేరు': orig_name,
+                                            'కొత్త పేరు': cleaned_new_name
+                                        }
+                                    elif m_id in st.session_state.name_corrections_log:
+                                        del st.session_state.name_corrections_log[m_id]
+
+                                    # Log Age Correction if changed
+                                    if str(active_age) != str(orig_age):
+                                        st.session_state.age_corrections_log[m_id] = {
+                                            'మండలము': str(row.get('MANDAL', '')),
+                                            'వి.ఓ (VO)': str(row.get('VO', '')),
+                                            'ఎస్‌.హెచ్.జి పేరు (SHG Name)': str(row.get('SHG', '')),
+                                            'సభ్యురాలి పేరు': cleaned_new_name,
+                                            'పాత ఏజ్': orig_age,
+                                            'కొత్త ఏజ్': str(active_age)
+                                        }
+                                    elif m_id in st.session_state.age_corrections_log:
+                                        del st.session_state.age_corrections_log[m_id]
                                     
                                     if pmjjby_sub_date: 
                                         updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
@@ -372,7 +411,7 @@ if df is not None:
                                         updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
-                                    st.success(f'✅ {entered_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
+                                    st.success(f'✅ {cleaned_new_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
                                     trigger_rerun()
 
     # 2. MANDAL WISE
@@ -383,7 +422,7 @@ if df is not None:
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡 PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -559,7 +598,7 @@ if df is not None:
         else:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
-    # 7. MEMBER LIST
+    # 7. MEMBER LEVEL LIST
     elif app_mode == 'Member Level':
         st.markdown("## 👥 పూర్తి సభ్యుల జాబితా")
         st.write('---')
@@ -570,3 +609,61 @@ if df is not None:
             filtered_report_df = filtered_report_df[filtered_report_df['MANDAL'] == selected_mandal_filter]
 
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
+
+    # 8. NAME CORRECTIONS REPORT
+    elif app_mode == 'Name Corrections':
+        st.markdown("## ✏️ నేమ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక (Name Corrections Report)")
+        st.write('---')
+        
+        if len(st.session_state.name_corrections_log) > 0:
+            name_corr_df = pd.DataFrame(list(st.session_state.name_corrections_log.values()))
+            
+            # Mandal Filter for Name Corrections
+            mandal_list_nc = ['అన్నీ (All)'] + sorted(name_corr_df['మండలము'].dropna().unique().tolist())
+            chosen_m_nc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_nc, key='nc_mandal_filter')
+            
+            if chosen_m_nc != 'అన్నీ (All)':
+                name_corr_df = name_corr_df[name_corr_df['మండలము'] == chosen_m_nc]
+            
+            st.markdown(f'### 📋 మొత్తం సవరించిన పేర్లు: {len(name_corr_df)}')
+            st.dataframe(name_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలి పేరు', 'పాత పేరు', 'కొత్త పేరు']], use_container_width=True)
+            
+            csv_nc = name_corr_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label='📥 నేమ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                data=csv_nc,
+                file_name='Name_Corrections_Report.csv',
+                mime='text/css',
+                type='primary'
+            )
+        else:
+            st.info('👉 ఇప్పటివరకు ఎలాంటి నేమ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
+
+    # 9. AGE CORRECTIONS REPORT
+    elif app_mode == 'Age Corrections':
+        st.markdown("## 🔢 ఏజ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక (Age Corrections Report)")
+        st.write('---')
+        
+        if len(st.session_state.age_corrections_log) > 0:
+            age_corr_df = pd.DataFrame(list(st.session_state.age_corrections_log.values()))
+            
+            # Mandal Filter for Age Corrections
+            mandal_list_ac = ['అన్నీ (All)'] + sorted(age_corr_df['మండలము'].dropna().unique().tolist())
+            chosen_m_ac = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_ac, key='ac_mandal_filter')
+            
+            if chosen_m_ac != 'అన్నీ (All)':
+                age_corr_df = age_corr_df[age_corr_df['మండలము'] == chosen_m_ac]
+            
+            st.markdown(f'### 📋 మొత్తం సవరించిన వయస్సులు: {len(age_corr_df)}')
+            st.dataframe(age_corr_df[['మండలము', 'వి.ఓ (VO)', 'ఎస్‌.హెచ్.జి పేరు (SHG Name)', 'సభ్యురాలి పేరు', 'పాత ఏజ్', 'కొత్త ఏజ్']], use_container_width=True)
+            
+            csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                data=csv_ac,
+                file_name='Age_Corrections_Report.csv',
+                mime='text/css',
+                type='primary'
+            )
+        else:
+            st.info('👉 ఇప్పటివరకు ఎలాంటి ఏజ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
