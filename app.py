@@ -48,11 +48,11 @@ st.markdown("""
         font-weight: 600;
     }
     /* Sidebar Category Headers Styling */
-    .sidebar-category {
-        background: linear-gradient(90deg, #ff9933 0%, #ffcc66 100%);
+    .sidebar-category-1 {
+        background: linear-gradient(90deg, #1565c0 0%, #64b5f6 100%);
         padding: 8px 12px;
         border-radius: 6px;
-        color: #000000;
+        color: #ffffff;
         font-weight: bold;
         margin-top: 15px;
         margin-bottom: 5px;
@@ -71,10 +71,10 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .sidebar-category-3 {
-        background: linear-gradient(90deg, #1565c0 0%, #64b5f6 100%);
+        background: linear-gradient(90deg, #ff9933 0%, #ffcc66 100%);
         padding: 8px 12px;
         border-radius: 6px;
-        color: #ffffff;
+        color: #000000;
         font-weight: bold;
         margin-top: 15px;
         margin-bottom: 5px;
@@ -153,7 +153,7 @@ if df is not None:
     st.sidebar.markdown('---')
 
     # Category 1: Enrollment Dashboard
-    st.sidebar.markdown('<div class="sidebar-category">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div class="sidebar-category-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
     page_opt_1 = '🏠 1. Enrollment Dashboard (Portal)'
 
     # Category 2: Progress & Detailed Reports
@@ -344,14 +344,23 @@ if df is not None:
             })
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
-    # Mandal & VO Wise Abstract & Report
+    # Mandal & VO Wise Abstract & Report (Updated with Mandal Filter)
     elif app_mode == page_opt_2[1]:
         st.markdown('## 📊 Mandal & VO Wise Abstract & Report')
         st.write('---')
+        
+        # Mandal selection filter as requested
+        mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
+        selected_mandal_filter = st.selectbox('మండలం ఎంచుకోండి (Select Mandal):', mandals_list)
+        
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
         
+        filtered_df = export_df_base.copy()
+        if selected_mandal_filter != 'అన్నీ (All Mandals)':
+            filtered_df = filtered_df[filtered_df['MANDAL'] == selected_mandal_filter]
+
         vo_summary = []
-        for (mandal, vo), group in export_df_base.groupby(['MANDAL', 'VO']):
+        for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
             if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
@@ -391,8 +400,8 @@ if df is not None:
 
         target_df = export_df_base.copy()
         if area_scope == '📍 నిర్దిష్ట మండలం (Specific Mandal)':
-            mandals_list = sorted(target_df['MANDAL'].dropna().unique().tolist())
-            chosen_mandal = st.selectbox('మండలం ఎంచుకోండి:', mandals_list)
+            mandals_list_det = sorted(target_df['MANDAL'].dropna().unique().tolist())
+            chosen_mandal = st.selectbox('మండలం ఎంచుకోండి:', mandals_list_det)
             target_df = target_df[target_df['MANDAL'] == chosen_mandal]
 
         result_list = []
@@ -472,14 +481,23 @@ if df is not None:
 
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
-    # Bank & Branch Wise Abstract Report
+    # Bank & Branch Wise Abstract Report (Updated with Bank Selection & Scheme Filter)
     elif app_mode == page_opt_3[1]:
         st.markdown('## 📊 Bank & Branch Wise Abstract Report')
         st.write('---')
+        
+        # Bank selection filter as requested
+        banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
+        selected_bank_filter = st.selectbox('బ్యాంక్ ఎంచుకోండి (Select Bank):', banks_list)
+        
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
 
+        filtered_bank_df = export_df_base.copy()
+        if selected_bank_filter != 'అన్నీ (All Banks)':
+            filtered_bank_df = filtered_bank_df[filtered_bank_df['BANK NAME'] == selected_bank_filter]
+
         bank_branch_summary = []
-        for (bank, branch), group in export_df_base.groupby(['BANK NAME', 'BRANCH NAME']):
+        for (bank, branch), group in filtered_bank_df.groupby(['BANK NAME', 'BRANCH NAME']):
             if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
