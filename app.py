@@ -3,10 +3,10 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title='VOA Insurance Enrollment Portal', page_icon='🏛️️', layout='wide'
+    page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for Modern, Colorful & Professional UI
+# Custom CSS for Modern UI, Pure Telugu sidebar labels & Larger Font Sizes for Reports
 st.markdown("""
     <style>
     /* Main App Background & Font */
@@ -29,7 +29,6 @@ st.markdown("""
         color: #ffffff !important; 
         font-size: 32px !important; 
         font-weight: 800; 
-        letter-spacing: 0.5px;
     }
     .portal-header p { 
         color: #e0e6ed !important; 
@@ -37,18 +36,23 @@ st.markdown("""
         margin-top: 5px;
     }
 
-    /* Sidebar Styling */
+    /* Sidebar Styling & Increased Telugu Text Font Size */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
         border-right: 2px solid #e2e8f0;
         box-shadow: 4px 0 15px rgba(0,0,0,0.05);
     }
     section[data-testid="stSidebar"] .stRadio label p {
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        color: #2d3748;
+        font-size: 15.5px !important;
+        font-weight: 700 !important;
+        color: #1f2937;
     }
 
+    /* Increase Font Size inside Dataframes / Tables & Reports */
+    .stDataFrame div {
+        font-size: 14.5px !important;
+    }
+    
     /* Section Titles */
     .section-title-pmjjby {
         color: #1d4ed8;
@@ -71,17 +75,6 @@ st.markdown("""
         margin-bottom: 15px;
         font-weight: 700;
         font-size: 18px;
-    }
-
-    /* Metric / Info Cards Styling */
-    .metric-card {
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        text-align: center;
-        border-top: 4px solid #3b82f6;
-        margin-bottom: 15px;
     }
 
     /* Buttons Styling */
@@ -161,19 +154,19 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation with exact requested order & icons
-    st.sidebar.markdown("<h2 style='color: #1e3c72; text-align: center; font-size: 22px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
+    # Sidebar Navigation - Pure Telugu Menu Names
+    st.sidebar.markdown("<h2 style='color: #1e3c72; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
     st.sidebar.markdown("<h3 style='color: #d97706; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌బోర్డ్ (Dashboard)': 'Dashboard',
-        '2️⃣ 📍 మండలం వారీగా (Mandal Wise)': 'Mandal Wise',
-        '3️⃣ 📊 VO వారీగా (VO Wise)': 'VO Wise',
-        '4️⃣ 🏛️ బ్యాంక్ వారీగా (Bank Wise)': 'Bank Wise',
-        '5️⃣ 📈 బ్రాంచ్ వారీగా (Branch Wise)': 'Branch Wise',
-        '6️⃣ 📥 పెండింగ్ జాబితా (Pending List)': 'Pending Reports',
-        '7️⃣ 👥 సభ్యుల జాబితా (Member List)': 'Member Level'
+        '1️⃣ 🏠 డాష్‌బోర్డ్': 'Dashboard',
+        '2️⃣ 📍 మండలం వారీగా': 'Mandal Wise',
+        '3️⃣ 📊 వి.ఓ (VO) వారీగా': 'VO Wise',
+        '4️⃣ 🏛️ బ్యాంక్ వారీగా': 'Bank Wise',
+        '5️⃣ 📈 బ్రాంచ్ వారీగా': 'Branch Wise',
+        '6️⃣ 📥 పెండింగ్ జాబితా': 'Pending Reports',
+        '7️⃣ 👥 సభ్యుల జాబితా': 'Member Level'
     }
 
     selected_display_opt = st.sidebar.radio(
@@ -185,7 +178,6 @@ if df is not None:
     
     app_mode = nav_options_mapping[selected_display_opt]
     st.sidebar.markdown('---')
-    st.sidebar.success("💡 **టిప్:** వివరాలు నమోదు చేయడానికి డాష్‌బోర్డ్ ఉపయోగించండి.")
 
     # PAGE 1: DASHBOARD
     if app_mode == 'Dashboard':
@@ -328,7 +320,7 @@ if df is not None:
 
     # 2. MANDAL WISE
     elif app_mode == 'Mandal Wise':
-        st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise Abstract)")
+        st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
@@ -356,7 +348,7 @@ if df is not None:
 
     # 3. VO WISE
     elif app_mode == 'VO Wise':
-        st.markdown("## 📊 VO వారీగా సారాంశం (VO Wise Abstract)")
+        st.markdown("## 📊 వి.ఓ (VO) వారీగా సారాంశం")
         st.write('---')
         
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
@@ -389,7 +381,7 @@ if df is not None:
 
     # 4. BANK WISE
     elif app_mode == 'Bank Wise':
-        st.markdown("## 🏛️ బ్యాంక్ వారీగా సారాంశం (Bank Wise Abstract)")
+        st.markdown("## 🏛️ బ్యాంక్ వారీగా సారాంశం")
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
@@ -414,7 +406,7 @@ if df is not None:
 
     # 5. BRANCH WISE
     elif app_mode == 'Branch Wise':
-        st.markdown("## 📈 బ్రాంచ్ వారీగా సారాంశం (Branch Wise Abstract)")
+        st.markdown("## 📈 బ్రాంచ్ వారీగా సారాంశం")
         st.write('---')
         
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
@@ -447,7 +439,7 @@ if df is not None:
 
     # 6. PENDING LIST
     elif app_mode == 'Pending Reports':
-        st.markdown("## 📥 పెండింగ్ మరియు ఎన్‌రోల్‌మెంట్ నివేదికలు (Pending & Status Reports)")
+        st.markdown("## 📥 పెండింగ్ మరియు ఎన్‌రోల్‌మెంట్ నివేదికలు")
         st.write('---')
 
         report_type = st.selectbox(
@@ -459,7 +451,7 @@ if df is not None:
             ]
         )
 
-        scheme_filter = st.radio('స్కీమ్ ఎంచుకోండి:', ['🛡️️ PMJJBY', '🚑 PMSBY'], horizontal=True)
+        scheme_filter = st.radio('స్కీమ్ ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
         is_pmjjby = (scheme_filter == '🛡️ PMJJBY')
 
         area_scope = st.radio('స్థాయి ఎంచుకోండి:', ['🌐 జిల్లా అంతా (Entire District)', '📍 నిర్దిష్ట మండలం (Specific Mandal)'], horizontal=True)
@@ -512,7 +504,7 @@ if df is not None:
 
     # 7. MEMBER LIST
     elif app_mode == 'Member Level':
-        st.markdown("## 👥 పూర్తి సభ్యుల జాబితా (Complete Member List)")
+        st.markdown("## 👥 పూర్తి సభ్యుల జాబితా")
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
         
