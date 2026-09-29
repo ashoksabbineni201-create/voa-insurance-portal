@@ -148,15 +148,18 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation with Categories and Correct Mapping
+    # Sidebar Navigation structured exactly as requested:
+    # 1. Enrollment Dashboard
+    # 2. Progress & Detailed Reports (All remaining reports)
+    # 3. Bank Reports (Bank Wise Report & Bank Branch Wise Abstract Report)
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్**')
     st.sidebar.markdown('---')
 
-    # Category 1: Enrollment Dashboard
+    # Category 1
     st.sidebar.markdown('<div class="sidebar-category-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
     page_opt_1 = '🏠 Enrollment Dashboard (Portal)'
 
-    # Category 2: Progress & Detailed Reports
+    # Category 2
     st.sidebar.markdown('<div class="sidebar-category-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
     page_opt_2 = [
         '📍 Mandal Wise Abstract Report',
@@ -165,7 +168,7 @@ if df is not None:
         '👥 SHG Member Level Detailed Report'
     ]
 
-    # Category 3: Bank Reports
+    # Category 3
     st.sidebar.markdown('<div class="sidebar-category-3">3. Bank Reports</div>', unsafe_allow_html=True)
     page_opt_3 = [
         '🏛️ Bank Wise Report',
@@ -217,7 +220,7 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
@@ -318,7 +321,7 @@ if df is not None:
 
     # Mandal Wise Abstract Report
     elif app_mode == page_opt_2[0]:
-        st.markdown('## 📍 Mandal Wise Abstract & Report')
+        st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
@@ -344,7 +347,7 @@ if df is not None:
             })
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
-    # Mandal & VO Wise Abstract Report (With Mandal Filter)
+    # Mandal & VO Wise Abstract Report
     elif app_mode == page_opt_2[1]:
         st.markdown('## 📊 Mandal & VO Wise Abstract Report')
         st.write('---')
@@ -480,7 +483,7 @@ if df is not None:
 
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
-    # Bank Branch Wise Abstract Report (With Bank Selection & Scheme Filter)
+    # Bank Branch Wise Abstract Report
     elif app_mode == page_opt_3[1]:
         st.markdown('## 📊 Bank Branch Wise Abstract Report')
         st.write('---')
