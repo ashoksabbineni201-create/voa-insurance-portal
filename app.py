@@ -102,89 +102,59 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation Setup with 3 Categories
+    # Sidebar Navigation Setup with 3 Categorized Sections
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
-    # Session state initialization for active category selection tracking
-    if 'selected_category' not in st.session_state:
-        st.session_state.selected_category = 'Dashboard'
+    # Keep track of active page using session state to prevent overwriting across multiple radio groups
+    if 'active_page' not in st.session_state:
+        st.session_state.active_page = '🏠 1. Enrollment Dashboard (Portal)'
 
     st.sidebar.markdown('**1. Dashboard**')
     opt_dash = st.sidebar.radio(
         'Dashboard Menu',
-        ['🏠 Enrollment Dashboard (Portal)'],
-        key='menu_dash',
+        ['🏠 1. Enrollment Dashboard (Portal)'],
+        key='radio_dash',
         label_visibility='collapsed'
     )
+    if opt_dash:
+        st.session_state.active_page = opt_dash
 
     st.sidebar.markdown('**2. Master Reports**')
     opt_master = st.sidebar.radio(
         'Master Reports Menu',
         [
-            '📍 Mandal Wise Abstract Report',
-            '📊 Mandal & VO Wise Abstract Report',
-            '📥 Detailed Lists & Pending Reports',
-            '👥 SHG Member Level Detailed Report'
+            '📍 2. Mandal Wise Abstract Report',
+            '📊 2. Mandal & VO Wise Abstract Report',
+            '📥 2. Detailed Lists & Pending Reports',
+            '👥 2. SHG Member Level Detailed Report'
         ],
-        key='menu_master',
+        key='radio_master',
         label_visibility='collapsed'
     )
+    if opt_master:
+        st.session_state.active_page = opt_master
 
     st.sidebar.markdown('**3. Bank Reports**')
     opt_bank = st.sidebar.radio(
         'Bank Reports Menu',
         [
-            '🏛️ Bank Wise Report',
-            '📊 Bank Branch Wise Abstract Report'
+            '🏛️️ 3. Bank Wise Report',
+            '📊 3. Bank Branch Wise Abstract Report'
         ],
-        key='menu_bank',
+        key='radio_bank',
         label_visibility='collapsed'
     )
+    if opt_bank:
+        st.session_state.active_page = opt_bank
     
     st.sidebar.markdown('---')
 
-    # Determine which radio button was recently interacted with or default to dashboard
-    # Streamlit automatically handles states via keys. Let's map app_mode based on current selections.
-    # To ensure smooth navigation, we check which radio button options exist:
-    nav_options = [
-        '🏠 1. Enrollment Dashboard (Portal)',
-        '📍 2. Mandal Wise Abstract Report',
-        '📊 2. Mandal & VO Wise Abstract Report',
-        '📥 2. Detailed Lists & Pending Reports',
-        '👥 2. SHG Member Level Detailed Report',
-        '🏛️ 3. Bank Wise Report',
-        '📊 3. Bank Branch Wise Abstract Report',
-    ]
-
-    # Let's map selections cleanly:
-    # We can unify them into a single variable check or use a clean dropdown/radio approach if needed, 
-    # but here we can check which part user clicked using st.session_state variables.
-    
-    # Simple workaround: map the active page directly based on user interaction or default to dashboard
-    app_mode = opt_dash # default
-
-    # A robust way for 3 categorized radios in Streamlit is using session state tracking:
-    if 'last_active_menu' not in st.session_state:
-        st.session_state.last_active_menu = nav_options[0]
-
-    # We can also simplify by using a single clean radio list with markdown headers if possible, 
-    # or keep the 3 sections by evaluating values:
-    app_mode = opt_dash
-    if opt_master:
-        # Check if master was changed or selected
-        pass
-
-    # To avoid conflict between multiple radios, let's use a unified dictionary or standard mapping:
-    # Better yet, let's combine them into a single selection logic or separate blocks safely:
-    selected_page = st.sidebar.selectbox(
-        'పేజీని ఎంచుకోండి (Select Report Category):',
-        nav_options
-    )
-    app_mode = selected_page
+    # Assign active page for routing
+    app_mode = st.session_state.active_page
 
     # PAGE 1: Enrollment Dashboard (Portal)
-    if app_mode == nav_options[0]:
+    if app_mode == '🏠 1. Enrollment Dashboard (Portal)':
         st.markdown(
             '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
@@ -323,10 +293,10 @@ if df is not None:
                             st.rerun()
 
     # Mandal Wise Abstract Report
-    elif app_mode == nav_options[1]:
+    elif app_mode == '📍 2. Mandal Wise Abstract Report':
         st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -351,7 +321,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # Mandal & VO Wise Abstract Report
-    elif app_mode == nav_options[2]:
+    elif app_mode == '📊 2. Mandal & VO Wise Abstract Report':
         st.markdown('## 📊 Mandal & VO Wise Abstract Report')
         st.write('---')
         
@@ -384,7 +354,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
     # Detailed Lists & Pending Reports
-    elif app_mode == nav_options[3]:
+    elif app_mode == '📥 2. Detailed Lists & Pending Reports':
         st.markdown('## 📥 Detailed Lists & Pending Reports')
         st.write('---')
 
@@ -449,7 +419,7 @@ if df is not None:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
     # SHG Member Level Detailed Report
-    elif app_mode == nav_options[4]:
+    elif app_mode == '👥 2. SHG Member Level Detailed Report':
         st.markdown('## 👥 SHG Member Level Detailed Report')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
@@ -461,7 +431,7 @@ if df is not None:
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
     # Bank Wise Report
-    elif app_mode == nav_options[5]:
+    elif app_mode == '🏛️ 3. Bank Wise Report':
         st.markdown('## 🏛️ Bank Wise Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
@@ -486,7 +456,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
     # Bank Branch Wise Abstract Report
-    elif app_mode == nav_options[6]:
+    elif app_mode == '📊 3. Bank Branch Wise Abstract Report':
         st.markdown('## 📊 Bank Branch Wise Abstract Report')
         st.write('---')
         
