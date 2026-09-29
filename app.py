@@ -111,25 +111,25 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Colorful Sidebar Navigation with "REPORTS" Heading & Numbering 1 to 7
+    # Colorful Sidebar Navigation with updated 7 report names
     st.sidebar.markdown("<h2 style='color: #1f4068; text-align: center; font-size: 22px;'>🚀 NAVIGATION PORTAL</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
     st.sidebar.markdown("<h3 style='color: #e43f5a; font-size: 16px; font-weight: bold;'>📊 REPORTS & DASHBOARD</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
-        '1️⃣ 🏠 Enrollment Dashboard (Portal)': 'Dashboard',
-        '2️⃣ 📍 Mandal Wise Abstract Report': 'Mandal Wise',
-        '3️⃣ 📊 Mandal & VO Wise Abstract Report': 'VO Wise',
-        '4️⃣ 📥 Detailed Lists & Pending Reports': 'Pending Reports',
-        '5️⃣ 👥 SHG Member Level Detailed Report': 'Member Level',
-        '6️⃣ 🏛️ Bank Wise Report': 'Bank Wise',
-        '7️⃣ 📈 Bank Branch Wise Abstract Report': 'Branch Wise'
+        '1️⃣ 🏠 ENROLLMENT DASHBOARD': 'Dashboard',
+        '2️⃣ 📍 MANDAL WISE ABSTRACT': 'Mandal Wise',
+        '3️⃣ 📊 MANDAL AND VO WISE ABSTRACT': 'VO Wise',
+        '4️⃣ 📥 PENDING LIST': 'Pending Reports',
+        '5️⃣ 👥 MEMBER WISE TOTAL LIST': 'Member Level',
+        '6️⃣ 🏛️ BANK WISE ABSTRACT': 'Bank Wise',
+        '7️⃣ 📈 BANK & BRANCH WISE ABSTRACT': 'Branch Wise'
     }
 
     selected_display_opt = st.sidebar.radio(
         'Select Report Option',
         list(nav_options_mapping.keys()),
-        key='colorful_sidebar_nav_7_options',
+        key='colorful_sidebar_nav_updated_names',
         label_visibility='collapsed'
     )
     
@@ -277,7 +277,7 @@ if df is not None:
 
     # Mandal Wise Abstract Report
     elif app_mode == 'Mandal Wise':
-        st.markdown('## 📍 2. Mandal Wise Abstract Report')
+        st.markdown('## 📍 2. MANDAL WISE ABSTRACT')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
@@ -305,7 +305,7 @@ if df is not None:
 
     # Mandal & VO Wise Abstract Report
     elif app_mode == 'VO Wise':
-        st.markdown('## 📊 3. Mandal & VO Wise Abstract Report')
+        st.markdown('## 📊 3. MANDAL AND VO WISE ABSTRACT')
         st.write('---')
         
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
@@ -338,7 +338,7 @@ if df is not None:
 
     # Detailed Lists & Pending Reports
     elif app_mode == 'Pending Reports':
-        st.markdown('## 📥 4. Detailed Lists & Pending Reports')
+        st.markdown('## 📥 4. PENDING LIST')
         st.write('---')
 
         report_type = st.selectbox(
@@ -403,7 +403,7 @@ if df is not None:
 
     # SHG Member Level Detailed Report
     elif app_mode == 'Member Level':
-        st.markdown('## 👥 5. SHG Member Level Detailed Report')
+        st.markdown('## 👥 5. MEMBER WISE TOTAL LIST')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
         
@@ -415,7 +415,7 @@ if df is not None:
 
     # Bank Wise Report
     elif app_mode == 'Bank Wise':
-        st.markdown('## 🏛️ 6. Bank Wise Report')
+        st.markdown('## 🏛️ 6. BANK WISE ABSTRACT')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
@@ -440,7 +440,7 @@ if df is not None:
 
     # Bank Branch Wise Abstract Report
     elif app_mode == 'Branch Wise':
-        st.markdown('## 📈 7. Bank Branch Wise Abstract Report')
+        st.markdown('## 📈 7. BANK & BRANCH WISE ABSTRACT')
         st.write('---')
         
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
