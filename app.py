@@ -146,17 +146,12 @@ if df is not None:
 
     export_df_base['NUM_AGE'] = pd.to_numeric(export_df_base['AGE'], errors='coerce').fillna(0)
     
+    # Status definitions
     export_df_base['PMJJBY_STATUS'] = 'Pending'
-    export_df_base.loc[
-        export_df_base[col_pmjjby_sub].notna() | export_df_base[col_pmjjby_bank].notna(),
-        'PMJJBY_STATUS'
-    ] = 'Done'
+    export_df_base.loc[export_df_base[col_pmjjby_bank].notna(), 'PMJJBY_STATUS'] = 'Enrolled'
 
     export_df_base['PMSBY_STATUS'] = 'Pending'
-    export_df_base.loc[
-        export_df_base[col_pmsby_sub].notna() | export_df_base[col_pmsby_bank].notna(),
-        'PMSBY_STATUS'
-    ] = 'Done'
+    export_df_base.loc[export_df_base[col_pmsby_bank].notna(), 'PMSBY_STATUS'] = 'Enrolled'
 
     # Sidebar Navigation
     st.sidebar.header('📁 నావిగేషన్')
@@ -267,7 +262,6 @@ if df is not None:
 
                         pmjjby_sub_date, pmjjby_b_date = None, None
                         pmsby_sub_date, pmsby_b_date_pmsby = None, None
-                        pmjjby_enrolled, pmsby_enrolled = 'Not Enrolled', 'Not Enrolled'
 
                         if 18 <= active_age <= 50:
                             st.markdown(
@@ -282,15 +276,11 @@ if df is not None:
                             with bc3:
                                 st.text_input('PMJJBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmjjby_acc_{idx}')
 
-                            pmjjby_enrolled = st.radio('PMJJBY Status', ['Not Enrolled', 'Already Enrolled'], key=f'pmjjby_status_{idx}')
-                            if pmjjby_enrolled == 'Already Enrolled':
-                                pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=None, key=f'pmjjby_b_already_{idx}')
-                            else:
-                                col_d1, col_d2 = st.columns(2)
-                                with col_d1:
-                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=None, key=f'pmjjby_sub_{idx}')
-                                with col_d2:
-                                    pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=None, key=f'pmjjby_b_opt_{idx}')
+                            col_d1, col_d2 = st.columns(2)
+                            with col_d1:
+                                pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=None, key=f'pmjjby_sub_{idx}')
+                            with col_d2:
+                                pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=None, key=f'pmjjby_b_opt_{idx}')
 
                         if 18 <= active_age <= 70:
                             st.markdown(
@@ -305,15 +295,11 @@ if df is not None:
                             with pc3:
                                 st.text_input('PMSBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmsby_acc_{idx}')
 
-                            pmsby_enrolled = st.radio('PMSBY Status', ['Not Enrolled', 'Already Enrolled'], key=f'pmsby_status_{idx}')
-                            if pmsby_enrolled == 'Already Enrolled':
-                                pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=None, key=f'pmsby_b_already_{idx}')
-                            else:
-                                col_d3, col_d4 = st.columns(2)
-                                with col_d3:
-                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=None, key=f'pmsby_sub_{idx}')
-                                with col_d4:
-                                    pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=None, key=f'pmsby_b_opt_{idx}')
+                            col_d3, col_d4 = st.columns(2)
+                            with col_d3:
+                                pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=None, key=f'pmsby_sub_{idx}')
+                            with col_d4:
+                                pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=None, key=f'pmsby_b_opt_{idx}')
 
                         if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='secondary'):
                             updated_row = row.to_dict()
@@ -333,26 +319,29 @@ if df is not None:
         st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)')
         st.write('---')
 
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['అన్ని స్కీమ్‌లు (All)', '🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            total_members = len(group)
-            pmjjby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)].shape[0]
-            pmsby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)].shape[0]
-            pmjjby_done = group[group['PMJJBY_STATUS'] == 'Done'].shape[0]
-            pmsby_done = group[group['PMSBY_STATUS'] == 'Done'].shape[0]
-
             if scheme_choice == '🛡️ PMJJBY':
-                mandal_summary.append({'Mandal': m_name, 'Total': total_members, 'Eligible': pmjjby_eligible, 'Done': pmjjby_done, 'Pending': max(0, pmjjby_eligible - pmjjby_done)})
-            elif scheme_choice == '🚑 PMSBY':
-                mandal_summary.append({'Mandal': m_name, 'Total': total_members, 'Eligible': pmsby_eligible, 'Done': pmsby_done, 'Pending': max(0, pmsby_eligible - pmsby_done)})
+                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                target = len(eligible_group)
+                enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
             else:
-                mandal_summary.append({
-                    'Mandal': m_name, 'Total Members': total_members,
-                    'PMJJBY Eligible': pmjjby_eligible, 'PMJJBY Done': pmjjby_done, 'PMJJBY Pending': max(0, pmjjby_eligible - pmjjby_done),
-                    'PMSBY Eligible': pmsby_eligible, 'PMSBY Done': pmsby_done, 'PMSBY Pending': max(0, pmsby_eligible - pmsby_done)
-                })
+                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                target = len(eligible_group)
+                enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+
+            pending = max(0, target - enrolled)
+            mandal_summary.append({
+                'Mandal': m_name,
+                'Target (Eligible)': target,
+                'Enrolled': enrolled,
+                'Applications Submitted to Bank': submitted,
+                'Pending': pending
+            })
 
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
@@ -364,26 +353,69 @@ if df is not None:
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_scheme')
 
         if 'BANK NAME' in export_df_base.columns and 'BRANCH NAME' in export_df_base.columns:
+            
+            # 1. Bank Wise Summary Table
+            st.markdown(f'### 🏦 బ్యాంక్ వారీగా అబ్‌స్ట్రాక్ట్ ({scheme_choice})')
             bank_summary = []
-            for (bank, branch), group in export_df_base.groupby(['BANK NAME', 'BRANCH NAME']):
-                total_members = len(group)
+            for bank, group in export_df_base.groupby('BANK NAME'):
                 if scheme_choice == '🛡️ PMJJBY':
-                    eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)].shape[0]
-                    done = group[group['PMJJBY_STATUS'] == 'Done'].shape[0]
+                    eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                    target = len(eligible_group)
+                    enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
+                    submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
                 else:
-                    eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)].shape[0]
-                    done = group[group['PMSBY_STATUS'] == 'Done'].shape[0]
-                
+                    eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                    target = len(eligible_group)
+                    enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
+                    submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+
+                pending = max(0, target - enrolled)
                 bank_summary.append({
                     'Bank Name': bank,
-                    'Branch Name': branch,
-                    'Total Members': total_members,
-                    'Eligible': eligible,
-                    'Enrolled / Done': done,
-                    'Pending': max(0, eligible - done)
+                    'Target': target,
+                    'Enrolled': enrolled,
+                    'Applications Submitted': submitted,
+                    'Pending': pending
                 })
 
             st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
+
+            st.markdown('---')
+            st.markdown(f'### 🏢 నిర్దిష్ట బ్యాంక్ వారీగా బ్రాంచ్ నివేదిక ({scheme_choice})')
+
+            all_banks = sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
+            selected_bank = st.selectbox('ఒక బ్యాంక్‌ను ఎంచుకోండి (Select Bank):', ['-- ఎంచుకోండి --'] + all_banks)
+
+            if selected_bank and selected_bank != '-- ఎంచుకోండి --':
+                bank_filtered_df = export_df_base[export_df_base['BANK NAME'] == selected_bank]
+                
+                branch_summary = []
+                for branch, group in bank_filtered_df.groupby('BRANCH NAME'):
+                    if scheme_choice == '🛡️ PMJJBY':
+                        eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                        target = len(eligible_group)
+                        enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
+                        submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
+                    else:
+                        eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                        target = len(eligible_group)
+                        enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
+                        submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+
+                    pending = max(0, target - enrolled)
+                    branch_summary.append({
+                        'Branch Name': branch,
+                        'Target': target,
+                        'Enrolled': enrolled,
+                        'Applications Submitted': submitted,
+                        'Pending': pending
+                    })
+
+                st.markdown(f'#### **{selected_bank}** బ్రాంచ్ వారీ వివరాలు:')
+                st.dataframe(pd.DataFrame(branch_summary), use_container_width=True)
+            else:
+                st.info('👉 పైన జాబితా నుండి ఏదైనా ఒక బ్యాంక్‌ను ఎంచుకుంటే, ఆ బ్యాంక్ కింద ఉన్న అన్ని బ్రాంచ్‌ల రిపోర్ట్ ఇక్కడ కనిపిస్తుంది.')
+
         else:
             st.error("డేటాలో బ్యాంక్ లేదా బ్రాంచ్ కాలమ్‌లు అందుబాటులో లేవు.")
 
@@ -394,11 +426,14 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in export_df_base.groupby(['MANDAL', 'VO']):
+            pmjjby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+            pmsby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+            
             vo_summary.append({
                 'Mandal': mandal, 'VO Name': vo,
                 'Total Members': len(group),
-                'PMJJBY Done': group[group['PMJJBY_STATUS'] == 'Done'].shape[0],
-                'PMSBY Done': group[group['PMSBY_STATUS'] == 'Done'].shape[0]
+                'PMJJBY Enrolled': pmjjby_eligible[pmjjby_eligible[col_pmjjby_bank].notna()].shape[0],
+                'PMSBY Enrolled': pmsby_eligible[pmsby_eligible[col_pmsby_bank].notna()].shape[0]
             })
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
