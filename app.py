@@ -3,52 +3,76 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
+    page_title='Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for compact sidebar text fitting and styling
+# Custom CSS: Green & Amber Theme, No Blue tones, Custom styled Save buttons
 st.markdown("""
     <style>
-    .stApp { background-color: #f0f2f6; }
-    
-    /* Main Portal Header Styling */
+    .stApp { 
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
     .portal-header {
-        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-        padding: 25px;
-        border-radius: 15px;
-        color: white !important;
+        background: linear-gradient(135deg, #fff176 0%, #ffee58 100%);
+        padding: 30px;
+        border-radius: 20px;
+        color: #d32f2f !important;
         text-align: center;
         margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid #fbc02d;
     }
-    .portal-header h1 { color: #ffffff !important; font-size: 28px !important; font-weight: 700; }
-    
-    /* Sidebar Styling Improvements & Text Shrinking to fit single line */
-    section[data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e0e0e0;
+    .portal-header h1 { 
+        color: #c62828 !important; 
+        font-size: 28px !important; 
+        font-weight: 800; 
     }
-    
-    section[data-testid="stSidebar"] .stRadio label p {
-        font-size: 13.5px !important;
-        font-weight: 600 !important;
-    }
-    
-    .section-title-pmjjby {
-        color: #1565C0;
-        border-bottom: 2px solid #1565C0;
-        padding-bottom: 5px;
-        margin-top: 15px;
-        margin-bottom: 15px;
+    .portal-header p { 
+        color: #b71c1c !important; 
+        font-size: 16px !important; 
+        margin-top: 5px;
         font-weight: 600;
+    }
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+        border-right: 2px solid #bbf7d0;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+    }
+    section[data-testid="stSidebar"] .stRadio label p {
+        font-size: 15.5px !important;
+        font-weight: 700 !important;
+        color: #14532d;
+    }
+    .stDataFrame div {
+        font-size: 14.5px !important;
+    }
+    .section-title-pmjjby {
+        color: #15803d;
+        background: #f0fdf4;
+        border-left: 5px solid #15803d;
+        padding: 10px 15px;
+        border-radius: 0 8px 8px 0;
+        margin-top: 20px;
+        margin-bottom: 15px;
+        font-weight: 700;
+        font-size: 18px;
     }
     .section-title-pmsby {
-        color: #2E7D32;
-        border-bottom: 2px solid #2E7D32;
-        padding-bottom: 5px;
-        margin-top: 15px;
+        color: #b45309;
+        background: #fef3c7;
+        border-left: 5px solid #b45309;
+        padding: 10px 15px;
+        border-radius: 0 8px 8px 0;
+        margin-top: 20px;
         margin-bottom: 15px;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 18px;
+    }
+    div.stAlert {
+        background-color: #fefce8 !important;
+        color: #854d0e !important;
+        border: 1px solid #fef08a !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -78,7 +102,7 @@ if df is not None:
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY'
     )
     col_pmjjby_bank = (
-        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
+        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
     )
     col_pmsby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
@@ -116,19 +140,19 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation with exact requested order & names
-    st.sidebar.markdown("<h2 style='color: #1f4068; text-align: center; font-size: 20px;'>🚀 NAVIGATION PORTAL</h2>", unsafe_allow_html=True)
+    # Sidebar Navigation
+    st.sidebar.markdown("<h2 style='color: #14532d; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
-    st.sidebar.markdown("<h3 style='color: #e43f5a; font-size: 15px; font-weight: bold;'>📊 REPORTS & DASHBOARD</h3>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h3 style='color: #b45309; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
-        '1️⃣ 🏠 DASHBOARD': 'Dashboard',
-        '2️⃣ 📍 MANDAL WISE': 'Mandal Wise',
-        '3️⃣ 📊 VO WISE': 'VO Wise',
-        '4️⃣ 🏛️ BANK WISE': 'Bank Wise',
-        '5️⃣ 📈 BRANCH WISE': 'Branch Wise',
-        '6️⃣ 📥 PENDING LIST': 'Pending Reports',
-        '7️⃣ 👥 MEMBER LIST': 'Member Level'
+        '1️⃣ 🏠 డాష్‌‌బోర్డ్': 'Dashboard',
+        '2️⃣ 📍 మండలం వారీగా': 'Mandal Wise',
+        '3️⃣ 📊 వి.ఓ (VO) వారీగా': 'VO Wise',
+        '4️⃣ 🏛️ బ్యాంక్ వారీగా': 'Bank Wise',
+        '5️⃣ 📈 బ్రాంచ్ వారీగా': 'Branch Wise',
+        '6️⃣ 📥 పెండింగ్ జాబితా': 'Pending Reports',
+        '7️⃣ 👥 సభ్యుల జాబితా': 'Member Level'
     }
 
     selected_display_opt = st.sidebar.radio(
@@ -144,7 +168,7 @@ if df is not None:
     # PAGE 1: DASHBOARD
     if app_mode == 'Dashboard':
         st.markdown(
-            '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1><p>Manage and track insurance status seamlessly</p></div>',
+            '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
             unsafe_allow_html=True,
         )
 
@@ -181,10 +205,10 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్ను** వరుసగా ఎంచుకోండి.'
             )
         else:
-            st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
+            st.markdown(f'### 📄 SHG సభ్యుల జాబితా: <span style="color: #15803d;">{selected_shg}</span>', unsafe_allow_html=True)
             members_df = export_df_base[
                 (export_df_base['MANDAL'] == selected_mandal)
                 & (export_df_base['VO'] == selected_vo)
@@ -202,7 +226,32 @@ if df is not None:
                 except Exception:
                     raw_age = 35
 
-                with st.expander(f'👤 {m_name} (ID: {m_id}) | వయస్సు: {raw_age}'):
+                # Determine Status for Header Label
+                p_sub = current_row.get(col_pmjjby_sub)
+                p_bank = current_row.get(col_pmjjby_bank)
+                s_sub = current_row.get(col_pmsby_sub)
+                s_bank = current_row.get(col_pmsby_bank)
+
+                status_tags = []
+                if raw_age > 70:
+                    status_tags.append("❌ Not Eligible")
+                else:
+                    if pd.notna(p_bank) and str(p_bank).lower() != 'nan' and str(p_bank).strip() != '':
+                        status_tags.append("🛡️ PMJJBY Enrolled")
+                    elif pd.notna(p_sub) and str(p_sub).lower() != 'nan' and str(p_sub).strip() != '':
+                        status_tags.append("🛡️ PMJJBY Application Submitted")
+
+                    if pd.notna(s_bank) and str(s_bank).lower() != 'nan' and str(s_bank).strip() != '':
+                        status_tags.append("🚑 PMSBY Enrolled")
+                    elif pd.notna(s_sub) and str(s_sub).lower() != 'nan' and str(s_sub).strip() != '':
+                        status_tags.append("🚑 PMSBY Application Submitted")
+
+                    if not status_tags:
+                        status_tags.append("⏳ అప్డేషన్ పెండింగ్ (Pending)")
+
+                status_str = " | ".join(status_tags)
+
+                with st.expander(f'👤 {m_name} (ID: {m_id}) | వయస్సు: {raw_age} -- [{status_str}]'):
                     entered_age = st.number_input(
                         'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
                         min_value=1,
@@ -227,62 +276,98 @@ if df is not None:
                     if st.session_state.get(is_confirmed_key, False):
                         active_age = st.session_state.get(session_key, raw_age)
 
-                        pmjjby_sub_date, pmjjby_b_date = None, None
-                        pmsby_sub_date, pmsby_b_date_pmsby = None, None
+                        if active_age > 70:
+                            st.error("❌ ఈ సభ్యురాలు 70 సంవత్సరాలు దాటినందున బీమా పథకాలకు అర్హులు కాదు (Not Eligible).")
+                        else:
+                            pmjjby_sub_date, pmjjby_b_date = None, None
+                            pmsby_sub_date, pmsby_b_date_pmsby = None, None
 
-                        if 18 <= active_age <= 50:
-                            st.markdown(
-                                '<h4 class="section-title-pmjjby">🛡 1. PMJJBY స్కీమ్ వివరాలు (18-50)</h4>',
-                                unsafe_allow_html=True,
-                            )
-                            bc1, bc2, bc3 = st.columns(3)
-                            with bc1:
-                                st.text_input('PMJJBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmjjby_bank_{idx}')
-                            with bc2:
-                                st.text_input('PMJJBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmjjby_branch_{idx}')
-                            with bc3:
-                                st.text_input('PMJJBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmjjby_acc_{idx}')
+                            def safe_parse_date(val):
+                                if pd.isna(val) or not val or str(val).lower() == 'nan':
+                                    return None
+                                try:
+                                    return pd.to_datetime(val).date()
+                                except:
+                                    return None
 
-                            col_d1, col_d2 = st.columns(2)
-                            with col_d1:
-                                pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=None, key=f'pmjjby_sub_{idx}')
-                            with col_d2:
-                                pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=None, key=f'pmjjby_b_opt_{idx}')
+                            existing_pm_sub = safe_parse_date(current_row.get(col_pmjjby_sub))
+                            existing_pm_bank = safe_parse_date(current_row.get(col_pmjjby_bank))
+                            existing_ps_sub = safe_parse_date(current_row.get(col_pmsby_sub))
+                            existing_ps_bank = safe_parse_date(current_row.get(col_pmsby_bank))
 
-                        if 18 <= active_age <= 70:
-                            st.markdown(
-                                '<h4 class="section-title-pmsby">🚑 2. PMSBY స్కీమ్ వివరాలు (18-70)</h4>',
-                                unsafe_allow_html=True,
-                            )
-                            pc1, pc2, pc3 = st.columns(3)
-                            with pc1:
-                                st.text_input('PMSBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmsby_bank_{idx}')
-                            with pc2:
-                                st.text_input('PMSBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmsby_branch_{idx}')
-                            with pc3:
-                                st.text_input('PMSBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmsby_acc_{idx}')
+                            if 18 <= active_age <= 50:
+                                st.markdown(
+                                    '<div class="section-title-pmjjby">🛡 1. PMJJBY స్కీమ్ వివరాలు (18-50 సంవత్సరాలు)</div>',
+                                    unsafe_allow_html=True,
+                                )
+                                bc1, bc2, bc3 = st.columns(3)
+                                with bc1:
+                                    st.text_input('PMJJBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmjjby_bank_{idx}')
+                                with bc2:
+                                    st.text_input('PMJJBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmjjby_branch_{idx}')
+                                with bc3:
+                                    st.text_input('PMJJBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmjjby_acc_{idx}')
 
-                            col_d3, col_d4 = st.columns(2)
-                            with col_d3:
-                                pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=None, key=f'pmsby_sub_{idx}')
-                            with col_d4:
-                                pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=None, key=f'pmsby_b_opt_{idx}')
+                                col_d1, col_d2 = st.columns(2)
+                                with col_d1:
+                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
+                                with col_d2:
+                                    pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=existing_pm_bank, key=f'pmjjby_b_opt_{idx}')
 
-                        if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='secondary'):
-                            updated_row = row.to_dict()
-                            updated_row['AGE'] = str(active_age)
-                            if pmjjby_sub_date: updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
-                            if pmjjby_b_date: updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
-                            if pmsby_sub_date: updated_row[col_pmsby_sub] = str(pmsby_sub_date)
-                            if pmsby_b_date_pmsby: updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+                            if 18 <= active_age <= 70:
+                                st.markdown(
+                                    '<div class="section-title-pmsby">🚑 2. PMSBY స్కీమ్ వివరాలు (18-70 సంవత్సరాలు)</div>',
+                                    unsafe_allow_html=True,
+                                )
+                                pc1, pc2, pc3 = st.columns(3)
+                                with pc1:
+                                    st.text_input('PMSBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmsby_bank_{idx}')
+                                with pc2:
+                                    st.text_input('PMSBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmsby_branch_{idx}')
+                                with pc3:
+                                    st.text_input('PMSBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmsby_acc_{idx}')
 
-                            st.session_state.saved_entries_dict[m_id] = updated_row
-                            st.success(f'✅ {m_name} వివరాలు సేవ్ చేయబడ్డాయి!')
-                            st.rerun()
+                                col_d3, col_d4 = st.columns(2)
+                                with col_d3:
+                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
+                                with col_d4:
+                                    pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
+
+                            if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
+                                date_error = False
+                                
+                                if pmjjby_sub_date and pmjjby_b_date:
+                                    if pmjjby_b_date < pmjjby_sub_date:
+                                        date_error = True
+                                        st.error("❌ PMJJBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
+
+                                if pmsby_sub_date and pmsby_b_date_pmsby:
+                                    if pmsby_b_date_pmsby < pmsby_sub_date:
+                                        date_error = True
+                                        st.error("❌ PMSBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
+
+                                if not date_error:
+                                    updated_row = row.to_dict()
+                                    updated_row['AGE'] = str(active_age)
+                                    
+                                    if pmjjby_sub_date: 
+                                        updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
+                                    if pmjjby_b_date: 
+                                        updated_row[col_pmjjby_bank] = str(pmjjby_b_date)
+                                    if pmsby_sub_date: 
+                                        updated_row[col_pmsby_sub] = str(pmsby_sub_date)
+                                    if pmsby_b_date_pmsby: 
+                                        updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
+
+                                    st.session_state.saved_entries_dict[m_id] = updated_row
+                                    # Reset confirmation state to auto-close/collapse the expander view
+                                    st.session_state[is_confirmed_key] = False
+                                    st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
+                                    st.rerun()
 
     # 2. MANDAL WISE
     elif app_mode == 'Mandal Wise':
-        st.markdown('## 📍 2. MANDAL WISE ABSTRACT')
+        st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
@@ -309,8 +394,8 @@ if df is not None:
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # 3. VO WISE
-    elif app_mode == 'VO WISE':
-        st.markdown('## 📊 3. VO WISE ABSTRACT')
+    elif app_mode == 'VO Wise':
+        st.markdown("## 📊 వి.ఓ (VO) వారీగా సారాంశం")
         st.write('---')
         
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
@@ -343,7 +428,7 @@ if df is not None:
 
     # 4. BANK WISE
     elif app_mode == 'Bank Wise':
-        st.markdown('## 🏛️ 4. BANK WISE ABSTRACT')
+        st.markdown("## 🏛️ బ్యాంక్ వారీగా సారాంశం")
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
@@ -368,7 +453,7 @@ if df is not None:
 
     # 5. BRANCH WISE
     elif app_mode == 'Branch Wise':
-        st.markdown('## 📈 5. BRANCH WISE ABSTRACT')
+        st.markdown("## 📈 బ్రాంచ్ వారీగా సారాంశం")
         st.write('---')
         
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
@@ -401,7 +486,7 @@ if df is not None:
 
     # 6. PENDING LIST
     elif app_mode == 'Pending Reports':
-        st.markdown('## 📥 6. PENDING LIST')
+        st.markdown("## 📥 పెండింగ్ మరియు ఎన్‌రోల్‌మెంట్ నివేదికలు")
         st.write('---')
 
         report_type = st.selectbox(
@@ -466,7 +551,7 @@ if df is not None:
 
     # 7. MEMBER LIST
     elif app_mode == 'Member Level':
-        st.markdown('## 👥 7. MEMBER LIST')
+        st.markdown("## 👥 పూర్తి సభ్యుల జాబితా")
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
         
