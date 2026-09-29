@@ -70,7 +70,7 @@ sheet_id = '1vZqfSZmc24tEPCC-7D5B7oIGAujln7du'
 sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
 
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=300, show_spinner=False)
 def load_data():
     try:
         headers = {
@@ -78,22 +78,30 @@ def load_data():
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             )
         }
-        response = requests.get(sheet_url, headers=headers, timeout=15)
-        response.raise_for_status()
-        df = pd.read_csv(io.StringIO(response.text), dtype=str)
-        df.columns = df.columns.str.strip()
-        for col in ['MANDAL', 'VO', 'SHG', 'BANK NAME', 'BRANCH NAME']:
-            if col in df.columns:
-                df[col] = df[col].astype(str).str.strip().str.upper()
-        return df
-    except Exception as e:
-        st.error(f'డేటా లోడ్ చేయడంలో విఫలమైంది: {e}')
+        response = requests.get(sheet_url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            df = pd.read_csv(io.StringIO(response.text), dtype=str)
+            df.columns = df.columns.str.strip()
+            for col in ['MANDAL', 'VO', 'SHG', 'BANK NAME', 'BRANCH NAME']:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).str.strip().str.upper()
+            return df
+        return None
+    except Exception:
         return None
 
 
-df = load_data()
+with st.spinner(
+    'దయచేసి వేచి ఉండండి, డేటా లోడ్ చేయబడుతోంది...'
+):
+    df = load_data()
 
-if df is not None:
+if df is None:
+    st.error(
+        '❌ డేటా లోడ్ అవ్వడంలో సమస్య ఏర్పడింది. దయచేసి పేజీని రిఫ్రెష్ (Refresh)'
+        ' చేయండి.'
+    )
+else:
     col_pmjjby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY'
     )
@@ -239,7 +247,6 @@ if df is not None:
                     m_id, row
                 )
 
-                # Active display name
                 orig_name = str(row.get('MEMBER NAME', 'Unknown'))
                 corr_name_val = current_row.get(col_corrected_name)
                 display_name = (
@@ -255,7 +262,6 @@ if df is not None:
                 except Exception:
                     raw_age = 35
 
-                # Determine Status for Header Label
                 p_sub = current_row.get(col_pmjjby_sub)
                 p_bank = current_row.get(col_pmjjby_bank)
                 s_sub = current_row.get(col_pmsby_sub)
@@ -308,7 +314,6 @@ if df is not None:
                     f'👤 {display_name} | వయస్సు: {raw_age} -- [{status_str}]'
                 ):
 
-                    # 1. NAME CONFIRMATION SECTION
                     st.markdown(
                         '##### 📝 ఆధార్ ప్రకారం పేరు నిర్ధారణ (Aadhaar Name'
                         ' Verification):'
@@ -354,7 +359,6 @@ if df is not None:
 
                     st.markdown('---')
 
-                    # 2. AGE CONFIRMATION SECTION
                     is_age_confirmed_key = f'is_age_confirmed_{idx}'
                     if is_already_saved:
                         st.session_state[is_age_confirmed_key] = True
@@ -538,7 +542,7 @@ if df is not None:
                                     st.error(
                                         '❌ PMSBY లో: ముందుగా అప్లికేషన్'
                                         ' బ్యాంకుకు సబ్మిట్ చేసిన తేదీ'
-                                        ' ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్'
+                                        ' ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌‌రోల్'
                                         ' చేసిన తేదీ ఇవ్వకూడదు!'
                                     )
 
@@ -721,7 +725,7 @@ if df is not None:
         st.write('---')
         scheme_choice = st.radio(
             'స్కీమ్‌ను ఎంచుకోండి:',
-            ['🛡️️ PMJJBY', '🚑 PMSBY'],
+            ['🛡️ PMJJBY', '🚑 PMSBY'],
             horizontal=True,
             key='bank_wise_scheme',
         )
