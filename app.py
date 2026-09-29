@@ -217,7 +217,7 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
