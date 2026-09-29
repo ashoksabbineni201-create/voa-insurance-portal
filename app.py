@@ -93,6 +93,8 @@ def load_data():
         df.columns = df.columns.str.strip()
         if 'MANDAL' in df.columns:
             df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
+        if 'VO' in df.columns:
+            df['VO'] = df['VO'].astype(str).str.strip()
         if 'BANK NAME' in df.columns:
             df['BANK NAME'] = df['BANK NAME'].astype(str).str.strip().str.upper()
         if 'BRANCH NAME' in df.columns:
@@ -312,7 +314,7 @@ if df is not None:
         st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)')
         st.write('---')
 
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='mandal_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -320,23 +322,23 @@ if df is not None:
                 eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(eligible_group)
                 enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
             else:
                 eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
                 target = len(eligible_group)
                 enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
 
             balance = max(0, target - enrolled)
             yet_to_submit = max(0, balance - submitted)
 
             mandal_summary.append({
-                'Mandal': m_name,
+                'Mandal Name': m_name,
                 'Target': target,
                 'Enrolled (Achievement)': enrolled,
                 'Balance': balance,
-                'Applications Submitted to Bank': submitted,
-                'Yet to Submit to Bank': yet_to_submit
+                'Applications Submitted': submitted,
+                'Yet to Submit': yet_to_submit
             })
 
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
@@ -358,12 +360,12 @@ if df is not None:
                     eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                     target = len(eligible_group)
                     enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                    submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
+                    submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
                 else:
                     eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
                     target = len(eligible_group)
                     enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                    submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+                    submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
 
                 balance = max(0, target - enrolled)
                 yet_to_submit = max(0, balance - submitted)
@@ -394,12 +396,12 @@ if df is not None:
                         eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                         target = len(eligible_group)
                         enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                        submitted = eligible_group[eligible_group[col_pmjjby_sub].notna()].shape[0]
+                        submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
                     else:
                         eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
                         target = len(eligible_group)
                         enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                        submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
+                        submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
 
                     balance = max(0, target - enrolled)
                     yet_to_submit = max(0, balance - submitted)
@@ -426,19 +428,40 @@ if df is not None:
         st.markdown('## 📊 VO ల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్')
         st.write('---')
 
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
+
+        selected_mandal_vo = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి (Optional):', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()), key='vo_mandal_filter')
+
+        vo_filter_df = export_df_base.copy()
+        if selected_mandal_vo != 'అన్నీ (All)':
+            vo_filter_df = vo_filter_df[vo_filter_df['MANDAL'] == selected_mandal_vo]
+
         vo_summary = []
-        for (mandal, vo), group in export_df_base.groupby(['MANDAL', 'VO']):
-            pmjjby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
-            pmsby_eligible = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
-            
+        for (mandal, vo), group in vo_filter_df.groupby(['MANDAL', 'VO']):
+            if scheme_choice == '🛡️ PMJJBY':
+                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                target = len(eligible_group)
+                enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
+            else:
+                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                target = len(eligible_group)
+                enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
+                submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
+
+            balance = max(0, target - enrolled)
+            yet_to_submit = max(0, balance - submitted)
+
             vo_summary.append({
-                'Mandal': mandal, 'VO Name': vo,
-                'Total Members': len(group),
-                'PMJJBY Target': len(pmjjby_eligible),
-                'PMJJBY Enrolled': pmjjby_eligible[pmjjby_eligible[col_pmjjby_bank].notna()].shape[0],
-                'PMSBY Target': len(pmsby_eligible),
-                'PMSBY Enrolled': pmsby_eligible[pmsby_eligible[col_pmsby_bank].notna()].shape[0]
+                'Mandal Name': mandal,
+                'VO Name': vo,
+                'Target': target,
+                'Enrolled (Achievement)': enrolled,
+                'Balance': balance,
+                'Applications Submitted': submitted,
+                'Yet to Submit': yet_to_submit
             })
+
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
     # PAGE 5: SHG & Member Level Detail
