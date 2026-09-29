@@ -145,13 +145,6 @@ if df is not None:
                     export_df_base.loc[idx_match, k] = str(v) if v is not None else None
 
     export_df_base['NUM_AGE'] = pd.to_numeric(export_df_base['AGE'], errors='coerce').fillna(0)
-    
-    # Status definitions
-    export_df_base['PMJJBY_STATUS'] = 'Pending'
-    export_df_base.loc[export_df_base[col_pmjjby_bank].notna(), 'PMJJBY_STATUS'] = 'Enrolled'
-
-    export_df_base['PMSBY_STATUS'] = 'Pending'
-    export_df_base.loc[export_df_base[col_pmsby_bank].notna(), 'PMSBY_STATUS'] = 'Enrolled'
 
     # Sidebar Navigation
     st.sidebar.header('📁 నావిగేషన్')
@@ -334,13 +327,16 @@ if df is not None:
                 enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
                 submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
 
-            pending = max(0, target - enrolled)
+            balance = max(0, target - enrolled)
+            yet_to_submit = max(0, balance - submitted)
+
             mandal_summary.append({
                 'Mandal': m_name,
-                'Target (Eligible)': target,
-                'Enrolled': enrolled,
+                'Target': target,
+                'Enrolled (Achievement)': enrolled,
+                'Balance': balance,
                 'Applications Submitted to Bank': submitted,
-                'Pending': pending
+                'Yet to Submit to Bank': yet_to_submit
             })
 
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
@@ -369,13 +365,16 @@ if df is not None:
                     enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
                     submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
 
-                pending = max(0, target - enrolled)
+                balance = max(0, target - enrolled)
+                yet_to_submit = max(0, balance - submitted)
+
                 bank_summary.append({
                     'Bank Name': bank,
                     'Target': target,
-                    'Enrolled': enrolled,
+                    'Enrolled (Achievement)': enrolled,
+                    'Balance': balance,
                     'Applications Submitted': submitted,
-                    'Pending': pending
+                    'Yet to Submit': yet_to_submit
                 })
 
             st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
@@ -402,13 +401,16 @@ if df is not None:
                         enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
                         submitted = eligible_group[eligible_group[col_pmsby_sub].notna()].shape[0]
 
-                    pending = max(0, target - enrolled)
+                    balance = max(0, target - enrolled)
+                    yet_to_submit = max(0, balance - submitted)
+
                     branch_summary.append({
                         'Branch Name': branch,
                         'Target': target,
-                        'Enrolled': enrolled,
+                        'Enrolled (Achievement)': enrolled,
+                        'Balance': balance,
                         'Applications Submitted': submitted,
-                        'Pending': pending
+                        'Yet to Submit': yet_to_submit
                     })
 
                 st.markdown(f'#### **{selected_bank}** బ్రాంచ్ వారీ వివరాలు:')
@@ -432,7 +434,9 @@ if df is not None:
             vo_summary.append({
                 'Mandal': mandal, 'VO Name': vo,
                 'Total Members': len(group),
+                'PMJJBY Target': len(pmjjby_eligible),
                 'PMJJBY Enrolled': pmjjby_eligible[pmjjby_eligible[col_pmjjby_bank].notna()].shape[0],
+                'PMSBY Target': len(pmsby_eligible),
                 'PMSBY Enrolled': pmsby_eligible[pmsby_eligible[col_pmsby_bank].notna()].shape[0]
             })
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
@@ -447,4 +451,4 @@ if df is not None:
         if selected_mandal_filter != 'అన్నీ (All)':
             filtered_report_df = filtered_report_df[filtered_report_df['MANDAL'] == selected_mandal_filter]
 
-        st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', 'PMJJBY_STATUS', 'PMSBY_STATUS']], use_container_width=True)
+        st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
