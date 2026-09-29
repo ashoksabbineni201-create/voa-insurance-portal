@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS - App styling & Sidebar Category Styling
+# Custom CSS for styling categories in sidebar
 st.markdown("""
     <style>
     .stApp { background-color: #f8f9fa; }
@@ -14,22 +14,39 @@ st.markdown("""
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        text-align: center;
         color: white !important;
+        text-align: center;
         margin-bottom: 25px;
     }
-    .portal-header h1 {
-        color: #ffffff !important;
-        font-size: 26px !important;
-        font-weight: 700 !important;
-        margin: 0 !important;
+    .portal-header h1 { color: #ffffff !important; font-size: 26px !important; }
+    
+    /* Sidebar Section Header Styling */
+    .sidebar-header-1 {
+        background-color: #1565C0;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-top: 10px;
+        text-align: center;
     }
-    div[data-testid="stForm"], div[data-testid="stExpander"] {
-        background-color: #ffffff !important;
-        border-radius: 10px !important;
-        border: 1px solid #e0e0e0 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+    .sidebar-header-2 {
+        background-color: #2E7D32;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-top: 15px;
+        text-align: center;
+    }
+    .sidebar-header-3 {
+        background-color: #EF6C00;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-top: 15px;
+        text-align: center;
     }
     .section-title-pmjjby {
         color: #1565C0;
@@ -47,44 +64,9 @@ st.markdown("""
         margin-bottom: 15px;
         font-weight: 600;
     }
-    /* Sidebar Category Headers Styling */
-    .sidebar-category-1 {
-        background: linear-gradient(90deg, #1565c0 0%, #64b5f6 100%);
-        padding: 8px 12px;
-        border-radius: 6px;
-        color: #ffffff;
-        font-weight: bold;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        font-size: 14px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .sidebar-category-2 {
-        background: linear-gradient(90deg, #2e7d32 0%, #81c784 100%);
-        padding: 8px 12px;
-        border-radius: 6px;
-        color: #ffffff;
-        font-weight: bold;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        font-size: 14px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .sidebar-category-3 {
-        background: linear-gradient(90deg, #ff9933 0%, #ffcc66 100%);
-        padding: 8px 12px;
-        border-radius: 6px;
-        color: #000000;
-        font-weight: bold;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        font-size: 14px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# Google Sheet link
 sheet_id = '1vZqfSZmc24tEPCC-7D5B7oIGAujln7du'
 sheet_url = f'https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv'
 
@@ -148,20 +130,17 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation structured exactly as requested:
-    # 1. Enrollment Dashboard
-    # 2. Progress & Detailed Reports (All remaining reports)
-    # 3. Bank Reports (Bank Wise Report & Bank Branch Wise Abstract Report)
-    st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్**')
+    # Sidebar Navigation with Categories
+    st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
     # Category 1
-    st.sidebar.markdown('<div class="sidebar-category-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
-    page_opt_1 = '🏠 Enrollment Dashboard (Portal)'
+    st.sidebar.markdown('<div class="sidebar-header-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
+    page_1 = '🏠 Enrollment Dashboard (Portal)'
 
     # Category 2
-    st.sidebar.markdown('<div class="sidebar-category-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
-    page_opt_2 = [
+    st.sidebar.markdown('<div class="sidebar-header-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
+    page_2_options = [
         '📍 Mandal Wise Abstract Report',
         '📊 Mandal & VO Wise Abstract Report',
         '📥 Detailed Lists & Pending Reports',
@@ -169,19 +148,19 @@ if df is not None:
     ]
 
     # Category 3
-    st.sidebar.markdown('<div class="sidebar-category-3">3. Bank Reports</div>', unsafe_allow_html=True)
-    page_opt_3 = [
+    st.sidebar.markdown('<div class="sidebar-header-3">3. Bank Reports</div>', unsafe_allow_html=True)
+    page_3_options = [
         '🏛️ Bank Wise Report',
         '📊 Bank Branch Wise Abstract Report'
     ]
 
-    all_pages = [page_opt_1] + page_opt_2 + page_opt_3
-    app_mode = st.sidebar.radio('పేజీ ఎంచుకోండి (Select Page):', all_pages, label_visibility='collapsed')
+    all_pages = [page_1] + page_2_options + page_3_options
+    app_mode = st.sidebar.selectbox('రిపోర్ట్ లేదా డాష్‌బోర్డ్ ఎంచుకోండి:', all_pages)
 
     st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Dashboard (Portal)
-    if app_mode == page_opt_1:
+    if app_mode == page_1:
         st.markdown(
             '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
@@ -220,7 +199,7 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
@@ -320,7 +299,7 @@ if df is not None:
                             st.rerun()
 
     # Mandal Wise Abstract Report
-    elif app_mode == page_opt_2[0]:
+    elif app_mode == page_2_options[0]:
         st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
@@ -348,7 +327,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # Mandal & VO Wise Abstract Report
-    elif app_mode == page_opt_2[1]:
+    elif app_mode == page_2_options[1]:
         st.markdown('## 📊 Mandal & VO Wise Abstract Report')
         st.write('---')
         
@@ -363,7 +342,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -381,13 +360,12 @@ if df is not None:
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
     # Detailed Lists & Pending Reports
-    elif app_mode == page_opt_2[2]:
+    elif app_mode == page_2_options[2]:
         st.markdown('## 📥 Detailed Lists & Pending Reports')
-        st.markdown('ఇప్పటివరకు ఎన్రోల్ అయినవి, సబ్మిట్ చేసి పెండింగ్‌లో ఉన్నవి, మరియు ఇంకా బ్యాంకుకు ఇవ్వని వారి వివరాలను చూడవచ్చు మరియు డౌన్లోడ్ చేసుకోవచ్చు.')
         st.write('---')
 
         report_type = st.selectbox(
-            'റിపోర్ట్ రకం ఎంచుకోండి (Select Report Category):',
+            'రిపోర్ట్ రకం ఎంచుకోండి:',
             [
                 '1. ఇప్పటివరకు ఎన్రోల్ అయినవారు (Completed / Enrolled List)',
                 '2. అప్లికేషన్ బ్యాంకుకు ఇచ్చి, ఎన్రోల్ కానివారు (Submitted & Pending at Bank)',
@@ -398,7 +376,7 @@ if df is not None:
         scheme_filter = st.radio('స్కీమ్ ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
         is_pmjjby = (scheme_filter == '🛡️ PMJJBY')
 
-        area_scope = st.radio('స్థాయి ఎంచుకోండి (Scope):', ['🌐 జిల్లా అంతా (Entire District)', '📍 నిర్దిష్ట మండలం (Specific Mandal)'], horizontal=True)
+        area_scope = st.radio('స్థాయి ఎంచుకోండి:', ['🌐 జిల్లా అంతా (Entire District)', '📍 నిర్దిష్ట మండలం (Specific Mandal)'], horizontal=True)
 
         target_df = export_df_base.copy()
         if area_scope == '📍 నిర్దిష్ట మండలం (Specific Mandal)':
@@ -437,7 +415,7 @@ if df is not None:
 
             csv_data = final_display_df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label='📥 ఈ రిపోర్ట్‌ని CSV / Excel గా డౌన్లోడ్ చేసుకోండి',
+                label='📥 ఈ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
                 data=csv_data,
                 file_name=f'Insurance_Report_{report_type[:3]}_{scheme_filter[2:]}.csv',
                 mime='text/csv',
@@ -447,7 +425,7 @@ if df is not None:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
     # SHG Member Level Detailed Report
-    elif app_mode == page_opt_2[3]:
+    elif app_mode == page_2_options[3]:
         st.markdown('## 👥 SHG Member Level Detailed Report')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
@@ -459,7 +437,7 @@ if df is not None:
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
     # Bank Wise Report
-    elif app_mode == page_opt_3[0]:
+    elif app_mode == page_3_options[0]:
         st.markdown('## 🏛️ Bank Wise Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
@@ -484,7 +462,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
     # Bank Branch Wise Abstract Report
-    elif app_mode == page_opt_3[1]:
+    elif app_mode == page_3_options[1]:
         st.markdown('## 📊 Bank Branch Wise Abstract Report')
         st.write('---')
         
