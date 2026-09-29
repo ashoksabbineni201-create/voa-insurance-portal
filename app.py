@@ -148,28 +148,28 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation with Categories
+    # Sidebar Navigation with Categories and Correct Mapping
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్**')
     st.sidebar.markdown('---')
 
     # Category 1: Enrollment Dashboard
     st.sidebar.markdown('<div class="sidebar-category-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
-    page_opt_1 = '🏠 1. Enrollment Dashboard (Portal)'
+    page_opt_1 = '🏠 Enrollment Dashboard (Portal)'
 
     # Category 2: Progress & Detailed Reports
     st.sidebar.markdown('<div class="sidebar-category-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
     page_opt_2 = [
-        '📍 Mandal Wise Abstract & Report',
-        '📊 Mandal & VO Wise Abstract & Report',
+        '📍 Mandal Wise Abstract Report',
+        '📊 Mandal & VO Wise Abstract Report',
         '📥 Detailed Lists & Pending Reports',
-        '👥 SHG & Member Level Detail Report'
+        '👥 SHG Member Level Detailed Report'
     ]
 
     # Category 3: Bank Reports
     st.sidebar.markdown('<div class="sidebar-category-3">3. Bank Reports</div>', unsafe_allow_html=True)
     page_opt_3 = [
         '🏛️ Bank Wise Report',
-        '📊 Bank & Branch Wise Abstract Report'
+        '📊 Bank Branch Wise Abstract Report'
     ]
 
     all_pages = [page_opt_1] + page_opt_2 + page_opt_3
@@ -316,7 +316,7 @@ if df is not None:
                             st.success(f'✅ {m_name} వివరాలు సేవ్ చేయబడ్డాయి!')
                             st.rerun()
 
-    # Mandal Wise Report
+    # Mandal Wise Abstract Report
     elif app_mode == page_opt_2[0]:
         st.markdown('## 📍 Mandal Wise Abstract & Report')
         st.write('---')
@@ -344,12 +344,11 @@ if df is not None:
             })
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
-    # Mandal & VO Wise Abstract & Report (Updated with Mandal Filter)
+    # Mandal & VO Wise Abstract Report (With Mandal Filter)
     elif app_mode == page_opt_2[1]:
-        st.markdown('## 📊 Mandal & VO Wise Abstract & Report')
+        st.markdown('## 📊 Mandal & VO Wise Abstract Report')
         st.write('---')
         
-        # Mandal selection filter as requested
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
         selected_mandal_filter = st.selectbox('మండలం ఎంచుకోండి (Select Mandal):', mandals_list)
         
@@ -444,9 +443,9 @@ if df is not None:
         else:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
-    # SHG & Member Level Detail Report
+    # SHG Member Level Detailed Report
     elif app_mode == page_opt_2[3]:
-        st.markdown('## 👥 SHG & Member Level Detail Report')
+        st.markdown('## 👥 SHG Member Level Detailed Report')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
         
@@ -481,12 +480,11 @@ if df is not None:
 
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
-    # Bank & Branch Wise Abstract Report (Updated with Bank Selection & Scheme Filter)
+    # Bank Branch Wise Abstract Report (With Bank Selection & Scheme Filter)
     elif app_mode == page_opt_3[1]:
-        st.markdown('## 📊 Bank & Branch Wise Abstract Report')
+        st.markdown('## 📊 Bank Branch Wise Abstract Report')
         st.write('---')
         
-        # Bank selection filter as requested
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
         selected_bank_filter = st.selectbox('బ్యాంక్ ఎంచుకోండి (Select Bank):', banks_list)
         
