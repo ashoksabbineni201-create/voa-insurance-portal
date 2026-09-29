@@ -20,33 +20,32 @@ st.markdown("""
     }
     .portal-header h1 { color: #ffffff !important; font-size: 26px !important; }
     
-    /* Sidebar Section Header Styling */
     .sidebar-header-1 {
         background-color: #1565C0;
         color: white;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 5px;
         font-weight: bold;
         margin-top: 10px;
-        text-align: center;
+        font-size: 14px;
     }
     .sidebar-header-2 {
         background-color: #2E7D32;
         color: white;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 5px;
         font-weight: bold;
         margin-top: 15px;
-        text-align: center;
+        font-size: 14px;
     }
     .sidebar-header-3 {
         background-color: #EF6C00;
         color: white;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 5px;
         font-weight: bold;
         margin-top: 15px;
-        text-align: center;
+        font-size: 14px;
     }
     .section-title-pmjjby {
         color: #1565C0;
@@ -130,15 +129,16 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation with Categories
+    # Sidebar Navigation Setup
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
-    # Category 1
+    # Category 1 Selection
     st.sidebar.markdown('<div class="sidebar-header-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
     page_1 = '🏠 Enrollment Dashboard (Portal)'
+    selected_cat_1 = st.sidebar.radio('Select Dashboard:', [page_1], label_visibility='collapsed')
 
-    # Category 2
+    # Category 2 Selection
     st.sidebar.markdown('<div class="sidebar-header-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
     page_2_options = [
         '📍 Mandal Wise Abstract Report',
@@ -146,16 +146,23 @@ if df is not None:
         '📥 Detailed Lists & Pending Reports',
         '👥 SHG Member Level Detailed Report'
     ]
+    selected_cat_2 = st.sidebar.selectbox('Select Progress Report:', ['-- ఎంచుకోండి --'] + page_2_options, label_visibility='collapsed')
 
-    # Category 3
+    # Category 3 Selection
     st.sidebar.markdown('<div class="sidebar-header-3">3. Bank Reports</div>', unsafe_allow_html=True)
     page_3_options = [
         '🏛️ Bank Wise Report',
         '📊 Bank Branch Wise Abstract Report'
     ]
+    selected_cat_3 = st.sidebar.selectbox('Select Bank Report:', ['-- ఎంచుకోండి --'] + page_3_options, label_visibility='collapsed')
 
-    all_pages = [page_1] + page_2_options + page_3_options
-    app_mode = st.sidebar.selectbox('రిపోర్ట్ లేదా డాష్‌బోర్డ్ ఎంచుకోండి:', all_pages)
+    # Determine active page based on user interaction
+    if selected_cat_2 != '-- ఎంచుకోండి --' and selected_cat_3 == '-- ఎంచుకోండి --':
+        app_mode = selected_cat_2
+    elif selected_cat_3 != '-- ఎంచుకోండి --':
+        app_mode = selected_cat_3
+    else:
+        app_mode = selected_cat_1
 
     st.sidebar.markdown('---')
 
@@ -199,7 +206,7 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
@@ -250,7 +257,7 @@ if df is not None:
 
                         if 18 <= active_age <= 50:
                             st.markdown(
-                                '<h4 class="section-title-pmjjby">🛡️ 1. PMJJBY స్కీమ్ వివరాలు (18-50)</h4>',
+                                '<h4 class="section-title-pmjjby">🛡️️ 1. PMJJBY స్కీమ్ వివరాలు (18-50)</h4>',
                                 unsafe_allow_html=True,
                             )
                             bc1, bc2, bc3 = st.columns(3)
@@ -342,7 +349,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
