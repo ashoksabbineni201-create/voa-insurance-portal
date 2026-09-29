@@ -20,33 +20,6 @@ st.markdown("""
     }
     .portal-header h1 { color: #ffffff !important; font-size: 26px !important; }
     
-    .sidebar-header-1 {
-        background-color: #1565C0;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 5px;
-        font-weight: bold;
-        margin-top: 10px;
-        font-size: 14px;
-    }
-    .sidebar-header-2 {
-        background-color: #2E7D32;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 5px;
-        font-weight: bold;
-        margin-top: 15px;
-        font-size: 14px;
-    }
-    .sidebar-header-3 {
-        background-color: #EF6C00;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 5px;
-        font-weight: bold;
-        margin-top: 15px;
-        font-size: 14px;
-    }
     .section-title-pmjjby {
         color: #1565C0;
         border-bottom: 2px solid #1565C0;
@@ -129,47 +102,25 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation Setup
+    # Sidebar Navigation Setup using st.sidebar.radio to prevent state sticking issues
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
-    # Category 1 Selection (Converted to Selectbox)
-    st.sidebar.markdown('<div class="sidebar-header-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
-    page_1_options = ['🏠 Enrollment Dashboard (Portal)']
-    selected_cat_1 = st.sidebar.selectbox('Select Dashboard:', ['-- ఎంచుకోండి --'] + page_1_options, label_visibility='collapsed', key='cat_1_select')
-
-    # Category 2 Selection
-    st.sidebar.markdown('<div class="sidebar-header-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
-    page_2_options = [
-        '📍 Mandal Wise Abstract Report',
-        '📊 Mandal & VO Wise Abstract Report',
-        '📥 Detailed Lists & Pending Reports',
-        '👥 SHG Member Level Detailed Report'
+    nav_options = [
+        '🏠 1. Enrollment Dashboard (Portal)',
+        '📍 2. Mandal Wise Abstract Report',
+        '📊 2. Mandal & VO Wise Abstract Report',
+        '📥 2. Detailed Lists & Pending Reports',
+        '👥 2. SHG Member Level Detailed Report',
+        '🏛️ 3. Bank Wise Report',
+        '📊 3. Bank Branch Wise Abstract Report',
     ]
-    selected_cat_2 = st.sidebar.selectbox('Select Progress Report:', ['-- ఎంచుకోండి --'] + page_2_options, label_visibility='collapsed', key='cat_2_select')
 
-    # Category 3 Selection
-    st.sidebar.markdown('<div class="sidebar-header-3">3. Bank Reports</div>', unsafe_allow_html=True)
-    page_3_options = [
-        '🏛️ Bank Wise Report',
-        '📊 Bank Branch Wise Abstract Report'
-    ]
-    selected_cat_3 = st.sidebar.selectbox('Select Bank Report:', ['-- ఎంచుకోండి --'] + page_3_options, label_visibility='collapsed', key='cat_3_select')
-
-    # Determine active page based on user interaction across all categories
-    if selected_cat_1 != '-- ఎంచుకోండి --':
-        app_mode = selected_cat_1
-    elif selected_cat_2 != '-- ఎంచుకోండి --':
-        app_mode = selected_cat_2
-    elif selected_cat_3 != '-- ఎంచుకోండి --':
-        app_mode = selected_cat_3
-    else:
-        app_mode = page_1_options[0] # Default fallback
-
+    app_mode = st.sidebar.radio('మెను ఎంచుకోండి:', nav_options)
     st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Dashboard (Portal)
-    if app_mode == page_1_options[0]:
+    if app_mode == nav_options[0]:
         st.markdown(
             '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
@@ -308,14 +259,14 @@ if df is not None:
                             st.rerun()
 
     # Mandal Wise Abstract Report
-    elif app_mode == page_2_options[0]:
+    elif app_mode == nav_options[1]:
         st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -336,7 +287,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # Mandal & VO Wise Abstract Report
-    elif app_mode == page_2_options[1]:
+    elif app_mode == nav_options[2]:
         st.markdown('## 📊 Mandal & VO Wise Abstract Report')
         st.write('---')
         
@@ -369,7 +320,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
     # Detailed Lists & Pending Reports
-    elif app_mode == page_2_options[2]:
+    elif app_mode == nav_options[3]:
         st.markdown('## 📥 Detailed Lists & Pending Reports')
         st.write('---')
 
@@ -434,7 +385,7 @@ if df is not None:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
     # SHG Member Level Detailed Report
-    elif app_mode == page_2_options[3]:
+    elif app_mode == nav_options[4]:
         st.markdown('## 👥 SHG Member Level Detailed Report')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
@@ -446,7 +397,7 @@ if df is not None:
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
     # Bank Wise Report
-    elif app_mode == page_3_options[0]:
+    elif app_mode == nav_options[5]:
         st.markdown('## 🏛️ Bank Wise Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
@@ -471,7 +422,7 @@ if df is not None:
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
     # Bank Branch Wise Abstract Report
-    elif app_mode == page_3_options[1]:
+    elif app_mode == nav_options[6]:
         st.markdown('## 📊 Bank Branch Wise Abstract Report')
         st.write('---')
         
