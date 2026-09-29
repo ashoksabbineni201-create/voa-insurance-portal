@@ -350,11 +350,11 @@ if df is not None:
                                 
                                 if pmjjby_b_date and not pmjjby_sub_date:
                                     date_error = True
-                                    st.error("❌ PMJJBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                    st.error("❌ PMJJBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
                                 
                                 if pmsby_b_date_pmsby and not pmsby_sub_date:
                                     date_error = True
-                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
 
                                 if not date_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
@@ -372,13 +372,13 @@ if df is not None:
                                     updated_row['MEMBER NAME'] = cleaned_new_name
                                     updated_row['AGE'] = str(active_age)
                                     
-                                    # Log Name Correction
+                                    # Log Name Correction (Member Name stores Old Name, Corrected Name stores New Name)
                                     if cleaned_new_name != orig_name:
                                         st.session_state.name_corrections_log[m_id] = {
                                             'Mandal Name': str(row.get('MANDAL', '')),
                                             'VO Name': str(row.get('VO', '')),
                                             'SHG Name': str(row.get('SHG', '')),
-                                            'Member Name': cleaned_new_name,
+                                            'Member Name': orig_name,
                                             'Member ID': str(m_id),
                                             'Corrected Name': cleaned_new_name
                                         }
@@ -420,7 +420,7 @@ if df is not None:
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
