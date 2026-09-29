@@ -133,10 +133,10 @@ if df is not None:
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
-    # Category 1 Selection
+    # Category 1 Selection (Converted to Selectbox)
     st.sidebar.markdown('<div class="sidebar-header-1">1. Enrollment Dashboard</div>', unsafe_allow_html=True)
-    page_1 = '🏠 Enrollment Dashboard (Portal)'
-    selected_cat_1 = st.sidebar.radio('Select Dashboard:', [page_1], label_visibility='collapsed')
+    page_1_options = ['🏠 Enrollment Dashboard (Portal)']
+    selected_cat_1 = st.sidebar.selectbox('Select Dashboard:', ['-- ఎంచుకోండి --'] + page_1_options, label_visibility='collapsed', key='cat_1_select')
 
     # Category 2 Selection
     st.sidebar.markdown('<div class="sidebar-header-2">2. Progress & Detailed Reports</div>', unsafe_allow_html=True)
@@ -146,7 +146,7 @@ if df is not None:
         '📥 Detailed Lists & Pending Reports',
         '👥 SHG Member Level Detailed Report'
     ]
-    selected_cat_2 = st.sidebar.selectbox('Select Progress Report:', ['-- ఎంచుకోండి --'] + page_2_options, label_visibility='collapsed')
+    selected_cat_2 = st.sidebar.selectbox('Select Progress Report:', ['-- ఎంచుకోండి --'] + page_2_options, label_visibility='collapsed', key='cat_2_select')
 
     # Category 3 Selection
     st.sidebar.markdown('<div class="sidebar-header-3">3. Bank Reports</div>', unsafe_allow_html=True)
@@ -154,20 +154,22 @@ if df is not None:
         '🏛️ Bank Wise Report',
         '📊 Bank Branch Wise Abstract Report'
     ]
-    selected_cat_3 = st.sidebar.selectbox('Select Bank Report:', ['-- ఎంచుకోండి --'] + page_3_options, label_visibility='collapsed')
+    selected_cat_3 = st.sidebar.selectbox('Select Bank Report:', ['-- ఎంచుకోండి --'] + page_3_options, label_visibility='collapsed', key='cat_3_select')
 
-    # Determine active page based on user interaction
-    if selected_cat_2 != '-- ఎంచుకోండి --' and selected_cat_3 == '-- ఎంచుకోండి --':
+    # Determine active page based on user interaction across all categories
+    if selected_cat_1 != '-- ఎంచుకోండి --':
+        app_mode = selected_cat_1
+    elif selected_cat_2 != '-- ఎంచుకోండి --':
         app_mode = selected_cat_2
     elif selected_cat_3 != '-- ఎంచుకోండి --':
         app_mode = selected_cat_3
     else:
-        app_mode = selected_cat_1
+        app_mode = page_1_options[0] # Default fallback
 
     st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Dashboard (Portal)
-    if app_mode == page_1:
+    if app_mode == page_1_options[0]:
         st.markdown(
             '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
             unsafe_allow_html=True,
@@ -206,7 +208,7 @@ if df is not None:
 
         if not selected_shg or selected_shg == '-- ఎంచుకోండి --':
             st.info(
-                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
+                '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
@@ -257,7 +259,7 @@ if df is not None:
 
                         if 18 <= active_age <= 50:
                             st.markdown(
-                                '<h4 class="section-title-pmjjby">🛡️️ 1. PMJJBY స్కీమ్ వివరాలు (18-50)</h4>',
+                                '<h4 class="section-title-pmjjby">🛡 1. PMJJBY స్కీమ్ వివరాలు (18-50)</h4>',
                                 unsafe_allow_html=True,
                             )
                             bc1, bc2, bc3 = st.columns(3)
@@ -309,7 +311,7 @@ if df is not None:
     elif app_mode == page_2_options[0]:
         st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
