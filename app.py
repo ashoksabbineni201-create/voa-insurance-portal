@@ -82,6 +82,16 @@ def load_data():
         return None
 
 
+def trigger_rerun():
+    try:
+        st.rerun()
+    except AttributeError:
+        try:
+            st.experimental_rerun()
+        except Exception:
+            pass
+
+
 df = load_data()
 
 if df is not None:
@@ -129,7 +139,7 @@ if df is not None:
 
     # Header Title
     st.markdown(
-        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
+        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
         unsafe_allow_html=True,
     )
 
@@ -236,7 +246,7 @@ if df is not None:
 
                 with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
                     
-                    # 1. Name Correction (ఆధార్ ప్రకారం పేరు సవరణ) & Age Confirmation Persistence Check
+                    # 1. Name Correction & Age Confirmation Persistence Check
                     col_nc1, col_nc2 = st.columns([2, 1])
                     with col_nc1:
                         entered_name = st.text_input(
@@ -254,8 +264,6 @@ if df is not None:
                         )
 
                     is_confirmed_key = f'is_age_confirmed_{idx}'
-                    
-                    # ఒకసారి సేవ్ చేసినట్లయితే లేదా కన్ఫర్మ్ అయితే నేరుగా ఫారమ్ కనిపిస్తుంది
                     has_saved_before = m_id in st.session_state.saved_entries_dict
                     
                     if not st.session_state.get(is_confirmed_key, False) and not has_saved_before:
@@ -266,7 +274,7 @@ if df is not None:
                         )
                         if age_confirmed:
                             st.session_state[is_confirmed_key] = True
-                            st.rererun() if hasattr(st, 'rerun') else st.experimental_rerun()
+                            trigger_rerun()
                     
                     if st.session_state.get(is_confirmed_key, False) or has_saved_before:
                         active_age = entered_age
@@ -365,7 +373,7 @@ if df is not None:
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
                                     st.success(f'✅ {entered_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
-                                    st.rerun()
+                                    trigger_rerun()
 
     # 2. MANDAL WISE
     elif app_mode == 'Mandal Wise':
@@ -375,7 +383,7 @@ if df is not None:
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡 PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
