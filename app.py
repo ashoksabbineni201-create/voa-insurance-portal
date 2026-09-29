@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for modern styling, colors and visual appeal
+# Custom CSS for compact sidebar text fitting and styling
 st.markdown("""
     <style>
     .stApp { background-color: #f0f2f6; }
@@ -23,10 +23,15 @@ st.markdown("""
     }
     .portal-header h1 { color: #ffffff !important; font-size: 28px !important; font-weight: 700; }
     
-    /* Sidebar Styling Improvements */
+    /* Sidebar Styling Improvements & Text Shrinking to fit single line */
     section[data-testid="stSidebar"] {
         background-color: #ffffff;
         border-right: 1px solid #e0e0e0;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio label p {
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
     }
     
     .section-title-pmjjby {
@@ -79,7 +84,7 @@ if df is not None:
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
     )
     col_pmsby_bank = (
-        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
+        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
     )
 
     for c in [
@@ -111,25 +116,25 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Colorful Sidebar Navigation with updated 7 report names
-    st.sidebar.markdown("<h2 style='color: #1f4068; text-align: center; font-size: 22px;'>🚀 NAVIGATION PORTAL</h2>", unsafe_allow_html=True)
+    # Sidebar Navigation
+    st.sidebar.markdown("<h2 style='color: #1f4068; text-align: center; font-size: 20px;'>🚀 NAVIGATION PORTAL</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
-    st.sidebar.markdown("<h3 style='color: #e43f5a; font-size: 16px; font-weight: bold;'>📊 REPORTS & DASHBOARD</h3>", unsafe_allow_html=True)
+    st.sidebar.markdown("<h3 style='color: #e43f5a; font-size: 15px; font-weight: bold;'>📊 REPORTS & DASHBOARD</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
-        '1️⃣ 🏠 ENROLLMENT DASHBOARD': 'Dashboard',
-        '2️⃣ 📍 MANDAL WISE ABSTRACT': 'Mandal Wise',
-        '3️⃣ 📊 MANDAL AND VO WISE ABSTRACT': 'VO Wise',
+        '1️⃣ 🏠 DASHBOARD': 'Dashboard',
+        '2️⃣ 📍 MANDAL WISE': 'Mandal Wise',
+        '3️⃣ 📊 MANDAL & VO WISE': 'VO Wise',
         '4️⃣ 📥 PENDING LIST': 'Pending Reports',
-        '5️⃣ 👥 MEMBER WISE TOTAL LIST': 'Member Level',
-        '6️⃣ 🏛️ BANK WISE ABSTRACT': 'Bank Wise',
-        '7️⃣ 📈 BANK & BRANCH WISE ABSTRACT': 'Branch Wise'
+        '5️⃣ 👥 MEMBER TOTAL LIST': 'Member Level',
+        '6️⃣ 🏛️ BANK WISE': 'Bank Wise',
+        '7️⃣ 📈 BRANCH WISE': 'Branch Wise'
     }
 
     selected_display_opt = st.sidebar.radio(
         'Select Report Option',
         list(nav_options_mapping.keys()),
-        key='colorful_sidebar_nav_updated_names',
+        key='compact_sidebar_nav_options',
         label_visibility='collapsed'
     )
     
@@ -371,7 +376,7 @@ if df is not None:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
             else:
-                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna() & target_df[col_pmsby_bank].isna())]
         else:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
@@ -421,7 +426,7 @@ if df is not None:
 
         bank_summary = []
         for bank, group in export_df_base.groupby('BANK NAME'):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
