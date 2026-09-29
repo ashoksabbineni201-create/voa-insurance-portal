@@ -209,7 +209,7 @@ if df is not None:
                 except Exception:
                     raw_age = 35
 
-                # Determine Status for Header Label
+                # Determine Status for Header Label (Without ID)
                 p_sub = current_row.get(col_pmjjby_sub)
                 p_bank = current_row.get(col_pmjjby_bank)
                 s_sub = current_row.get(col_pmsby_sub)
@@ -234,7 +234,7 @@ if df is not None:
 
                 status_str = " | ".join(status_tags)
 
-                with st.expander(f'👤 {m_name} (ID: {m_id}) | వయస్సు: {raw_age} -- [{status_str}]'):
+                with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
                     entered_age = st.number_input(
                         'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
                         min_value=1,
@@ -293,7 +293,7 @@ if df is not None:
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
-                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
+                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY (అప్లికేషన్ తేదీ ఇవ్వాలి)', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
                                 with col_d2:
                                     pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=existing_pm_bank, key=f'pmjjby_b_opt_{idx}')
 
@@ -312,19 +312,28 @@ if df is not None:
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
-                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
+                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY (అప్లికేషన్ తేదీ ఇవ్వాలి)', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
                                 with col_d4:
                                     pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
 
                             if st.button(f'💾 {m_name} వివరాలు సేవ్ చేయండి', key=f'save_{idx}', type='primary'):
                                 date_error = False
                                 
-                                if pmjjby_sub_date and pmjjby_b_date:
+                                # Validation: Direct Bank Enrolled check without application submission date
+                                if pmjjby_b_date and not pmjjby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMJJBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                
+                                if pmsby_b_date_pmsby and not pmsby_sub_date:
+                                    date_error = True
+                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+
+                                if not date_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
                                         date_error = True
                                         st.error("❌ PMJJBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
 
-                                if pmsby_sub_date and pmsby_b_date_pmsby:
+                                if not date_error and pmsby_sub_date and pmsby_b_date_pmsby:
                                     if pmsby_b_date_pmsby < pmsby_sub_date:
                                         date_error = True
                                         st.error("❌ PMSBY లో: బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ, అప్లికేషన్ సబ్మిట్ చేసిన తేదీ కంటే ముందు ఉండకూడదు!")
@@ -351,7 +360,7 @@ if df is not None:
     elif app_mode == 'Mandal Wise':
         st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -525,7 +534,7 @@ if df is not None:
                 label='📥 ఈ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
                 data=csv_data,
                 file_name=f'Insurance_Report_{report_type[:3]}_{scheme_filter[2:]}.csv',
-                mime='text/csv',
+                mime='text/css',
                 type='primary'
             )
         else:
