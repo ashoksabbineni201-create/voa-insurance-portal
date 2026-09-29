@@ -102,40 +102,27 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation Setup with a single unified radio menu for smooth switching
+    # Sidebar Navigation Setup with a single unified radio component
     st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
     st.sidebar.markdown('---')
 
-    pages_dict = {
-        "1. Dashboard": [
-            "🏠 Enrollment Dashboard (Portal)"
-        ],
-        "2. Master Reports": [
-            "📍 Mandal Wise Abstract Report",
-            "📊 Mandal & VO Wise Abstract Report",
-            "📥 Detailed Lists & Pending Reports",
-            "👥 SHG Member Level Detailed Report"
-        ],
-        "3. Bank Reports": [
-            "🏛️ Bank Wise Report",
-            "📊 Bank Branch Wise Abstract Report"
-        ]
-    }
+    nav_options = [
+        '🏠 Enrollment Dashboard (Portal)',
+        '📍 Mandal Wise Abstract Report',
+        '📊 Mandal & VO Wise Abstract Report',
+        '📥 Detailed Lists & Pending Reports',
+        '👥 SHG Member Level Detailed Report',
+        '🏛️ Bank Wise Report',
+        '📊 Bank Branch Wise Abstract Report'
+    ]
 
-    # Creating a seamless sidebar layout
-    app_mode = None
-    for category, options in pages_dict.items():
-        st.sidebar.markdown(f"**{category}**")
-        selected_opt = st.sidebar.radio(
-            f"menu_{category}",
-            options,
-            key=f"radio_{category}",
-            label_visibility='collapsed'
-        )
-        # Check if any option in this category is active/clicked
-        if selected_opt:
-            app_mode = selected_opt
-
+    app_mode = st.sidebar.radio(
+        'Select Menu Option',
+        nav_options,
+        key='unified_sidebar_nav',
+        label_visibility='collapsed'
+    )
+    
     st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Dashboard (Portal)
@@ -281,7 +268,7 @@ if df is not None:
     elif app_mode == '📍 Mandal Wise Abstract Report':
         st.markdown('## 📍 Mandal Wise Abstract Report')
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -321,7 +308,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -373,7 +360,7 @@ if df is not None:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
             else:
-                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna() & (target_df[col_pmsby_bank].isna()))]
         else:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
