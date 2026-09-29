@@ -9,9 +9,7 @@ st.set_page_config(
 # Custom CSS - App styling
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #f8f9fa;
-    }
+    .stApp { background-color: #f8f9fa; }
     .portal-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         padding: 20px;
@@ -32,35 +30,6 @@ st.markdown("""
         border-radius: 10px !important;
         border: 1px solid #e0e0e0 !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
-    }
-    .streamlit-expanderHeader {
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        color: #1e3c72 !important;
-        background-color: #f0f4f8 !important;
-        border-radius: 8px !important;
-    }
-    div[data-testid="stButton"] > button[kind="primary"] {
-        background: linear-gradient(90deg, #1E88E5 0%, #1565C0 100%) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
-        border: none !important;
-        width: 100% !important;
-        padding: 8px 16px !important;
-    }
-    div[data-testid="stButton"] > button[kind="secondary"] {
-        background: linear-gradient(90deg, #2E7D32 0%, #1B5E20 100%) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        font-weight: bold !important;
-        border: none !important;
-        width: 100% !important;
-        padding: 8px 16px !important;
-    }
-    section[data-testid="stSidebar"] {
-        background-color: #ffffff !important;
-        border-right: 1px solid #e0e0e0;
     }
     .section-title-pmjjby {
         color: #1565C0;
@@ -91,14 +60,9 @@ def load_data():
     try:
         df = pd.read_csv(sheet_url, dtype=str)
         df.columns = df.columns.str.strip()
-        if 'MANDAL' in df.columns:
-            df['MANDAL'] = df['MANDAL'].astype(str).str.strip().str.title()
-        if 'VO' in df.columns:
-            df['VO'] = df['VO'].astype(str).str.strip()
-        if 'BANK NAME' in df.columns:
-            df['BANK NAME'] = df['BANK NAME'].astype(str).str.strip().str.upper()
-        if 'BRANCH NAME' in df.columns:
-            df['BRANCH NAME'] = df['BRANCH NAME'].astype(str).str.strip().str.upper()
+        for col in ['MANDAL', 'VO', 'SHG', 'BANK NAME', 'BRANCH NAME']:
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.strip().str.upper()
         return df
     except Exception as e:
         st.error(f'డేటా లోడ్ చేయడంలో విఫలమైంది: {e}')
@@ -146,7 +110,9 @@ if df is not None:
                     export_df_base[k] = export_df_base[k].astype(object)
                     export_df_base.loc[idx_match, k] = str(v) if v is not None else None
 
-    export_df_base['NUM_AGE'] = pd.to_numeric(export_df_base['AGE'], errors='coerce').fillna(0)
+    export_df_base['NUM_AGE'] = pd.to_numeric(
+        export_df_base['AGE'], errors='coerce'
+    ).fillna(0)
 
     # Sidebar Navigation
     st.sidebar.header('📁 నావిగేషన్')
@@ -159,6 +125,7 @@ if df is not None:
             '🏠 మండల్ వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal Wise Report)',
             '📊 బ్యాంక్ & బ్రాంచ్ వైజ్ అబ్‌స్ట్రాక్ట్ (Bank & Branch Wise Report)',
             '📊 VO వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal & VO Wise Report)',
+            '📥 SAG మెమోరైజ్డ్ & పెండింగ్ రిపోర్ట్స్ (Detailed Lists)',
             '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)',
         ],
     )
@@ -208,10 +175,6 @@ if df is not None:
                 '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్‌ను** వరుసగా ఎంచుకోండి.'
             )
         else:
-            st.sidebar.success(
-                f'📍 **ఎంచుకున్న వివరాలు:**\n\n- **మండలం:** {selected_mandal}\n- **VO:** {selected_vo}\n- **SHG:** {selected_shg}'
-            )
-
             st.markdown(f'### 📄 SHG సభ్యుల జాబితా ({selected_shg})')
             members_df = export_df_base[
                 (export_df_base['MANDAL'] == selected_mandal)
@@ -306,165 +269,157 @@ if df is not None:
 
                             st.session_state.saved_entries_dict[m_id] = updated_row
                             st.success(f'✅ {m_name} వివరాలు సేవ్ చేయబడ్డాయి!')
-                            st.rer5un = getattr(st, 'rerun', None)
-                            if st.rer5un: st.rer5un()
+                            st.rerun()
 
     # PAGE 2: Mandal Wise Report
     elif app_mode == '🏠 మండల్ వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal Wise Report)':
-        st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్ (Mandal Wise Summary)')
+        st.markdown('## 🏠 మండలాల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్')
         st.write('---')
-
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='mandal_scheme')
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
             if scheme_choice == '🛡️ PMJJBY':
-                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
-                target = len(eligible_group)
-                enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmjjby_sub].notna() & elig[col_pmjjby_bank].isna()].shape[0]
             else:
-                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
-                target = len(eligible_group)
-                enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmsby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmsby_sub].notna() & elig[col_pmsby_bank].isna()].shape[0]
 
             balance = max(0, target - enrolled)
             yet_to_submit = max(0, balance - submitted)
 
             mandal_summary.append({
-                'Mandal Name': m_name,
-                'Target': target,
-                'Enrolled (Achievement)': enrolled,
-                'Balance': balance,
-                'Applications Submitted': submitted,
-                'Yet to Submit': yet_to_submit
+                'Mandal Name': m_name, 'Target': target, 'Enrolled': enrolled,
+                'Balance': balance, 'Applications Submitted': submitted, 'Yet to Submit': yet_to_submit
             })
-
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # PAGE 3: Bank & Branch Wise Abstract Report
     elif app_mode == '📊 బ్యాంక్ & బ్రాంచ్ వైజ్ అబ్‌స్ట్రాక్ట్ (Bank & Branch Wise Report)':
         st.markdown('## 📊 బ్యాంక్ మరియు బ్రాంచ్ వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్')
         st.write('---')
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
 
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_scheme')
-
-        if 'BANK NAME' in export_df_base.columns and 'BRANCH NAME' in export_df_base.columns:
-            
-            # 1. Bank Wise Summary Table
-            st.markdown(f'### 🏦 బ్యాంక్ వారీగా అబ్‌స్ట్రాక్ట్ ({scheme_choice})')
-            bank_summary = []
-            for bank, group in export_df_base.groupby('BANK NAME'):
-                if scheme_choice == '🛡️ PMJJBY':
-                    eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
-                    target = len(eligible_group)
-                    enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                    submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
-                else:
-                    eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
-                    target = len(eligible_group)
-                    enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                    submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
-
-                balance = max(0, target - enrolled)
-                yet_to_submit = max(0, balance - submitted)
-
-                bank_summary.append({
-                    'Bank Name': bank,
-                    'Target': target,
-                    'Enrolled (Achievement)': enrolled,
-                    'Balance': balance,
-                    'Applications Submitted': submitted,
-                    'Yet to Submit': yet_to_submit
-                })
-
-            st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
-
-            st.markdown('---')
-            st.markdown(f'### 🏢 నిర్దిష్ట బ్యాంక్ వారీగా బ్రాంచ్ నివేదిక ({scheme_choice})')
-
-            all_banks = sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
-            selected_bank = st.selectbox('ఒక బ్యాంక్‌ను ఎంచుకోండి (Select Bank):', ['-- ఎంచుకోండి --'] + all_banks)
-
-            if selected_bank and selected_bank != '-- ఎంచుకోండి --':
-                bank_filtered_df = export_df_base[export_df_base['BANK NAME'] == selected_bank]
-                
-                branch_summary = []
-                for branch, group in bank_filtered_df.groupby('BRANCH NAME'):
-                    if scheme_choice == '🛡️ PMJJBY':
-                        eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
-                        target = len(eligible_group)
-                        enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                        submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
-                    else:
-                        eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
-                        target = len(eligible_group)
-                        enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                        submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
-
-                    balance = max(0, target - enrolled)
-                    yet_to_submit = max(0, balance - submitted)
-
-                    branch_summary.append({
-                        'Branch Name': branch,
-                        'Target': target,
-                        'Enrolled (Achievement)': enrolled,
-                        'Balance': balance,
-                        'Applications Submitted': submitted,
-                        'Yet to Submit': yet_to_submit
-                    })
-
-                st.markdown(f'#### **{selected_bank}** బ్రాంచ్ వారీ వివరాలు:')
-                st.dataframe(pd.DataFrame(branch_summary), use_container_width=True)
+        bank_summary = []
+        for bank, group in export_df_base.groupby('BANK NAME'):
+            if scheme_choice == '🛡️ PMJJBY':
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmjjby_sub].notna() & elig[col_pmjjby_bank].isna()].shape[0]
             else:
-                st.info('👉 పైన జాబితా నుండి ఏదైనా ఒక బ్యాంక్‌ను ఎంచుకుంటే, ఆ బ్యాంక్ కింద ఉన్న అన్ని బ్రాంచ్‌ల రిపోర్ట్ ఇక్కడ కనిపిస్తుంది.')
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmsby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmsby_sub].notna() & elig[col_pmsby_bank].isna()].shape[0]
 
-        else:
-            st.error("డేటాలో బ్యాంక్ లేదా బ్రాంచ్ కాలమ్‌లు అందుబాటులో లేవు.")
+            balance = max(0, target - enrolled)
+            yet_to_submit = max(0, balance - submitted)
+            bank_summary.append({'Bank Name': bank, 'Target': target, 'Enrolled': enrolled, 'Balance': balance, 'Applications Submitted': submitted, 'Yet to Submit': yet_to_submit})
+
+        st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
     # PAGE 4: VO Wise Abstract
     elif app_mode == '📊 VO వైజ్ అబ్‌స్ట్రాక్ట్ & రిపోర్ట్ (Mandal & VO Wise Report)':
         st.markdown('## 📊 VO ల వారీగా అబ్‌స్ట్రాక్ట్ రిపోర్ట్')
         st.write('---')
-
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='vo_scheme')
-
-        selected_mandal_vo = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి (Optional):', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()), key='vo_mandal_filter')
-
-        vo_filter_df = export_df_base.copy()
-        if selected_mandal_vo != 'అన్నీ (All)':
-            vo_filter_df = vo_filter_df[vo_filter_df['MANDAL'] == selected_mandal_vo]
-
+        
         vo_summary = []
-        for (mandal, vo), group in vo_filter_df.groupby(['MANDAL', 'VO']):
+        for (mandal, vo), group in export_df_base.groupby(['MANDAL', 'VO']):
             if scheme_choice == '🛡️ PMJJBY':
-                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
-                target = len(eligible_group)
-                enrolled = eligible_group[eligible_group[col_pmjjby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmjjby_sub].notna() & eligible_group[col_pmjjby_bank].isna()].shape[0]
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmjjby_sub].notna() & elig[col_pmjjby_bank].isna()].shape[0]
             else:
-                eligible_group = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
-                target = len(eligible_group)
-                enrolled = eligible_group[eligible_group[col_pmsby_bank].notna()].shape[0]
-                submitted = eligible_group[eligible_group[col_pmsby_sub].notna() & eligible_group[col_pmsby_bank].isna()].shape[0]
+                elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 70)]
+                target = len(elig)
+                enrolled = elig[elig[col_pmsby_bank].notna()].shape[0]
+                submitted = elig[elig[col_pmsby_sub].notna() & elig[col_pmsby_bank].isna()].shape[0]
 
             balance = max(0, target - enrolled)
             yet_to_submit = max(0, balance - submitted)
-
-            vo_summary.append({
-                'Mandal Name': mandal,
-                'VO Name': vo,
-                'Target': target,
-                'Enrolled (Achievement)': enrolled,
-                'Balance': balance,
-                'Applications Submitted': submitted,
-                'Yet to Submit': yet_to_submit
-            })
+            vo_summary.append({'Mandal Name': mandal, 'VO Name': vo, 'Target': target, 'Enrolled': enrolled, 'Balance': balance, 'Applications Submitted': submitted, 'Yet to Submit': yet_to_submit})
 
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
-    # PAGE 5: SHG & Member Level Detail
+    # PAGE 5: SAG Memo & Pending Detailed Reports with Download Option
+    elif app_mode == '📥 SAG మెమోరైజ్డ్ & పెండింగ్ రిపోర్ట్స్ (Detailed Lists)':
+        st.markdown('## 📥 SAG మెమోరైజ్డ్ మరియు పెండింగ్ సభ్యుల వివరాల నివేదిక')
+        st.markdown('ఇప్పటివరకు ఎన్రోల్ అయినవి, సబ్మిట్ చేసి పెండింగ్‌లో ఉన్నవి, మరియు ఇంకా బ్యాంకుకు ఇవ్వని వారి వివరాలను **స్కీమ్-వారీగా, పేరు-వారీగా** చూడవచ్చు మరియు డౌన్లోడ్ చేసుకోవచ్చు.')
+        st.write('---')
+
+        # Report Options
+        report_type = st.selectbox(
+            'റിపోర్ట్ రకం ఎంచుకోండి (Select Report Category):',
+            [
+                '1. ఇప్పటివరకు ఎన్రోల్ అయినవారు (Completed / Enrolled List)',
+                '2. అప్లికేషన్ బ్యాంకుకు ఇచ్చి, ఎన్రోల్ కానివారు (Submitted & Pending at Bank)',
+                '3. ఇంకా బ్యాంకుకు అప్లికేషన్ ఇవ్వనివారు (Yet to Submit to Bank)'
+            ]
+        )
+
+        scheme_filter = st.radio('స్కీమ్ ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
+        is_pmjjby = (scheme_filter == '🛡️ PMJJBY')
+
+        # Level filter: District vs Mandal
+        area_scope = st.radio('స్థాయి ఎంచుకోండి (Scope):', ['🌐 జిల్లా అంతా (Entire District)', '📍 నిర్దిష్ట మండలం (Specific Mandal)'], horizontal=True)
+
+        target_df = export_df_base.copy()
+        if area_scope == '📍 నిర్దిష్ట మండలం (Specific Mandal)':
+            mandals_list = sorted(target_df['MANDAL'].dropna().unique().tolist())
+            chosen_mandal = st.selectbox('మండలం ఎంచుకోండి:', mandals_list)
+            target_df = target_df[target_df['MANDAL'] == chosen_mandal]
+
+        # Filtering logic based on report type
+        result_list = []
+        if '1.' in report_type:
+            if is_pmjjby:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_bank].notna())]
+            else:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_bank].notna())]
+        elif '2.' in report_type:
+            if is_pmjjby:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
+            else:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
+        else:
+            if is_pmjjby:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
+            else:
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].isna()) & (target_df[col_pmsby_bank].isna())]
+
+        st.markdown(f'### 📋 సభ్యుల జాబితా (మొత్తం రికార్డులు: {len(result_list)})')
+
+        if not result_list.empty:
+            display_cols = ['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', 'BANK NAME', 'BRANCH NAME', 'MEMBER SB ACCOUNT NUMBER']
+            if is_pmjjby:
+                display_cols += [col_pmjjby_sub, col_pmjjby_bank]
+            else:
+                display_cols += [col_pmsby_sub, col_pmsby_bank]
+
+            final_display_df = result_list[[c for c in display_cols if c in result_list.columns]]
+            st.dataframe(final_display_df, use_container_width=True)
+
+            # Download CSV Button
+            csv_data = final_display_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label='📥 ఈ రిపోర్ట్‌ని CSV / Excel గా డౌన్లోడ్ చేసుకోండి',
+                data=csv_data,
+                file_name=f'Insurance_Report_{report_type[:3]}_{scheme_filter[2:]}.csv',
+                mime='text/csv',
+                type='primary'
+            )
+        else:
+            st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
+
+    # PAGE 6: SHG & Member Level Detail
     elif app_mode == '👥 SHG & మెంబర్ వైజ్ రిపోర్ట్ (SHG / Member Level Detail)':
         st.markdown('## 👥 SHG మరియు సభ్యుల పూర్తి వివరాల నివేదిక')
         st.write('---')
