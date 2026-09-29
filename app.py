@@ -95,14 +95,16 @@ if df is not None:
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
     )
     col_pmsby_bank = (
-        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
+        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
     )
+    col_corrected_name = 'AADHAAR CORRECTED NAME'
 
     for c in [
         col_pmjjby_sub,
         col_pmjjby_bank,
         col_pmsby_sub,
         col_pmsby_bank,
+        col_corrected_name,
     ]:
         if c not in df.columns:
             df[c] = None
@@ -199,10 +201,14 @@ if df is not None:
             ]
 
             for idx, row in members_df.reset_index(drop=True).iterrows():
-                m_name = str(row.get('MEMBER NAME', 'Unknown'))
                 m_id = str(row.get('MEMBER ID', f'ID-{idx+1}'))
-
                 current_row = st.session_state.saved_entries_dict.get(m_id, row)
+                
+                # Check corrected name or original name
+                m_name = str(current_row.get(col_corrected_name, ''))
+                if not m_name or m_name.lower() == 'nan' or m_name.strip() == '':
+                    m_name = str(row.get('MEMBER NAME', 'Unknown'))
+
                 raw_age = current_row.get('AGE', 35)
                 try:
                     raw_age = int(float(raw_age))
@@ -234,30 +240,57 @@ if df is not None:
 
                 status_str = " | ".join(status_tags)
 
+                # Check if data or age was already saved previously for this member
+                is_already_saved = m_id in st.session_state.saved_entries_dict or (
+                    pd.notna(current_row.get(col_pmjjby_sub)) or 
+                    pd.notna(current_row.get(col_pmjjby_bank)) or 
+                    pd.notna(current_row.get(col_pmsby_sub)) or 
+                    pd.notna(current_row.get(col_pmsby_bank))
+                )
+
                 with st.expander(f'👤 {m_name} | వయస్సు: {raw_age} -- [{status_str}]'):
-                    entered_age = st.number_input(
-                        'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
-                        min_value=1,
-                        max_value=100,
-                        value=raw_age,
-                        key=f'age_{idx}',
-                    )
-
-                    age_confirmed = st.button(
-                        f'✔️ {m_name} వయస్సును నిర్ధారించండి',
-                        key=f'confirm_age_btn_{idx}',
-                        type='primary',
-                    )
-
-                    session_key = f'confirmed_age_val_{idx}'
+                    
+                    # If already saved or confirmed once, bypass age confirmation button requirement
                     is_confirmed_key = f'is_age_confirmed_{idx}'
-
-                    if age_confirmed:
-                        st.session_state[session_key] = entered_age
+                    if is_already_saved:
                         st.session_state[is_confirmed_key] = True
 
+                    if not st.session_state.get(is_confirmed_key, False):
+                        entered_age = st.number_input(
+                            'మెంబర్ వయస్సు నిర్ధారించండి / మార్చండి (Age):',
+                            min_value=1,
+                            max_value=100,
+                            value=raw_age,
+                            key=f'age_{idx}',
+                        )
+
+                        age_confirmed = st.button(
+                            f'✔️ {m_name} వయస్సును నిర్ధారించండి',
+                            key=f'confirm_age_btn_{idx}',
+                            type='primary',
+                        )
+
+                        session_key = f'confirmed_age_val_{idx}'
+                        if age_confirmed:
+                            st.session_state[session_key] = entered_age
+                            st.session_state[is_confirmed_key] = True
+                            st.rerun()
+                    
                     if st.session_state.get(is_confirmed_key, False):
+                        session_key = f'confirmed_age_val_{idx}'
                         active_age = st.session_state.get(session_key, raw_age)
+
+                        # Aadhaar Name Correction Option
+                        st.markdown("##### 📝 ఆధార్ ప్రకారం పేరు మార్పు (Aadhaar Name Correction):")
+                        current_corrected_val = str(current_row.get(col_corrected_name, ''))
+                        if current_corrected_val.lower() == 'nan':
+                            current_corrected_val = str(row.get('MEMBER NAME', ''))
+                        
+                        entered_corrected_name = st.text_input(
+                            'సభ్యురాలి పూర్తి పేరు (యాస్ పర్ ఆధార్):',
+                            value=current_corrected_val,
+                            key=f'corrected_name_{idx}'
+                        )
 
                         if active_age > 70:
                             st.error("❌ ఈ సభ్యురాలు 70 సంవత్సరాలు దాటినందున బీమా పథకాలకు అర్హులు కాదు (Not Eligible).")
@@ -341,6 +374,7 @@ if df is not None:
                                 if not date_error:
                                     updated_row = row.to_dict()
                                     updated_row['AGE'] = str(active_age)
+                                    updated_row[col_corrected_name] = str(entered_corrected_name).strip()
                                     
                                     if pmjjby_sub_date: 
                                         updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
@@ -352,7 +386,6 @@ if df is not None:
                                         updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
-                                    st.session_state[is_confirmed_key] = False
                                     st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
                                     st.rerun()
 
@@ -520,7 +553,7 @@ if df is not None:
         st.markdown(f'### 📋 సభ్యుల జాబితా (మొత్తం రికార్డులు: {len(result_list)})')
 
         if not result_list.empty:
-            display_cols = ['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', 'BANK NAME', 'BRANCH NAME', 'MEMBER SB ACCOUNT NUMBER']
+            display_cols = ['MANDAL', 'VO', 'SHG', 'MEMBER NAME', col_corrected_name, 'MEMBER ID', 'AGE', 'BANK NAME', 'BRANCH NAME', 'MEMBER SB ACCOUNT NUMBER']
             if is_pmjjby:
                 display_cols += [col_pmjjby_sub, col_pmjjby_bank]
             else:
@@ -550,4 +583,4 @@ if df is not None:
         if selected_mandal_filter != 'అన్నీ (All)':
             filtered_report_df = filtered_report_df[filtered_report_df['MANDAL'] == selected_mandal_filter]
 
-        st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
+        st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', col_corrected_name, 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
