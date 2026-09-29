@@ -6,7 +6,7 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for Modern UI, Pure Telugu sidebar labels & Larger Font Sizes for Reports
+# Custom CSS for Modern UI, Yellow Background with Red Letters for Portal Header
 st.markdown("""
     <style>
     /* Main App Background & Font */
@@ -15,25 +15,27 @@ st.markdown("""
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* Portal Header Styling */
+    /* Portal Header Styling: Yellow Backdrop with Red Letters */
     .portal-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background: linear-gradient(135deg, #fff176 0%, #ffee58 100%);
         padding: 30px;
         border-radius: 20px;
-        color: white !important;
+        color: #d32f2f !important;
         text-align: center;
         margin-bottom: 25px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border: 2px solid #fbc02d;
     }
     .portal-header h1 { 
-        color: #ffffff !important; 
+        color: #c62828 !important; 
         font-size: 32px !important; 
         font-weight: 800; 
     }
     .portal-header p { 
-        color: #e0e6ed !important; 
+        color: #b71c1c !important; 
         font-size: 16px !important; 
         margin-top: 5px;
+        font-weight: 600;
     }
 
     /* Sidebar Styling & Increased Telugu Text Font Size */
@@ -160,7 +162,7 @@ if df is not None:
     st.sidebar.markdown("<h3 style='color: #d97706; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
 
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌బోర్డ్': 'Dashboard',
+        '1️⃣ 🏠 డాష్‌‌బోర్డ్': 'Dashboard',
         '2️⃣ 📍 మండలం వారీగా': 'Mandal Wise',
         '3️⃣ 📊 వి.ఓ (VO) వారీగా': 'VO Wise',
         '4️⃣ 🏛️ బ్యాంక్ వారీగా': 'Bank Wise',
