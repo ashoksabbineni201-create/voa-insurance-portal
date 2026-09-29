@@ -6,19 +6,28 @@ st.set_page_config(
     page_title='VOA Insurance Enrollment Portal', page_icon='🏛️', layout='wide'
 )
 
-# Custom CSS for styling categories in sidebar
+# Custom CSS for modern styling, colors and visual appeal
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
+    .stApp { background-color: #f0f2f6; }
+    
+    /* Main Portal Header Styling */
     .portal-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 20px;
-        border-radius: 12px;
+        background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        padding: 25px;
+        border-radius: 15px;
         color: white !important;
         text-align: center;
         margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
-    .portal-header h1 { color: #ffffff !important; font-size: 26px !important; }
+    .portal-header h1 { color: #ffffff !important; font-size: 28px !important; font-weight: 700; }
+    
+    /* Sidebar Styling Improvements */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e0e0e0;
+    }
     
     .section-title-pmjjby {
         color: #1565C0;
@@ -102,33 +111,35 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation Setup with a single unified radio component
-    st.sidebar.markdown('📁 **NAVIGATOR / నావిగేషన్ మెను**')
+    # Colorful Sidebar Navigation with "REPORTS" Heading & Numbering 1 to 7
+    st.sidebar.markdown("<h2 style='color: #1f4068; text-align: center; font-size: 22px;'>🚀 NAVIGATION PORTAL</h2>", unsafe_allow_html=True)
     st.sidebar.markdown('---')
+    st.sidebar.markdown("<h3 style='color: #e43f5a; font-size: 16px; font-weight: bold;'>📊 REPORTS & DASHBOARD</h3>", unsafe_allow_html=True)
 
-    nav_options = [
-        '🏠 Enrollment Dashboard (Portal)',
-        '📍 Mandal Wise Abstract Report',
-        '📊 Mandal & VO Wise Abstract Report',
-        '📥 Detailed Lists & Pending Reports',
-        '👥 SHG Member Level Detailed Report',
-        '🏛️ Bank Wise Report',
-        '📊 Bank Branch Wise Abstract Report'
-    ]
+    nav_options_mapping = {
+        '1️⃣ 🏠 Enrollment Dashboard (Portal)': 'Dashboard',
+        '2️⃣ 📍 Mandal Wise Abstract Report': 'Mandal Wise',
+        '3️⃣ 📊 Mandal & VO Wise Abstract Report': 'VO Wise',
+        '4️⃣ 📥 Detailed Lists & Pending Reports': 'Pending Reports',
+        '5️⃣ 👥 SHG Member Level Detailed Report': 'Member Level',
+        '6️⃣ 🏛️ Bank Wise Report': 'Bank Wise',
+        '7️⃣ 📈 Bank Branch Wise Abstract Report': 'Branch Wise'
+    }
 
-    app_mode = st.sidebar.radio(
-        'Select Menu Option',
-        nav_options,
-        key='unified_sidebar_nav',
+    selected_display_opt = st.sidebar.radio(
+        'Select Report Option',
+        list(nav_options_mapping.keys()),
+        key='colorful_sidebar_nav_7_options',
         label_visibility='collapsed'
     )
     
+    app_mode = nav_options_mapping[selected_display_opt]
     st.sidebar.markdown('---')
 
     # PAGE 1: Enrollment Dashboard (Portal)
-    if app_mode == '🏠 Enrollment Dashboard (Portal)':
+    if app_mode == 'Dashboard':
         st.markdown(
-            '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1></div>',
+            '<div class="portal-header"><h1>🔑 VOA & SHG Insurance Enrollment Portal</h1><p>Manage and track insurance status seamlessly</p></div>',
             unsafe_allow_html=True,
         )
 
@@ -265,10 +276,10 @@ if df is not None:
                             st.rerun()
 
     # Mandal Wise Abstract Report
-    elif app_mode == '📍 Mandal Wise Abstract Report':
-        st.markdown('## 📍 Mandal Wise Abstract Report')
+    elif app_mode == 'Mandal Wise':
+        st.markdown('## 📍 2. Mandal Wise Abstract Report')
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -293,8 +304,8 @@ if df is not None:
         st.dataframe(pd.DataFrame(mandal_summary), use_container_width=True)
 
     # Mandal & VO Wise Abstract Report
-    elif app_mode == '📊 Mandal & VO Wise Abstract Report':
-        st.markdown('## 📊 Mandal & VO Wise Abstract Report')
+    elif app_mode == 'VO Wise':
+        st.markdown('## 📊 3. Mandal & VO Wise Abstract Report')
         st.write('---')
         
         mandals_list = ['అన్నీ (All Mandals)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist())
@@ -308,7 +319,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -326,8 +337,8 @@ if df is not None:
         st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
     # Detailed Lists & Pending Reports
-    elif app_mode == '📥 Detailed Lists & Pending Reports':
-        st.markdown('## 📥 Detailed Lists & Pending Reports')
+    elif app_mode == 'Pending Reports':
+        st.markdown('## 📥 4. Detailed Lists & Pending Reports')
         st.write('---')
 
         report_type = st.selectbox(
@@ -360,7 +371,7 @@ if df is not None:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
             else:
-                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna() & (target_df[col_pmsby_bank].isna()))]
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
         else:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
@@ -391,8 +402,8 @@ if df is not None:
             st.info('👉 ఈ ఫిల్టర్‌కు సరిపోయే రికార్డులు ఏవీ కనుగొనబడలేదు.')
 
     # SHG Member Level Detailed Report
-    elif app_mode == '👥 SHG Member Level Detailed Report':
-        st.markdown('## 👥 SHG Member Level Detailed Report')
+    elif app_mode == 'Member Level':
+        st.markdown('## 👥 5. SHG Member Level Detailed Report')
         st.write('---')
         selected_mandal_filter = st.selectbox('మండలం ద్వారా ఫిల్టర్ చేయండి:', ['అన్నీ (All)'] + sorted(export_df_base['MANDAL'].dropna().unique().tolist()))
         
@@ -403,8 +414,8 @@ if df is not None:
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
     # Bank Wise Report
-    elif app_mode == '🏛️ Bank Wise Report':
-        st.markdown('## 🏛️ Bank Wise Report')
+    elif app_mode == 'Bank Wise':
+        st.markdown('## 🏛️ 6. Bank Wise Report')
         st.write('---')
         scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
@@ -428,8 +439,8 @@ if df is not None:
         st.dataframe(pd.DataFrame(bank_summary), use_container_width=True)
 
     # Bank Branch Wise Abstract Report
-    elif app_mode == '📊 Bank Branch Wise Abstract Report':
-        st.markdown('## 📊 Bank Branch Wise Abstract Report')
+    elif app_mode == 'Branch Wise':
+        st.markdown('## 📈 7. Bank Branch Wise Abstract Report')
         st.write('---')
         
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
