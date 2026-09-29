@@ -15,37 +15,24 @@ st.markdown("""
     }
     .portal-header {
         background: linear-gradient(135deg, #fff176 0%, #ffee58 100%);
-        padding: 30px;
+        padding: 25px;
         border-radius: 20px;
         color: #d32f2f !important;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         border: 2px solid #fbc02d;
     }
     .portal-header h1 { 
         color: #c62828 !important; 
-        font-size: 28px !important; 
+        font-size: 26px !important; 
         font-weight: 800; 
     }
     .portal-header p { 
         color: #b71c1c !important; 
-        font-size: 16px !important; 
+        font-size: 15px !important; 
         margin-top: 5px;
         font-weight: 600;
-    }
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
-        border-right: 2px solid #bbf7d0;
-        box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-    }
-    section[data-testid="stSidebar"] .stRadio label p {
-        font-size: 15.5px !important;
-        font-weight: 700 !important;
-        color: #14532d;
-    }
-    .stDataFrame div {
-        font-size: 14.5px !important;
     }
     .section-title-pmjjby {
         color: #15803d;
@@ -140,38 +127,34 @@ if df is not None:
         export_df_base['AGE'], errors='coerce'
     ).fillna(0)
 
-    # Sidebar Navigation
-    st.sidebar.markdown("<h2 style='color: #14532d; text-align: center; font-size: 20px;'>🚀 నెవిగేషన్ పోర్టల్</h2>", unsafe_allow_html=True)
-    st.sidebar.markdown('---')
-    st.sidebar.markdown("<h3 style='color: #b45309; font-size: 15px; font-weight: bold;'>📊 రిపోర్ట్స్ & డాష్‌బోర్డ్</h3>", unsafe_allow_html=True)
+    # Header Title
+    st.markdown(
+        '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
+        unsafe_allow_html=True,
+    )
 
+    # Top Mobile-Friendly Navigation Selector
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌‌బోర్డ్': 'Dashboard',
-        '2️⃣ 📍 మండలం వారీగా': 'Mandal Wise',
-        '3️⃣ 📊 వి.ఓ (VO) వారీగా': 'VO Wise',
-        '4️⃣ 🏛️ బ్యాంక్ వారీగా': 'Bank Wise',
-        '5️⃣ 📈 బ్రాంచ్ వారీగా': 'Branch Wise',
-        '6️⃣ 📥 పెండింగ్ జాబితా': 'Pending Reports',
-        '7️⃣ 👥 సభ్యుల జాబితా': 'Member Level'
+        '1️⃣ 🏠 డాష్‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
+        '2️⃣ 📍 మండలం వారీగా రిపోర్ట్ (Mandal Wise)': 'Mandal Wise',
+        '3️⃣ 📊 వి.ఓ (VO) వారీగా రిపోర్ట్ (VO Wise)': 'VO Wise',
+        '4️⃣ 🏛️ బ్యాంక్ వారీగా రిపోర్ట్ (Bank Wise)': 'Bank Wise',
+        '5️⃣ 📈 బ్రాంచ్ వారీగా రిపోర్ట్ (Branch Wise)': 'Branch Wise',
+        '6️⃣ 📥 పెండింగ్ జాబితా (Pending Reports)': 'Pending Reports',
+        '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level'
     }
 
-    selected_display_opt = st.sidebar.radio(
-        'Select Report Option',
+    selected_display_opt = st.selectbox(
+        '📌 దయచేసి క్రింది మెను నుండి కావలసిన సెక్షన్ లేదా రిపోర్ట్ ఎంచుకోండి:',
         list(nav_options_mapping.keys()),
-        key='exact_ordered_sidebar_nav',
-        label_visibility='collapsed'
+        key='mobile_friendly_main_nav'
     )
     
     app_mode = nav_options_mapping[selected_display_opt]
-    st.sidebar.markdown('---')
+    st.markdown('---')
 
     # PAGE 1: DASHBOARD
     if app_mode == 'Dashboard':
-        st.markdown(
-            '<div class="portal-header"><h1>గుంటూరు జిల్లా - SHG సభ్యుల బీమా (PMJJBY & PMSBY) ఎన్‌రోల్‌మెంట్ పోర్టల్</h1><p>సంఘ సభ్యులందరికీ సులభంగా ఇన్సూరెన్స్ నమోదు మరియు ట్రాకింగ్ చేయు విధానం</p></div>',
-            unsafe_allow_html=True,
-        )
-
         mandals = ['-- ఎంచుకోండి --'] + sorted(
             export_df_base['MANDAL'].dropna().unique().tolist()
         )
@@ -360,7 +343,6 @@ if df is not None:
                                         updated_row[col_pmsby_bank] = str(pmsby_b_date_pmsby)
 
                                     st.session_state.saved_entries_dict[m_id] = updated_row
-                                    # Reset confirmation state to auto-close/collapse the expander view
                                     st.session_state[is_confirmed_key] = False
                                     st.success(f'✅ {m_name} వివరాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!')
                                     st.rerun()
