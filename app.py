@@ -160,7 +160,7 @@ if df is not None:
 
         if "అడ్మిన్" in login_type:
             admin_pin = st.text_input("అడ్మిన్ పాస్‌వర్డ్ / పిన్ నమోదు చేయండి:", type="password")
-            if st.button("అడ్మిన్ లాగిನ್", type="primary"):
+            if st.button("అడ్మిన్ లాగిన్", type="primary"):
                 if admin_pin == "admin123":  # మీ అవసరాన్ని బట్టి మార్చుకోవచ్చు
                     st.session_state.logged_in_user = {'role': 'Admin', 'name': 'District Admin'}
                     trigger_rerun()
@@ -195,9 +195,9 @@ if df is not None:
         col_lg1, col_lg2 = st.columns([6, 1])
         with col_lg1:
             if user_info['role'] == 'Admin':
-                st.info(👤 **లాగిన్ వివరాలు:** జిల్లా అడ్మిన్ (District Admin - All Mandals Access))
+                st.info("లాగిన్ వివరాలు: జిల్లా అడ్మిన్ (District Admin - All Mandals Access)")
             else:
-                st.info(f"👤 **లాగిన్ వివరాలు:** మండలం: **{user_info['mandal']}** | VO: **{user_info['vo']}** | మొబైల్: **{user_info['mobile']}**")
+                st.info(f"లాగిన్ వివరాలు: మండలం: {user_info['mandal']} | VO: {user_info['vo']} | మొబైల్: {user_info['mobile']}")
         with col_lg2:
             if st.button("లాగౌట్ (Logout)"):
                 st.session_state.logged_in_user = None
@@ -335,7 +335,7 @@ if df is not None:
 
                     status_str = " | ".join(status_tags)
 
-                    with st.expander(f'👤 {m_name} | Age: {raw_age} -- [{status_str}]'):
+                    with st.expander(f'{m_name} | Age: {raw_age} -- [{status_str}]'):
                         col_nc1, col_nc2 = st.columns([2, 1])
                         with col_nc1:
                             entered_name = st.text_input('Member Name (Aadhar prakaram):', value=m_name, key=f'name_{idx}')
@@ -590,7 +590,7 @@ if df is not None:
             st.dataframe(pd.DataFrame(vo_summary), use_container_width=True)
 
         elif app_mode == 'Bank Wise' and user_info['role'] == 'Admin':
-            st.markdown("## 🏛️️ Bank Wise Summary")
+            st.markdown("## 🏛 Bank Wise Summary")
             st.write('---')
             scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
@@ -762,7 +762,7 @@ if df is not None:
                     st.info('👉 No age corrections found.')
 
             elif '3.' in correction_type:
-                st.markdown("### 🏛️️ Bank Name Corrections Report")
+                st.markdown("### 🏛 Bank Name Corrections Report")
                 if len(st.session_state.bank_corrections_log) > 0:
                     bank_corr_df = pd.DataFrame(list(st.session_state.bank_corrections_log.values()))
                     mandal_list_bc = ['All'] + sorted(bank_corr_df['Mandal Name'].dropna().unique().tolist())
