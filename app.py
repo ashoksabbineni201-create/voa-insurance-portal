@@ -77,6 +77,8 @@ def load_data():
                 df[col] = df[col].astype(str).str.strip()
         if 'BANK NAME' in df.columns:
             df['BANK NAME'] = df['BANK NAME'].str.upper()
+        if 'BRANCH NAME' in df.columns:
+            df['BRANCH NAME'] = df['BRANCH NAME'].str.upper()
         return df
     except Exception as e:
         st.error(f'Data load cheyadamlo vipalamaindi: {e}')
@@ -96,6 +98,12 @@ def trigger_rerun():
 df = load_data()
 
 if df is not None:
+    all_available_banks = []
+    if 'BANK NAME' in df.columns:
+        all_available_banks = sorted(df['BANK NAME'].dropna().unique().tolist())
+    if not all_available_banks:
+        all_available_banks = ['SBI', 'UNION BANK', 'ANDHRA PRADESH GRAMEENA VIKAS BANK', 'APGVB', 'CANARA BANK']
+
     col_pmjjby_sub = (
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY'
     )
@@ -106,7 +114,7 @@ if df is not None:
         'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
     )
     col_pmsby_bank = (
-        'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
+        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
     )
 
     for c in [
@@ -227,6 +235,7 @@ if df is not None:
                 orig_name = str(original_row_data.iloc[0]['MEMBER NAME']).strip().upper() if not original_row_data.empty else str(row.get('MEMBER NAME', '')).strip().upper()
                 orig_age = str(original_row_data.iloc[0]['AGE']).strip() if not original_row_data.empty else str(row.get('AGE', '35')).strip()
                 orig_bank = str(original_row_data.iloc[0]['BANK NAME']).strip().upper() if not original_row_data.empty and 'BANK NAME' in original_row_data.columns else str(row.get('BANK NAME', '')).strip().upper()
+                orig_branch = str(original_row_data.iloc[0]['BRANCH NAME']).strip().upper() if not original_row_data.empty and 'BRANCH NAME' in original_row_data.columns else str(row.get('BRANCH NAME', '')).strip().upper()
                 orig_acc = str(original_row_data.iloc[0]['MEMBER SB ACCOUNT NUMBER']).strip() if not original_row_data.empty and 'MEMBER SB ACCOUNT NUMBER' in original_row_data.columns else str(row.get('MEMBER SB ACCOUNT NUMBER', '')).strip()
 
                 m_name = str(current_row.get('MEMBER NAME', 'Unknown'))
@@ -313,12 +322,18 @@ if df is not None:
                             existing_ps_sub = safe_parse_date(current_row.get(col_pmsby_sub))
                             existing_ps_bank = safe_parse_date(current_row.get(col_pmsby_bank))
 
-                            default_bank_val = str(current_row.get('BANK NAME', row.get('BANK NAME', ''))).strip()
-                            default_branch_val = str(current_row.get('BRANCH NAME', row.get('BRANCH NAME', ''))).strip()
+                            default_bank_val = str(current_row.get('BANK NAME', row.get('BANK NAME', ''))).strip().upper()
+                            default_branch_val = str(current_row.get('BRANCH NAME', row.get('BRANCH NAME', ''))).strip().upper()
                             default_acc_val = str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBER SB ACCOUNT NUMBER', ''))).strip()
+
+                            bank_index = 0
+                            if default_bank_val in all_available_banks:
+                                bank_index = all_available_banks.index(default_bank_val)
 
                             entered_pmjjby_bank = default_bank_val
                             entered_pmsby_bank = default_bank_val
+                            entered_pmjjby_branch = default_branch_val
+                            entered_pmsby_branch = default_branch_val
                             entered_pmjjby_acc = default_acc_val
                             entered_pmsby_acc = default_acc_val
 
@@ -329,9 +344,18 @@ if df is not None:
                                 )
                                 bc1, bc2, bc3 = st.columns(3)
                                 with bc1:
-                                    entered_pmjjby_bank = st.text_input('PMJJBY Bank', value=default_bank_val, key=f'pmjjby_bank_{idx}')
+                                    entered_pmjjby_bank = st.selectbox('PMJJBY Bank', all_available_banks, index=bank_index, key=f'pmjjby_bank_{idx}')
                                 with bc2:
-                                    st.text_input('PMJJBY Branch', value=default_branch_val, key=f'pmjjby_branch_{idx}')
+                                    # Fetch branches belonging exclusively to the selected PMJJBY bank
+                                    available_pmjjby_branches = sorted(df[df['BANK NAME'] == entered_pmjjby_bank]['BRANCH NAME'].dropna().unique().tolist())
+                                    if not available_pmjjby_branches:
+                                        available_pmjjby_branches = [default_branch_val] if default_branch_val else ['MAIN BRANCH']
+                                    
+                                    branch_index_pm = 0
+                                    if default_branch_val in available_pmjjby_branches:
+                                        branch_index_pm = available_pmjjby_branches.index(default_branch_val)
+                                    
+                                    entered_pmjjby_branch = st.selectbox('PMJJBY Branch', available_pmjjby_branches, index=branch_index_pm, key=f'pmjjby_branch_{idx}')
                                 with bc3:
                                     entered_pmjjby_acc = st.text_input('PMJJBY Acc No', value=default_acc_val, key=f'pmjjby_acc_{idx}')
 
@@ -348,9 +372,18 @@ if df is not None:
                                 )
                                 pc1, pc2, pc3 = st.columns(3)
                                 with pc1:
-                                    entered_pmsby_bank = st.text_input('PMSBY Bank', value=default_bank_val, key=f'pmsby_bank_{idx}')
+                                    entered_pmsby_bank = st.selectbox('PMSBY Bank', all_available_banks, index=bank_index, key=f'pmsby_bank_{idx}')
                                 with pc2:
-                                    st.text_input('PMSBY Branch', value=default_branch_val, key=f'pmsby_branch_{idx}')
+                                    # Fetch branches belonging exclusively to the selected PMSBY bank
+                                    available_pmsby_branches = sorted(df[df['BANK NAME'] == entered_pmsby_bank]['BRANCH NAME'].dropna().unique().tolist())
+                                    if not available_pmsby_branches:
+                                        available_pmsby_branches = [default_branch_val] if default_branch_val else ['MAIN BRANCH']
+                                    
+                                    branch_index_ps = 0
+                                    if default_branch_val in available_pmsby_branches:
+                                        branch_index_ps = available_pmsby_branches.index(default_branch_val)
+                                    
+                                    entered_pmsby_branch = st.selectbox('PMSBY Branch', available_pmsby_branches, index=branch_index_ps, key=f'pmsby_branch_{idx}')
                                 with pc3:
                                     entered_pmsby_acc = st.text_input('PMSBY Acc No', value=default_acc_val, key=f'pmsby_acc_{idx}')
 
@@ -386,11 +419,13 @@ if df is not None:
                                     cleaned_new_name = str(entered_name).strip().upper()
                                     
                                     final_new_bank = str(entered_pmjjby_bank).strip().upper() if (18 <= active_age <= 50) else str(entered_pmsby_bank).strip().upper()
+                                    final_new_branch = str(entered_pmjjby_branch).strip().upper() if (18 <= active_age <= 50) else str(entered_pmsby_branch).strip().upper()
                                     final_new_acc = str(entered_pmjjby_acc).strip() if (18 <= active_age <= 50) else str(entered_pmsby_acc).strip()
 
                                     updated_row['MEMBER NAME'] = cleaned_new_name
                                     updated_row['AGE'] = str(active_age)
                                     updated_row['BANK NAME'] = final_new_bank
+                                    updated_row['BRANCH NAME'] = final_new_branch
                                     updated_row['MEMBER SB ACCOUNT NUMBER'] = final_new_acc
                                     
                                     if cleaned_new_name != orig_name:
@@ -502,7 +537,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -549,7 +584,7 @@ if df is not None:
         
         banks_list = ['All Banks'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
         selected_bank_filter = st.selectbox('Bank Enchukondi:', banks_list)
-        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
+        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
 
         filtered_bank_df = export_df_base.copy()
         if selected_bank_filter != 'All Banks':
