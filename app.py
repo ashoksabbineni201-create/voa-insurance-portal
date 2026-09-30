@@ -73,9 +73,11 @@ def load_data():
     try:
         df = pd.read_csv(sheet_url, dtype=str)
         df.columns = df.columns.str.strip()
-        for col in ['MANDAL', 'VO', 'SHG', 'BANK NAME', 'BRANCH NAME']:
+        for col in ['MANDAL', 'VO', 'SHG', 'BANK NAME', 'BRANCH NAME', 'MEMBER SB ACCOUNT NUMBER']:
             if col in df.columns:
-                df[col] = df[col].astype(str).str.strip().str.upper()
+                df[col] = df[col].astype(str).str.strip()
+        if 'BANK NAME' in df.columns:
+            df['BANK NAME'] = df['BANK NAME'].str.upper()
         return df
     except Exception as e:
         st.error(f'డేటా లోడ్ చేయడంలో విఫలమైంది: {e}')
@@ -214,7 +216,7 @@ if df is not None:
                 '👉 దయచేసి పైన ఇవ్వబడిన **మండలం, VO మరియు SHG గ్రూప్ను** వరుసగా ఎంచుకోండి.'
             )
         else:
-            st.markdown(f'### 📄 SHG సభ్యుల జాబితా: <span style="color: #15803d;">{selected_shg}</span>', unsafe_allow_html=True)
+            st.markdown(f'### 📄 శిజీ సభ్యుల జాబితా: <span style="color: #15803d;">{selected_shg}</span>', unsafe_allow_html=True)
             members_df = export_df_base[
                 (export_df_base['MANDAL'] == selected_mandal)
                 & (export_df_base['VO'] == selected_vo)
@@ -250,7 +252,7 @@ if df is not None:
                     if pd.notna(p_bank) and str(p_bank).lower() != 'nan' and str(p_bank).strip() != '':
                         status_tags.append("🛡️ PMJJBY Enrolled")
                     elif pd.notna(p_sub) and str(p_sub).lower() != 'nan' and str(p_sub).strip() != '':
-                        status_tags.append("🛡️️ PMJJBY Application Submitted")
+                        status_tags.append("🛡️ PMJJBY Application Submitted")
 
                     if pd.notna(s_bank) and str(s_bank).lower() != 'nan' and str(s_bank).strip() != '':
                         status_tags.append("🚑 PMSBY Enrolled")
@@ -315,7 +317,12 @@ if df is not None:
                             existing_ps_sub = safe_parse_date(current_row.get(col_pmsby_sub))
                             existing_ps_bank = safe_parse_date(current_row.get(col_pmsby_bank))
 
-                            entered_bank_name, entered_acc_no = str(row.get('BANK NAME', '')), str(row.get('MEMBER SB ACCOUNT NUMBER', ''))
+                            default_bank_val = str(current_row.get('BANK NAME', row.get('BANK NAME', ''))).strip()
+                            default_branch_val = str(current_row.get('BRANCH NAME', row.get('BRANCH NAME', ''))).strip()
+                            default_acc_val = str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBER SB ACCOUNT NUMBER', ''))).strip()
+
+                            entered_bank_name = default_bank_val
+                            entered_acc_no = default_acc_val
 
                             if 18 <= active_age <= 50:
                                 st.markdown(
@@ -324,11 +331,11 @@ if df is not None:
                                 )
                                 bc1, bc2, bc3 = st.columns(3)
                                 with bc1:
-                                    entered_bank_name = st.text_input('PMJJBY Bank', value=str(current_row.get('BANK NAME', row.get('BANKNAME', ''))), key=f'pmjjby_bank_{idx}')
+                                    entered_bank_name = st.text_input('PMJJBY Bank', value=default_bank_val, key=f'pmjjby_bank_{idx}')
                                 with bc2:
-                                    st.text_input('PMJJBY Branch', value=str(current_row.get('BRANCH NAME', row.get('BRANCHNAME', ''))), key=f'pmjjby_branch_{idx}')
+                                    st.text_input('PMJJBY Branch', value=default_branch_val, key=f'pmjjby_branch_{idx}')
                                 with bc3:
-                                    entered_acc_no = st.text_input('PMJJBY Acc No', value=str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBERSBACCOUNTNUMBER', ''))), key=f'pmjjby_acc_{idx}')
+                                    entered_acc_no = st.text_input('PMJJBY Acc No', value=default_acc_val, key=f'pmjjby_acc_{idx}')
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
@@ -343,11 +350,11 @@ if df is not None:
                                 )
                                 pc1, pc2, pc3 = st.columns(3)
                                 with pc1:
-                                    st.text_input('PMSBY Bank', value=str(current_row.get('BANK NAME', row.get('BANKNAME', ''))), key=f'pmsby_bank_{idx}')
+                                    entered_bank_name = st.text_input('PMSBY Bank', value=entered_bank_name, key=f'pmsby_bank_{idx}')
                                 with pc2:
-                                    st.text_input('PMSBY Branch', value=str(current_row.get('BRANCH NAME', row.get('BRANCHNAME', ''))), key=f'pmsby_branch_{idx}')
+                                    st.text_input('PMSBY Branch', value=default_branch_val, key=f'pmsby_branch_{idx}')
                                 with pc3:
-                                    st.text_input('PMSBY Acc No', value=str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBERSBACCOUNTNUMBER', ''))), key=f'pmsby_acc_{idx}')
+                                    entered_acc_no = st.text_input('PMSBY Acc No', value=entered_acc_no, key=f'pmsby_acc_{idx}')
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
@@ -499,7 +506,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -549,7 +556,7 @@ if df is not None:
         banks_list = ['అన్నీ (All Banks)'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
         selected_bank_filter = st.selectbox('బ్యాంక్ ఎంచుకోండి (Select Bank):', banks_list)
         
-        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
 
         filtered_bank_df = export_df_base.copy()
         if selected_bank_filter != 'అన్నీ (All Banks)':
@@ -609,7 +616,7 @@ if df is not None:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
             else:
-                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna() & (target_df[col_pmsby_bank].isna()))]
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
         else:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
@@ -709,7 +716,7 @@ if df is not None:
                 
                 csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                    label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
                     data=csv_ac,
                     file_name='Age_Corrections_Report.csv',
                     mime='text/css',
