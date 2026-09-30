@@ -155,19 +155,16 @@ if df is not None:
         unsafe_allow_html=True,
     )
 
-    # Top Mobile-Friendly Navigation Selector (11 Options)
+    # Top Mobile-Friendly Navigation Selector (8 Options)
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌‌‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
+        '1️⃣ 🏠 డాష్‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
         '2️⃣ 📍 మండలం వారీగా రిపోర్ట్ (Mandal Wise)': 'Mandal Wise',
         '3️⃣ 📊 వి.ఓ (VO) వారీగా రిపోర్ట్ (VO Wise)': 'VO Wise',
         '4️⃣ 🏛️ బ్యాంక్ వారీగా రిపోర్ట్ (Bank Wise)': 'Bank Wise',
         '5️⃣ 📈 బ్రాంచ్ వారీగా రిపోర్ట్ (Branch Wise)': 'Branch Wise',
         '6️⃣ 📥 పెండింగ్ జాబితా (Pending Reports)': 'Pending Reports',
         '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level',
-        '8️⃣ ✏️ నేమ్ కరెక్షన్ నివేదిక (Name Corrections)': 'Name Corrections',
-        '9️⃣ 🔢 ఏజ్ కరెక్షన్ నివేదిక (Age Corrections)': 'Age Corrections',
-        '🔟 🏛️ బ్యాంక్ పేరు మార్చినవి (Bank Corrections)': 'Bank Corrections',
-        '1️⃣1️⃣ 💳 అకౌంట్ నంబర్ మార్చినవి (Account Corrections)': 'Account Corrections'
+        '8️⃣ 📝 కరెక్షన్ నివేదికలు (Corrections Reports)': 'Corrections Reports'
     }
 
     selected_display_opt = st.selectbox(
@@ -253,7 +250,7 @@ if df is not None:
                     if pd.notna(p_bank) and str(p_bank).lower() != 'nan' and str(p_bank).strip() != '':
                         status_tags.append("🛡️ PMJJBY Enrolled")
                     elif pd.notna(p_sub) and str(p_sub).lower() != 'nan' and str(p_sub).strip() != '':
-                        status_tags.append("🛡️ PMJJBY Application Submitted")
+                        status_tags.append("🛡️️ PMJJBY Application Submitted")
 
                     if pd.notna(s_bank) and str(s_bank).lower() != 'nan' and str(s_bank).strip() != '':
                         status_tags.append("🚑 PMSBY Enrolled")
@@ -367,7 +364,7 @@ if df is not None:
                                 
                                 if pmsby_b_date_pmsby and not pmsby_sub_date:
                                     date_error = True
-                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
 
                                 if not date_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
@@ -462,7 +459,7 @@ if df is not None:
     elif app_mode == 'Mandal Wise':
         st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
@@ -612,7 +609,7 @@ if df is not None:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].notna()) & (target_df[col_pmjjby_bank].isna())]
             else:
-                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna()) & (target_df[col_pmsby_bank].isna())]
+                result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 70) & (target_df[col_pmsby_sub].notna() & (target_df[col_pmsby_bank].isna()))]
         else:
             if is_pmjjby:
                 result_list = target_df[(target_df['NUM_AGE'] >= 18) & (target_df['NUM_AGE'] <= 50) & (target_df[col_pmjjby_sub].isna()) & (target_df[col_pmjjby_bank].isna())]
@@ -654,114 +651,121 @@ if df is not None:
 
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
-    # 8. NAME CORRECTIONS REPORT
-    elif app_mode == 'Name Corrections':
-        st.markdown("## ✏️ నేమ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక (Name Corrections Report)")
+    # 8. CORRECTIONS REPORTS (Combined Tab for Name, Age, Bank Name, and Account Number Corrections)
+    elif app_mode == 'Corrections Reports':
+        st.markdown("## 📝 కరెక్షన్ నివేదికలు (Corrections Reports)")
         st.write('---')
-        
-        if len(st.session_state.name_corrections_log) > 0:
-            name_corr_df = pd.DataFrame(list(st.session_state.name_corrections_log.values()))
-            
-            mandal_list_nc = ['అన్నీ (All)'] + sorted(name_corr_df['Mandal Name'].dropna().unique().tolist())
-            chosen_m_nc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_nc, key='nc_mandal_filter')
-            
-            if chosen_m_nc != 'అన్నీ (All)':
-                name_corr_df = name_corr_df[name_corr_df['Mandal Name'] == chosen_m_nc]
-            
-            st.markdown(f'### 📋 మొత్తం సవరించిన పేర్లు: {len(name_corr_df)}')
-            st.dataframe(name_corr_df[['Mandal Name', 'VO Name', 'SHG Name', 'Member Name', 'Member ID', 'Corrected Name']], use_container_width=True)
-            
-            csv_nc = name_corr_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label='📥 నేమ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
-                data=csv_nc,
-                file_name='Name_Corrections_Report.csv',
-                mime='text/css',
-                type='primary'
-            )
-        else:
-            st.info('👉 ఇప్పటివరకు ఎలాంటి నేమ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
 
-    # 9. AGE CORRECTIONS REPORT
-    elif app_mode == 'Age Corrections':
-        st.markdown("## 🔢 ఏజ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక (Age Corrections Report)")
-        st.write('---')
-        
-        if len(st.session_state.age_corrections_log) > 0:
-            age_corr_df = pd.DataFrame(list(st.session_state.age_corrections_log.values()))
-            
-            mandal_list_ac = ['అన్నీ (All)'] + sorted(age_corr_df['Mandal Name'].dropna().unique().tolist())
-            chosen_m_ac = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_ac, key='ac_mandal_filter')
-            
-            if chosen_m_ac != 'అన్నీ (All)':
-                age_corr_df = age_corr_df[age_corr_df['Mandal Name'] == chosen_m_ac]
-            
-            st.markdown(f'### 📋 మొత్తం సవరించిన వయస్సులు: {len(age_corr_df)}')
-            st.dataframe(age_corr_df[['Mandal Name', 'VO Name', 'SHG Name', 'Member Name', 'Member ID', 'Old Age', 'New Age']], use_container_width=True)
-            
-            csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
-                data=csv_ac,
-                file_name='Age_Corrections_Report.csv',
-                mime='text/css',
-                type='primary'
-            )
-        else:
-            st.info('👉 ఇప్పటివరకు ఎలాంటి ఏజ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
+        correction_type = st.selectbox(
+            'నివేదిక రకం ఎంచుకోండి:',
+            [
+                '1. ✏️ నేమ్ కరెక్షన్ చేసినవి (Name Corrections)',
+                '2. 🔢 ఏజ్ కరెక్షన్ చేసినవి (Age Corrections)',
+                '3. 🏛️ బ్యాంక్ పేరు మార్చినవి (Bank Name Corrections)',
+                '4. 💳 అకౌంట్ నంబర్ మార్చినవి (Account Number Corrections)'
+            ]
+        )
 
-    # 10. BANK NAME CORRECTIONS REPORT
-    elif app_mode == 'Bank Corrections':
-        st.markdown("## 🏛️ బ్యాంక్ పేరు మార్చిన సభ్యుల నివేదిక (Bank Name Corrections Report)")
-        st.write('---')
-        
-        if len(st.session_state.bank_corrections_log) > 0:
-            bank_corr_df = pd.DataFrame(list(st.session_state.bank_corrections_log.values()))
-            
-            mandal_list_bc = ['అన్నీ (All)'] + sorted(bank_corr_df['MANDAL NAME'].dropna().unique().tolist())
-            chosen_m_bc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_bc, key='bc_mandal_filter')
-            
-            if chosen_m_bc != 'అన్నీ (All)':
-                bank_corr_df = bank_corr_df[bank_corr_df['MANDAL NAME'] == chosen_m_bc]
-            
-            st.markdown(f'### 📋 మొత్తం మార్చబడిన బ్యాంకులు: {len(bank_corr_df)}')
-            st.dataframe(bank_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK NAME', 'NEW BANK NAME']], use_container_width=True)
-            
-            csv_bc = bank_corr_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label='📥 బ్యాంక్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
-                data=csv_bc,
-                file_name='Bank_Name_Corrections_Report.csv',
-                mime='text/css',
-                type='primary'
-            )
-        else:
-            st.info('👉 ఇప్పటివరకు ఎలాంటి బ్యాంక్ పేరు మార్పులు నమోదు చేయబడలేదు.')
+        # 1. Name Corrections Sub-Report
+        if '1.' in correction_type:
+            st.markdown("### ✏️ నేమ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక")
+            if len(st.session_state.name_corrections_log) > 0:
+                name_corr_df = pd.DataFrame(list(st.session_state.name_corrections_log.values()))
+                
+                mandal_list_nc = ['అన్నీ (All)'] + sorted(name_corr_df['Mandal Name'].dropna().unique().tolist())
+                chosen_m_nc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_nc, key='nc_mandal_filter')
+                
+                if chosen_m_nc != 'అన్నీ (All)':
+                    name_corr_df = name_corr_df[name_corr_df['Mandal Name'] == chosen_m_nc]
+                
+                st.markdown(f'📋 **మొత్తం సవరించిన పేర్లు:** {len(name_corr_df)}')
+                st.dataframe(name_corr_df[['Mandal Name', 'VO Name', 'SHG Name', 'Member Name', 'Member ID', 'Corrected Name']], use_container_width=True)
+                
+                csv_nc = name_corr_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 నేమ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                    data=csv_nc,
+                    file_name='Name_Corrections_Report.csv',
+                    mime='text/css',
+                    type='primary'
+                )
+            else:
+                st.info('👉 ఇప్పటివరకు ఎలాంటి నేమ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
 
-    # 11. ACCOUNT NUMBER CORRECTIONS REPORT
-    elif app_mode == 'Account Corrections':
-        st.markdown("## 💳 అకౌంట్ నంబర్ మార్చిన సభ్యుల నివేదిక (Account Number Corrections Report)")
-        st.write('---')
-        
-        if len(st.session_state.acc_corrections_log) > 0:
-            acc_corr_df = pd.DataFrame(list(st.session_state.acc_corrections_log.values()))
-            
-            mandal_list_acc = ['అన్నీ (All)'] + sorted(acc_corr_df['MANDAL NAME'].dropna().unique().tolist())
-            chosen_m_acc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_acc, key='acc_mandal_filter')
-            
-            if chosen_m_acc != 'అన్నీ (All)':
-                acc_corr_df = acc_corr_df[acc_corr_df['MANDAL NAME'] == chosen_m_acc]
-            
-            st.markdown(f'### 📋 మొత్తం మార్చబడిన అకౌంట్ నంబర్లు: {len(acc_corr_df)}')
-            st.dataframe(acc_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK ACCOUNT NUMBER', 'NEW BANK ACCOUNT NUMBER']], use_container_width=True)
-            
-            csv_acc = acc_corr_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label='📥 అకౌంట్ నంబర్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
-                data=csv_acc,
-                file_name='Account_Number_Corrections_Report.csv',
-                mime='text/css',
-                type='primary'
-            )
-        else:
-            st.info('👉 ఇప్పటివరకు ఎలాంటి అకౌంట్ నంబర్ మార్పులు నమోదు చేయబడలేదు.')
+        # 2. Age Corrections Sub-Report
+        elif '2.' in correction_type:
+            st.markdown("### 🔢 ఏజ్ కరెక్షన్ చేసిన సభ్యుల నివేదిక")
+            if len(st.session_state.age_corrections_log) > 0:
+                age_corr_df = pd.DataFrame(list(st.session_state.age_corrections_log.values()))
+                
+                mandal_list_ac = ['అన్నీ (All)'] + sorted(age_corr_df['Mandal Name'].dropna().unique().tolist())
+                chosen_m_ac = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_ac, key='ac_mandal_filter')
+                
+                if chosen_m_ac != 'అన్నీ (All)':
+                    age_corr_df = age_corr_df[age_corr_df['Mandal Name'] == chosen_m_ac]
+                
+                st.markdown(f'📋 **మొత్తం సవరించిన వయస్సులు:** {len(age_corr_df)}')
+                st.dataframe(age_corr_df[['Mandal Name', 'VO Name', 'SHG Name', 'Member Name', 'Member ID', 'Old Age', 'New Age']], use_container_width=True)
+                
+                csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                    data=csv_ac,
+                    file_name='Age_Corrections_Report.csv',
+                    mime='text/css',
+                    type='primary'
+                )
+            else:
+                st.info('👉 ఇప్పటివరకు ఎలాంటి ఏజ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
+
+        # 3. Bank Name Corrections Sub-Report
+        elif '3.' in correction_type:
+            st.markdown("### 🏛️ బ్యాంక్ పేరు మార్చిన సభ్యుల నివేదిక")
+            if len(st.session_state.bank_corrections_log) > 0:
+                bank_corr_df = pd.DataFrame(list(st.session_state.bank_corrections_log.values()))
+                
+                mandal_list_bc = ['అన్నీ (All)'] + sorted(bank_corr_df['MANDAL NAME'].dropna().unique().tolist())
+                chosen_m_bc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_bc, key='bc_mandal_filter')
+                
+                if chosen_m_bc != 'అన్నీ (All)':
+                    bank_corr_df = bank_corr_df[bank_corr_df['MANDAL NAME'] == chosen_m_bc]
+                
+                st.markdown(f'📋 **మొత్తం మార్చబడిన బ్యాంకులు:** {len(bank_corr_df)}')
+                st.dataframe(bank_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK NAME', 'NEW BANK NAME']], use_container_width=True)
+                
+                csv_bc = bank_corr_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 బ్యాంక్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                    data=csv_bc,
+                    file_name='Bank_Name_Corrections_Report.csv',
+                    mime='text/css',
+                    type='primary'
+                )
+            else:
+                st.info('👉 ఇప్పటివరకు ఎలాంటి బ్యాంక్ పేరు మార్పులు నమోదు చేయబడలేదు.')
+
+        # 4. Account Number Corrections Sub-Report
+        elif '4.' in correction_type:
+            st.markdown("### 💳 అకౌంట్ నంబర్ మార్చిన సభ్యుల నివేదిక")
+            if len(st.session_state.acc_corrections_log) > 0:
+                acc_corr_df = pd.DataFrame(list(st.session_state.acc_corrections_log.values()))
+                
+                mandal_list_acc = ['అన్నీ (All)'] + sorted(acc_corr_df['MANDAL NAME'].dropna().unique().tolist())
+                chosen_m_acc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_acc, key='acc_mandal_filter')
+                
+                if chosen_m_acc != 'అన్నీ (All)':
+                    acc_corr_df = acc_corr_df[acc_corr_df['MANDAL NAME'] == chosen_m_acc]
+                
+                st.markdown(f'📋 **మొత్తం మార్చబడిన అకౌంట్ నంబర్లు:** {len(acc_corr_df)}')
+                st.dataframe(acc_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK ACCOUNT NUMBER', 'NEW BANK ACCOUNT NUMBER']], use_container_width=True)
+                
+                csv_acc = acc_corr_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 అకౌంట్ నంబర్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                    data=csv_acc,
+                    file_name='Account_Number_Corrections_Report.csv',
+                    mime='text/css',
+                    type='primary'
+                )
+            else:
+                st.info('👉 ఇప్పటివరకు ఎలాంటి అకౌంట్ నంబర్ మార్పులు నమోదు చేయబడలేదు.')
