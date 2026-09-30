@@ -104,18 +104,11 @@ if df is not None:
     if not all_available_banks:
         all_available_banks = ['SBI', 'UNION BANK', 'ANDHRA PRADESH GRAMEENA VIKAS BANK', 'APGVB', 'CANARA BANK']
 
-    col_pmjjby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMJJBY'
-    )
-    col_pmjjby_bank = (
-        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMJJBY'
-    )
-    col_pmsby_sub = (
-        'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted at Bank) - PMSBY'
-    )
-    col_pmsby_bank = (
-        'బ్యాంకు వారు ఎన్‌‌రోల్ చేసిన తేదీ (Bank Enrolled Date) - PMSBY'
-    )
+    # Updated column names in pure Telugu format
+    col_pmjjby_sub = 'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ - PMJJBY'
+    col_pmjjby_bank = 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ - PMJJBY'
+    col_pmsby_sub = 'అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ - PMSBY'
+    col_pmsby_bank = 'బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ - PMSBY'
 
     for c in [
         col_pmjjby_sub,
@@ -360,9 +353,9 @@ if df is not None:
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
-                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY (DD-MM-YYYY format)', value=existing_pm_sub, format="DD/MM/YYYY", key=f'pmjjby_sub_{idx}')
+                                    pmjjby_sub_date = st.date_input('అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ - PMJJBY (DD/MM/YYYY)', value=existing_pm_sub, format="DD/MM/YYYY", key=f'pmjjby_sub_{idx}')
                                 with col_d2:
-                                    pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY (DD-MM-YYYY format)', value=existing_pm_bank, format="DD/MM/YYYY", key=f'pmjjby_b_opt_{idx}')
+                                    pmjjby_b_date = st.date_input('బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ - PMJJBY (DD/MM/YYYY)', value=existing_pm_bank, format="DD/MM/YYYY", key=f'pmjjby_b_opt_{idx}')
 
                             if 18 <= active_age <= 70:
                                 st.markdown(
@@ -387,14 +380,13 @@ if df is not None:
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
-                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY (DD-MM-YYYY format)', value=existing_ps_sub, format="DD/MM/YYYY", key=f'pmsby_sub_{idx}')
+                                    pmsby_sub_date = st.date_input('అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ - PMSBY (DD/MM/YYYY)', value=existing_ps_sub, format="DD/MM/YYYY", key=f'pmsby_sub_{idx}')
                                 with col_d4:
-                                    pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY (DD-MM-YYYY format)', value=existing_ps_bank, format="DD/MM/YYYY", key=f'pmsby_b_opt_{idx}')
+                                    pmsby_b_date_pmsby = st.date_input('బ్యాంకు వారు ఎన్‌రోల్ చేసిన తేదీ - PMSBY (DD/MM/YYYY)', value=existing_ps_bank, format="DD/MM/YYYY", key=f'pmsby_b_opt_{idx}')
 
                             if st.button(f'💾 {entered_name} Vivaralu Save Cheyandi', key=f'save_{idx}', type='primary'):
                                 validation_error = False
                                 
-                                # Check Account Number contains only digits
                                 active_acc_to_check = str(entered_pmjjby_acc).strip() if (18 <= active_age <= 50) else str(entered_pmsby_acc).strip()
                                 if not active_acc_to_check.isdigit():
                                     validation_error = True
@@ -561,7 +553,7 @@ if df is not None:
     elif app_mode == 'Bank Wise':
         st.markdown("## 🏛️ Bank Wise Summary")
         st.write('---')
-        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
+        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
         bank_summary = []
         for bank, group in export_df_base.groupby('BANK NAME'):
@@ -697,7 +689,7 @@ if df is not None:
             [
                 '1. ✏️ Name Corrections',
                 '2. 🔢 Age Corrections',
-                '3. 🏛️️ Bank Name Corrections',
+                '3. 🏛️ Bank Name Corrections',
                 '4. 💳 Account Number Corrections'
             ]
         )
