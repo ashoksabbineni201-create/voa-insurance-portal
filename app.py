@@ -346,7 +346,6 @@ if df is not None:
                                 with bc1:
                                     entered_pmjjby_bank = st.selectbox('PMJJBY Bank', all_available_banks, index=bank_index, key=f'pmjjby_bank_{idx}')
                                 with bc2:
-                                    # Fetch branches belonging exclusively to the selected PMJJBY bank
                                     available_pmjjby_branches = sorted(df[df['BANK NAME'] == entered_pmjjby_bank]['BRANCH NAME'].dropna().unique().tolist())
                                     if not available_pmjjby_branches:
                                         available_pmjjby_branches = [default_branch_val] if default_branch_val else ['MAIN BRANCH']
@@ -357,13 +356,13 @@ if df is not None:
                                     
                                     entered_pmjjby_branch = st.selectbox('PMJJBY Branch', available_pmjjby_branches, index=branch_index_pm, key=f'pmjjby_branch_{idx}')
                                 with bc3:
-                                    entered_pmjjby_acc = st.text_input('PMJJBY Acc No', value=default_acc_val, key=f'pmjjby_acc_{idx}')
+                                    entered_pmjjby_acc = st.text_input('PMJJBY Acc No (Numbers only)', value=default_acc_val, key=f'pmjjby_acc_{idx}')
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
-                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY', value=existing_pm_sub, key=f'pmjjby_sub_{idx}')
+                                    pmjjby_sub_date = st.date_input('Application Submitted Date - PMJJBY (DD-MM-YYYY format)', value=existing_pm_sub, format="DD/MM/YYYY", key=f'pmjjby_sub_{idx}')
                                 with col_d2:
-                                    pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY', value=existing_pm_bank, key=f'pmjjby_b_opt_{idx}')
+                                    pmjjby_b_date = st.date_input('Bank Enrolled Date - PMJJBY (DD-MM-YYYY format)', value=existing_pm_bank, format="DD/MM/YYYY", key=f'pmjjby_b_opt_{idx}')
 
                             if 18 <= active_age <= 70:
                                 st.markdown(
@@ -374,7 +373,6 @@ if df is not None:
                                 with pc1:
                                     entered_pmsby_bank = st.selectbox('PMSBY Bank', all_available_banks, index=bank_index, key=f'pmsby_bank_{idx}')
                                 with pc2:
-                                    # Fetch branches belonging exclusively to the selected PMSBY bank
                                     available_pmsby_branches = sorted(df[df['BANK NAME'] == entered_pmsby_bank]['BRANCH NAME'].dropna().unique().tolist())
                                     if not available_pmsby_branches:
                                         available_pmsby_branches = [default_branch_val] if default_branch_val else ['MAIN BRANCH']
@@ -385,36 +383,42 @@ if df is not None:
                                     
                                     entered_pmsby_branch = st.selectbox('PMSBY Branch', available_pmsby_branches, index=branch_index_ps, key=f'pmsby_branch_{idx}')
                                 with pc3:
-                                    entered_pmsby_acc = st.text_input('PMSBY Acc No', value=default_acc_val, key=f'pmsby_acc_{idx}')
+                                    entered_pmsby_acc = st.text_input('PMSBY Acc No (Numbers only)', value=default_acc_val, key=f'pmsby_acc_{idx}')
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
-                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY', value=existing_ps_sub, key=f'pmsby_sub_{idx}')
+                                    pmsby_sub_date = st.date_input('Application Submitted Date - PMSBY (DD-MM-YYYY format)', value=existing_ps_sub, format="DD/MM/YYYY", key=f'pmsby_sub_{idx}')
                                 with col_d4:
-                                    pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY', value=existing_ps_bank, key=f'pmsby_b_opt_{idx}')
+                                    pmsby_b_date_pmsby = st.date_input('Bank Enrolled Date - PMSBY (DD-MM-YYYY format)', value=existing_ps_bank, format="DD/MM/YYYY", key=f'pmsby_b_opt_{idx}')
 
                             if st.button(f'💾 {entered_name} Vivaralu Save Cheyandi', key=f'save_{idx}', type='primary'):
-                                date_error = False
+                                validation_error = False
                                 
-                                if pmjjby_b_date and not pmjjby_sub_date:
-                                    date_error = True
+                                # Check Account Number contains only digits
+                                active_acc_to_check = str(entered_pmjjby_acc).strip() if (18 <= active_age <= 50) else str(entered_pmsby_acc).strip()
+                                if not active_acc_to_check.isdigit():
+                                    validation_error = True
+                                    st.error("❌ Account Number should contain only numbers (Digits only, no alphabets/special characters allowed)!")
+
+                                if not validation_error and pmjjby_b_date and not pmjjby_sub_date:
+                                    validation_error = True
                                     st.error("❌ PMJJBY lo: Munduga application submit date ivvakunda bank enroll date ivvakkudadu!")
                                 
-                                if pmsby_b_date_pmsby and not pmsby_sub_date:
-                                    date_error = True
+                                if not validation_error and pmsby_b_date_pmsby and not pmsby_sub_date:
+                                    validation_error = True
                                     st.error("❌ PMSBY lo: Munduga application submit date ivvakunda bank enroll date ivvakkudadu!")
 
-                                if not date_error and pmjjby_sub_date and pmjjby_b_date:
+                                if not validation_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
-                                        date_error = True
+                                        validation_error = True
                                         st.error("❌ PMJJBY lo: Bank enrolled date application submit date kante mundu undakudadu!")
 
-                                if not date_error and pmsby_sub_date and pmsby_b_date_pmsby:
+                                if not validation_error and pmsby_sub_date and pmsby_b_date_pmsby:
                                     if pmsby_b_date_pmsby < pmsby_sub_date:
-                                        date_error = True
+                                        validation_error = True
                                         st.error("❌ PMSBY lo: Bank enrolled date application submit date kante mundu undakudadu!")
 
-                                if not date_error:
+                                if not validation_error:
                                     updated_row = row.to_dict()
                                     cleaned_new_name = str(entered_name).strip().upper()
                                     
@@ -557,7 +561,7 @@ if df is not None:
     elif app_mode == 'Bank Wise':
         st.markdown("## 🏛️ Bank Wise Summary")
         st.write('---')
-        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
+        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='bank_wise_scheme')
 
         bank_summary = []
         for bank, group in export_df_base.groupby('BANK NAME'):
@@ -693,7 +697,7 @@ if df is not None:
             [
                 '1. ✏️ Name Corrections',
                 '2. 🔢 Age Corrections',
-                '3. 🏛️ Bank Name Corrections',
+                '3. 🏛️️ Bank Name Corrections',
                 '4. 💳 Account Number Corrections'
             ]
         )
