@@ -5,17 +5,22 @@ from datetime import datetime
 # పేజీ సెటప్
 st.set_page_config(page_title="SERP SHG Portal", page_icon="📊", layout="wide")
 
+# మండలాలు మరియు వివోల మాస్టర్ డేటా (డ్రిల్-డౌన్ కోసం)
+if 'location_master' not in st.session_state:
+    st.session_state.location_master = {
+        "Guntur": ["Vatticherukuru", "Prathipadu", "Medikonduru", "Pedakakani"],
+        "Vatticherukuru": ["Vatticherukuru VO-1", "Vatticherukuru VO-2", "Penumaka VO"],
+        "Prathipadu": ["Prathipadu VO-1", "Prathipadu VO-2"],
+        "Medikonduru": ["Medikonduru VO-1", "Medikonduru VO-2"],
+        "Pedakakani": ["Pedakakani VO-1", "Pedakakani VO-2"]
+    }
+
 # సెషన్ స్టేట్ ఇనిషియలైజేషన్
 if 'users_db' not in st.session_state:
-    # ప్రారంభ రిజిస్ట్రేషన్ డేటా (స్టేటస్: Approved / Pending)
-    st.session_state.users_db = pd.DataFrame({
-        'phone': ['9121190676', '9876543210', '9111111111'],
-        'name': ['జిల్లా అడ్మిన్ (District Admin)', 'రాము (APM)', 'సీత (VO)'],
-        'role': ['District Admin', 'APM', 'VO'],
-        'village': ['అన్ని (All)', 'మండలం (All)', 'గ్రామం-1'],
-        'password': ['1234', '1234', '1234'],
-        'status': ['Approved', 'Approved', 'Approved']
-    })
+    # ప్రారంభంలో ఎలాంటి అడ్మిన్ ఉండరు, మొదటిసారి DPM/జిల్లా అడ్మిన్ రిజిస్టర్ చేసుకుంటారు
+    st.session_state.users_db = pd.DataFrame(columns=[
+        'phone', 'name', 'role', 'mandal', 'vo', 'password', 'status'
+    ])
 
 if 'data_records' not in st.session_state:
     st.session_state.data_records = pd.DataFrame(columns=[
@@ -30,72 +35,101 @@ if 'logged_in' not in st.session_state:
 
 # లాగిన్ / రిజిస్ట్రేషన్ పేజీ
 def login_page():
-    st.title("🏛️ SERP SHG - పోర్టల్ లాగిన్")
+    st.title("🏛️ SERP SHG - పోర్టల్ లాగిన్ & రిజిస్ట్రేషన్")
     
-    tab1, tab2 = st.tabs(["లాగిన్ (Login)", "కొత్త రిజిస్ట్రేషన్ (New Registration)"])
+    # డేటాబేస్ లో అసలు అడ్మిన్లు ఉన్నారా లేదా అని చెక్ చేయడం
+    users_df = st.session_state.users_db
+    admin_exists = not users_df[users_df['role'] == 'District Admin'].empty
     
-    with tab1:
-        st.subheader("ప్రవేశం (Sign In)")
-        phone = st.text_input("ఫోన్ నెంబర్ (Phone Number)", max_chars=10, key="login_phone")
-        password = st.text_input("పాస్‌వర్డ్ (Password)", type="password", key="login_password")
+    if not admin_exists:
+        st.warning("⚠️ సిస్టమ్‌లో జిల్లా అడ్మిన్ (DPM) ఇంకా నమోదు కాలేదు. దయచేసి ముందుగా మీ వివరాలతో జిల్లా అడ్మిన్‌గా రిజిస్టర్ చేసుకోండి.")
+        reg_tab = "కొత్త రిజిస్ట్రేషన్ (New Registration)"
+    else:
+        tab1, tab2 = st.tabs(["లాగిన్ (Login)", "కొత్త రిజిస్ట్రేషన్ (New Registration)"])
+        reg_tab = tab2
         
-        if st.button("లాగిన్ అవ్వండి (Login)"):
-            users = st.session_state.users_db
-            user_match = users[users['phone'] == phone]
+    with (st.tabs(["లాగిన్ (Login)", "కొత్త రిజిస్ట్రేషన్ (New Registration)"])[0] if admin_exists else st.container()):
+        if admin_exists:
+            st.subheader("ప్రవేశం (Sign In)")
+            phone = st.text_input("ఫోన్ నెంబర్ (Phone Number)", max_chars=10, key="login_phone")
+            password = st.text_input("పాస్‌వర్డ్ (Password)", type="password", key="login_password")
             
-            if phone == "9121190676" and password == "1234":
-                st.session_state.logged_in = True
-                st.session_state.current_user = "జిల్లా అడ్మిన్"
-                st.session_state.current_role = "District Admin"
-                st.session_state.current_phone = phone
-                st.success("జిల్లా అడ్మిన్‌గా విజయవంతంగా లాగిన్ అయ్యారు!")
-                st.rerun()
-            elif not user_match.empty:
-                row = user_match.iloc[0]
-                if row['password'] == password:
-                    if row['status'] == 'Approved':
-                        st.session_state.logged_in = True
-                        st.session_state.current_user = row['name']
-                        st.session_state.current_role = row['role']
-                        st.session_state.current_phone = phone
-                        st.success(f"స్వాగతం, {row['name']}!")
-                        st.rerun()
+            if st.button("లాగిన్ అవ్వండి (Login)"):
+                user_match = users_df[users_df['phone'] == phone]
+                if not user_match.empty:
+                    row = user_match.iloc[0]
+                    if row['password'] == password:
+                        if row['status'] == 'Approved' or row['role'] == 'District Admin':
+                            st.session_state.logged_in = True
+                            st.session_state.current_user = row['name']
+                            st.session_state.current_role = row['role']
+                            st.session_state.current_phone = phone
+                            st.success(f"స్వాగతం, {row['name']}!")
+                            st.rerun()
+                        else:
+                            st.warning("మీ రిజిస్ట్రేషన్ ఇంకా జిల్లా అడ్మిన్ ఆమోదం (Approval) పొందలేదు.")
                     else:
-                        st.warning("మీ రిజిస్ట్రేషన్ ఇంకా జిల్లా అడ్మిన్ ఆమోదం (Approval) పొందలేదు.")
+                        st.error("తప్పు పాస్‌వర్డ్.")
                 else:
-                    st.error("తప్పు పాస్‌వర్డ్.")
-            else:
-                st.error("ఈ ఫోన్ నెంబర్ రిజిస్టర్ కాలేదు లేదా కనుగొనబడలేదు.")
+                    st.error("ఈ ఫోన్ నెంబర్ రిజిస్టర్ కాలేదు.")
 
-    with tab2:
-        st.subheader("కొత్త యూజర్ రిజిస్ట్రేషన్ (VO / APM Registration)")
+    with (reg_tab if admin_exists else st.container()):
+        if not admin_exists:
+            st.subheader("జిల్లా అడ్మిన్ / DPM మొదటి రిజిస్ట్రేషన్")
+        else:
+            st.subheader("కొత్త యూజర్ రిజిస్ట్రేషన్ (APM / VOA Registration)")
+            
         reg_phone = st.text_input("ఫోన్ నెంబర్ (Phone Number)", max_chars=10, key="reg_phone")
         reg_name = st.text_input("పేరు (Name)", key="reg_name")
-        reg_role = st.selectbox("హోదా (Role)", ["VO", "APM"])
-        reg_village = st.text_input("గ్రామం / మండలం పేరు (Village / Mandal Name)")
+        
+        if not admin_exists:
+            reg_role = "District Admin"
+            st.info("హోదా (Role): District Admin (మొదటి రిజిస్ట్రేషన్ కాబట్టి స్వయంచాలకంగా సెట్ చేయబడింది)")
+        else:
+            reg_role = st.selectbox("హోదా (Role)", ["APM", "VOA"])
+            
+        # డ్రిల్-డౌన్ లాజిక్ కోసం మండలాలు మరియు వివోల ఎంపిక
+        selected_mandal = ""
+        selected_vo = ""
+        
+        if reg_role in ["APM", "VOA"]:
+            mandals_list = ["-- మండలం ఎంచుకోండి --"] + list(st.session_state.location_master.keys())[:4] # ప్రధాన మండలాలు
+            selected_mandal = st.selectbox("మండలం ఎంచుకోండి (Select Mandal)", mandals_list)
+            
+            if reg_role == "VOA" and selected_mandal and selected_mandal != "-- మండలం ఎంచుకోండి --":
+                vo_options = ["-- VO ఎంచుకోండి --"] + st.session_state.location_master.get(selected_mandal, [])
+                selected_vo = st.selectbox("వివో (VO) ఎంచుకోండి", vo_options)
+        
         reg_pass = st.text_input("పాస్‌వర్డ్ సృష్టించండి (Create Password)", type="password", key="reg_pass")
         
         if st.button("రిజిస్టర్ చేసుకోండి (Register)"):
-            users = st.session_state.users_db
-            if reg_phone in users['phone'].values:
-                st.error("ఈ ఫోన్ నెంబర్‌‌తో ఇప్పటికే రిజిస్ట్రేషన్ చేయబడింది. ఒక గ్రామానికి/వ్యక్తికి ఒకే ఫోన్ నెంబర్ అనుమతించబడుతుంది.")
+            if reg_phone in users_df['phone'].values:
+                st.error("ఈ ఫోన్ నెంబర్‌‌‌‌తో ఇప్పటికే రిజిస్ట్రేషన్ చేయబడింది. ఒక గ్రామానికి/వ్యక్తికి ఒకే ఫోన్ నెంబర్ అనుమతించబడుతుంది.")
             elif not reg_phone or not reg_name or not reg_pass:
                 st.warning("దయచేసి అన్ని వివరాలను పూరించండి.")
+            elif reg_role == "APM" and (not selected_mandal or selected_mandal == "-- మండలం ఎంచుకోండి --"):
+                st.warning("దయచేసి మండలాన్ని ఎంచుకోండి.")
+            elif reg_role == "VOA" and (not selected_vo or selected_vo == "-- VO ఎంచుకోండి --"):
+                st.warning("దయచేసి మండలం మరియు వివో (VO) రెండూ ఎంచుకోండి.")
             else:
+                initial_status = 'Approved' if reg_role == 'District Admin' else 'Pending'
                 new_row = pd.DataFrame({
                     'phone': [reg_phone],
                     'name': [reg_name],
                     'role': [reg_role],
-                    'village': [reg_village],
+                    'mandal': [selected_mandal if reg_role != 'District Admin' else 'All'],
+                    'vo': [selected_vo if reg_role == 'VOA' else 'All'],
                     'password': [reg_pass],
-                    'status': ['Pending'] # అడ్మిన్ అప్రూవల్ కోసం పెండింగ్
+                    'status': [initial_status] 
                 })
-                st.session_state.users_db = pd.concat([users, new_row], ignore_index=True)
-                st.success("రిజిస్ట్రేషన్ విజయవంతంగా సమర్పించబడింది! జిల్లా అడ్మిన్ ఆమోదం తరువాత మీరు లాగిన్ হতেవచ్చు.")
+                st.session_state.users_db = pd.concat([users_df, new_row], ignore_index=True)
+                if reg_role == 'District Admin':
+                    st.success("జిల్లా అడ్మిన్ రిజిస్ట్రేషన్ విజయవంతమైంది! దయచేసి ఇప్పుడు లాగిన్ అవ్వండి.")
+                else:
+                    st.success("రిజిస్ట్రేషన్ విజయవంతంగా సమర్పించబడింది! జిల్లా అడ్మిన్ (DPM) ఆమోదం తరువాత మీరు లాగిన్ కావచ్చు.")
 
 # ప్రధాన అప్లికేషన్
 def main_app():
-    st.sidebar.logged_in_user = st.session_state.current_user
     st.sidebar.write(f"👤 **యూజర్:** {st.session_state.current_user}")
     st.sidebar.write(f"📌 **హోదా:** {st.session_state.current_role}")
     
@@ -109,33 +143,36 @@ def main_app():
     
     role = st.session_state.current_role
     
-    # జిల్లా అడ్మిన్ లాగిన్ ప్యానెల్
+    # జిల్లా అడ్మిన్ / DPM లాగిన్ ప్యానెల్
     if role == "District Admin":
-        st.title("👑 జిల్లా అడ్మిன் కంట్రోల్ ప్యానెల్ (District Admin Login)")
+        st.title("👑 జిల్లా అడ్మిన్ / DPM కంట్రోల్ ప్యానెల్")
         
-        admin_tab1, admin_tab2, admin_tab3 = st.tabs(["యూజర్ అప్రూవల్స్ & పాస్‌వర్డ్ మేనేజ్‌మెంట్", "అన్ని వివో (VO) ఎంట్రీలు", "పాస్‌వర్డ్ మార్చుకోండి"])
+        admin_tab1, admin_tab2, admin_tab3 = st.tabs(["APM & VOA అప్రూవల్స్ & పాస్‌వర్డ్స్", "అన్ని ఎంట్రీలు", "పాస్‌వర్డ్ మార్చుకోండి"])
         
         with admin_tab1:
-            st.subheader("VO / APM రిజిస్ట్రేషన్ అప్రూవల్స్ మరియు పాస్‌వర్డ్స్")
+            st.subheader("APM మరియు VOA రిజిస్ట్రేషన్ అప్రూవల్స్ మరియు మేనేజ్‌మెంట్")
             users_df = st.session_state.users_db
             
-            st.dataframe(users_df[['phone', 'name', 'role', 'village', 'status', 'password']], use_container_width=True)
+            st.dataframe(users_df[['phone', 'name', 'role', 'mandal', 'vo', 'status', 'password']], use_container_width=True)
             
             st.markdown("### యూజర్ స్టేటస్ అప్రూవ్ చేయుట లేదా న్యూ పాస్‌వర్డ్ సెట్ చేయుట")
-            selected_phone = st.selectbox("ఫోన్ నెంబర్ ఎంచుకోండి", users_df['phone'].tolist())
+            pending_phones = users_df[users_df['role'] != 'District Admin']['phone'].tolist()
             
-            if selected_phone:
-                current_status = users_df.loc[users_df['phone'] == selected_phone, 'status'].values[0]
-                new_status = st.selectbox("స్టేటస్ మార్చండి", ["Approved", "Pending"], index=0 if current_status=="Approved" else 1)
-                
-                new_generated_pass = st.text_input("కొత్త పాస్‌వర్డ్ కేటాయించండి (New Password)")
-                
-                if st.button("మార్పులను సేవ్ చేయండి"):
-                    st.session_state.users_db.loc[st.session_state.users_db['phone'] == selected_phone, 'status'] = new_status
-                    if new_generated_pass:
-                        st.session_state.users_db.loc[st.session_state.users_db['phone'] == selected_phone, 'password'] = new_generated_pass
-                    st.success("వివరాలు வெற்றవంతంగా అప్‌డేట్ చేయబడ్డాయి!")
-                    st.rerun()
+            if pending_phones:
+                selected_phone = st.selectbox("ఫోన్ నెంబర్ ఎంచుకోండి", pending_phones)
+                if selected_phone:
+                    current_status = users_df.loc[users_df['phone'] == selected_phone, 'status'].values[0]
+                    new_status = st.selectbox("స్టేటస్ మార్చండి", ["Approved", "Pending"], index=0 if current_status=="Approved" else 1)
+                    new_generated_pass = st.text_input("కొత్త పాస్‌వర్డ్ కేటాయించండి (New Password)")
+                    
+                    if st.button("మార్పులను సేవ్ చేయండి"):
+                        st.session_state.users_db.loc[st.session_state.users_db['phone'] == selected_phone, 'status'] = new_status
+                        if new_generated_pass:
+                            st.session_state.users_db.loc[st.session_state.users_db['phone'] == selected_phone, 'password'] = new_generated_pass
+                        st.success("వివరాలు విజయవంతంగా అప్‌డేట్ చేయబడ్డాయి!")
+                        st.rerun()
+            else:
+                st.info("ప్రస్తుతానికి ఎలాంటి APM లేదా VOA రిజిస్ట్రేషన్లు పెండింగ్‌లో లేవు.")
                     
         with admin_tab2:
             st.subheader("సమర్పించబడిన మొత్తం డేటా")
@@ -146,15 +183,18 @@ def main_app():
                 
         with admin_tab3:
             st.subheader("అడ్మిన్ పాస్‌వర్డ్ మార్చుకోండి")
+            current_phone_num = st.session_state.current_phone
             old_p = st.text_input("పాత పాస్‌వర్డ్", type="password")
             new_p = st.text_input("కొత్త పాస్‌వర్డ్", type="password")
             if st.button("పాస్‌వర్డ్ మార్చు"):
-                if old_p == "1234": # లేదా ప్రస్తుత అడ్మిన్ పాస్‌వర్డ్
-                    st.success("పాస్‌వర్డ్ విజయవంతంగా మార్చబడింది!")
+                stored_pass = users_df.loc[users_df['phone'] == current_phone_num, 'password'].values[0]
+                if old_p == stored_pass:
+                    st.session_state.users_db.loc[users_df['phone'] == current_phone_num, 'password'] = new_p
+                    st.success("పాస్‌వర్డ్ విజయవంతವಾಗಿ మార్చబడింది!")
                 else:
                     st.error("పాత పాస్‌వర్డ్ తప్పు.")
 
-    # APM మరియు VO లాగిన్ ప్యానెల్ (డేటా ఎంట్రీ మరియు రిపోర్ట్స్)
+    # APM మరియు VOA లాగిన్ ప్యానెల్
     else:
         st.markdown("📌 దయచేసి క్రింది మెను నుండి కావలసిన సెక్షన్ లేదా రిపోర్ట్ ఎంచుకోండి:")
         
@@ -170,7 +210,7 @@ def main_app():
         )
         
         if "1 🏠 VO Data Entry" in menu_choice:
-            st.subheader("సమాచార నమోదు (VO Data Entry)")
+            st.subheader("సమచార నమోదు (VO Data Entry)")
             with st.form("data_entry_form"):
                 district = st.text_input("జిల్లా (District)", value="Guntur")
                 mandal = st.text_input("మండలం (Mandal)")
