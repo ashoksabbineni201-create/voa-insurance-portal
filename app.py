@@ -126,6 +126,12 @@ if df is not None:
     if 'age_corrections_log' not in st.session_state:
         st.session_state.age_corrections_log = {}
 
+    if 'bank_corrections_log' not in st.session_state:
+        st.session_state.bank_corrections_log = {}
+
+    if 'acc_corrections_log' not in st.session_state:
+        st.session_state.acc_corrections_log = {}
+
     export_df_base = df.copy()
     if len(st.session_state.saved_entries_dict) > 0:
         for m_id, saved_row in st.session_state.saved_entries_dict.items():
@@ -149,8 +155,9 @@ if df is not None:
         unsafe_allow_html=True,
     )
 
+    # Top Mobile-Friendly Navigation Selector (11 Options)
     nav_options_mapping = {
-        '1️⃣ 🏠 డాష్‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
+        '1️⃣ 🏠 డాష్‌‌‌‌బోర్డ్ (Dashboard & Entry)': 'Dashboard',
         '2️⃣ 📍 మండలం వారీగా రిపోర్ట్ (Mandal Wise)': 'Mandal Wise',
         '3️⃣ 📊 వి.ఓ (VO) వారీగా రిపోర్ట్ (VO Wise)': 'VO Wise',
         '4️⃣ 🏛️ బ్యాంక్ వారీగా రిపోర్ట్ (Bank Wise)': 'Bank Wise',
@@ -158,7 +165,9 @@ if df is not None:
         '6️⃣ 📥 పెండింగ్ జాబితా (Pending Reports)': 'Pending Reports',
         '7️⃣ 👥 పూర్తి సభ్యుల జాబితా (Member Level)': 'Member Level',
         '8️⃣ ✏️ నేమ్ కరెక్షన్ నివేదిక (Name Corrections)': 'Name Corrections',
-        '9️⃣ 🔢 ఏజ్ కరెక్షన్ నివేదిక (Age Corrections)': 'Age Corrections'
+        '9️⃣ 🔢 ఏజ్ కరెక్షన్ నివేదిక (Age Corrections)': 'Age Corrections',
+        '🔟 🏛️ బ్యాంక్ పేరు మార్చినవి (Bank Corrections)': 'Bank Corrections',
+        '1️⃣1️⃣ 💳 అకౌంట్ నంబర్ మార్చినవి (Account Corrections)': 'Account Corrections'
     }
 
     selected_display_opt = st.selectbox(
@@ -222,6 +231,8 @@ if df is not None:
                 original_row_data = df[df['MEMBER ID'].astype(str) == str(m_id)]
                 orig_name = str(original_row_data.iloc[0]['MEMBER NAME']).strip().upper() if not original_row_data.empty else str(row.get('MEMBER NAME', '')).strip().upper()
                 orig_age = str(original_row_data.iloc[0]['AGE']).strip() if not original_row_data.empty else str(row.get('AGE', '35')).strip()
+                orig_bank = str(original_row_data.iloc[0]['BANK NAME']).strip().upper() if not original_row_data.empty and 'BANK NAME' in original_row_data.columns else str(row.get('BANK NAME', '')).strip().upper()
+                orig_acc = str(original_row_data.iloc[0]['MEMBER SB ACCOUNT NUMBER']).strip() if not original_row_data.empty and 'MEMBER SB ACCOUNT NUMBER' in original_row_data.columns else str(row.get('MEMBER SB ACCOUNT NUMBER', '')).strip()
 
                 m_name = str(current_row.get('MEMBER NAME', 'Unknown'))
                 raw_age = current_row.get('AGE', 35)
@@ -307,6 +318,8 @@ if df is not None:
                             existing_ps_sub = safe_parse_date(current_row.get(col_pmsby_sub))
                             existing_ps_bank = safe_parse_date(current_row.get(col_pmsby_bank))
 
+                            entered_bank_name, entered_acc_no = str(row.get('BANK NAME', '')), str(row.get('MEMBER SB ACCOUNT NUMBER', ''))
+
                             if 18 <= active_age <= 50:
                                 st.markdown(
                                     '<div class="section-title-pmjjby">🛡 1. PMJJBY స్కీమ్ వివరాలు (18-50 సంవత్సరాలు)</div>',
@@ -314,11 +327,11 @@ if df is not None:
                                 )
                                 bc1, bc2, bc3 = st.columns(3)
                                 with bc1:
-                                    st.text_input('PMJJBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmjjby_bank_{idx}')
+                                    entered_bank_name = st.text_input('PMJJBY Bank', value=str(current_row.get('BANK NAME', row.get('BANKNAME', ''))), key=f'pmjjby_bank_{idx}')
                                 with bc2:
-                                    st.text_input('PMJJBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmjjby_branch_{idx}')
+                                    st.text_input('PMJJBY Branch', value=str(current_row.get('BRANCH NAME', row.get('BRANCHNAME', ''))), key=f'pmjjby_branch_{idx}')
                                 with bc3:
-                                    st.text_input('PMJJBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmjjby_acc_{idx}')
+                                    entered_acc_no = st.text_input('PMJJBY Acc No', value=str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBERSBACCOUNTNUMBER', ''))), key=f'pmjjby_acc_{idx}')
 
                                 col_d1, col_d2 = st.columns(2)
                                 with col_d1:
@@ -333,11 +346,11 @@ if df is not None:
                                 )
                                 pc1, pc2, pc3 = st.columns(3)
                                 with pc1:
-                                    st.text_input('PMSBY Bank', value=str(row.get('BANK NAME', '')), key=f'pmsby_bank_{idx}')
+                                    st.text_input('PMSBY Bank', value=str(current_row.get('BANK NAME', row.get('BANKNAME', ''))), key=f'pmsby_bank_{idx}')
                                 with pc2:
-                                    st.text_input('PMSBY Branch', value=str(row.get('BRANCH NAME', '')), key=f'pmsby_branch_{idx}')
+                                    st.text_input('PMSBY Branch', value=str(current_row.get('BRANCH NAME', row.get('BRANCHNAME', ''))), key=f'pmsby_branch_{idx}')
                                 with pc3:
-                                    st.text_input('PMSBY Acc No', value=str(row.get('MEMBER SB ACCOUNT NUMBER', '')), key=f'pmsby_acc_{idx}')
+                                    st.text_input('PMSBY Acc No', value=str(current_row.get('MEMBER SB ACCOUNT NUMBER', row.get('MEMBERSBACCOUNTNUMBER', ''))), key=f'pmsby_acc_{idx}')
 
                                 col_d3, col_d4 = st.columns(2)
                                 with col_d3:
@@ -354,7 +367,7 @@ if df is not None:
                                 
                                 if pmsby_b_date_pmsby and not pmsby_sub_date:
                                     date_error = True
-                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
+                                    st.error("❌ PMSBY లో: ముందుగా అప్లికేషన్ బ్యాంకుకు సబ్మిట్ చేసిన తేదీ (Application Submitted Date) ఇవ్వకుండా, నేరుగా బ్యాంకు ఎన్‌‌‌‌రోల్ చేసిన తేదీ ఇవ్వకూడదు!")
 
                                 if not date_error and pmjjby_sub_date and pmjjby_b_date:
                                     if pmjjby_b_date < pmjjby_sub_date:
@@ -369,10 +382,15 @@ if df is not None:
                                 if not date_error:
                                     updated_row = row.to_dict()
                                     cleaned_new_name = str(entered_name).strip().upper()
+                                    cleaned_new_bank = str(entered_bank_name).strip().upper()
+                                    cleaned_new_acc = str(entered_acc_no).strip()
+
                                     updated_row['MEMBER NAME'] = cleaned_new_name
                                     updated_row['AGE'] = str(active_age)
+                                    updated_row['BANK NAME'] = cleaned_new_bank
+                                    updated_row['MEMBER SB ACCOUNT NUMBER'] = cleaned_new_acc
                                     
-                                    # Log Name Correction (Member Name stores Old Name, Corrected Name stores New Name)
+                                    # 1. Log Name Correction
                                     if cleaned_new_name != orig_name:
                                         st.session_state.name_corrections_log[m_id] = {
                                             'Mandal Name': str(row.get('MANDAL', '')),
@@ -385,7 +403,7 @@ if df is not None:
                                     elif m_id in st.session_state.name_corrections_log:
                                         del st.session_state.name_corrections_log[m_id]
 
-                                    # Log Age Correction
+                                    # 2. Log Age Correction
                                     if str(active_age) != str(orig_age):
                                         st.session_state.age_corrections_log[m_id] = {
                                             'Mandal Name': str(row.get('MANDAL', '')),
@@ -398,6 +416,34 @@ if df is not None:
                                         }
                                     elif m_id in st.session_state.age_corrections_log:
                                         del st.session_state.age_corrections_log[m_id]
+
+                                    # 3. Log Bank Name Correction
+                                    if cleaned_new_bank != orig_bank:
+                                        st.session_state.bank_corrections_log[m_id] = {
+                                            'MANDAL NAME': str(row.get('MANDAL', '')),
+                                            'VO NAME': str(row.get('VO', '')),
+                                            'SHG NAME': str(row.get('SHG', '')),
+                                            'MEMBER NAME': cleaned_new_name,
+                                            'MEMBER ID': str(m_id),
+                                            'OLD BANK NAME': orig_bank,
+                                            'NEW BANK NAME': cleaned_new_bank
+                                        }
+                                    elif m_id in st.session_state.bank_corrections_log:
+                                        del st.session_state.bank_corrections_log[m_id]
+
+                                    # 4. Log Account Number Correction
+                                    if cleaned_new_acc != orig_acc:
+                                        st.session_state.acc_corrections_log[m_id] = {
+                                            'MANDAL NAME': str(row.get('MANDAL', '')),
+                                            'VO NAME': str(row.get('VO', '')),
+                                            'SHG NAME': str(row.get('SHG', '')),
+                                            'MEMBER NAME': cleaned_new_name,
+                                            'MEMBER ID': str(m_id),
+                                            'OLD BANK ACCOUNT NUMBER': orig_acc,
+                                            'NEW BANK ACCOUNT NUMBER': cleaned_new_acc
+                                        }
+                                    elif m_id in st.session_state.acc_corrections_log:
+                                        del st.session_state.acc_corrections_log[m_id]
                                     
                                     if pmjjby_sub_date: 
                                         updated_row[col_pmjjby_sub] = str(pmjjby_sub_date)
@@ -416,11 +462,11 @@ if df is not None:
     elif app_mode == 'Mandal Wise':
         st.markdown("## 📍 మండలం వారీగా సారాంశం (Mandal Wise)")
         st.write('---')
-        scheme_choice = st.radio('స్కీమ్‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
+        scheme_choice = st.radio('స్కీమ్‌‌‌ను ఎంచుకోండి:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='m_scheme')
 
         mandal_summary = []
         for m_name, group in export_df_base.groupby('MANDAL'):
-            if scheme_choice == '🛡️️ PMJJBY':
+            if scheme_choice == '🛡️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -456,7 +502,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -655,7 +701,7 @@ if df is not None:
             
             csv_ac = age_corr_df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                label='📥 ఏజ్ కరెక్షన్ రిపోర్ట్‌‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
                 data=csv_ac,
                 file_name='Age_Corrections_Report.csv',
                 mime='text/css',
@@ -663,3 +709,59 @@ if df is not None:
             )
         else:
             st.info('👉 ఇప్పటివరకు ఎలాంటి ఏజ్ కరెక్షన్స్ నమోదు చేయబడలేదు.')
+
+    # 10. BANK NAME CORRECTIONS REPORT
+    elif app_mode == 'Bank Corrections':
+        st.markdown("## 🏛️ బ్యాంక్ పేరు మార్చిన సభ్యుల నివేదిక (Bank Name Corrections Report)")
+        st.write('---')
+        
+        if len(st.session_state.bank_corrections_log) > 0:
+            bank_corr_df = pd.DataFrame(list(st.session_state.bank_corrections_log.values()))
+            
+            mandal_list_bc = ['అన్నీ (All)'] + sorted(bank_corr_df['MANDAL NAME'].dropna().unique().tolist())
+            chosen_m_bc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_bc, key='bc_mandal_filter')
+            
+            if chosen_m_bc != 'అన్నీ (All)':
+                bank_corr_df = bank_corr_df[bank_corr_df['MANDAL NAME'] == chosen_m_bc]
+            
+            st.markdown(f'### 📋 మొత్తం మార్చబడిన బ్యాంకులు: {len(bank_corr_df)}')
+            st.dataframe(bank_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK NAME', 'NEW BANK NAME']], use_container_width=True)
+            
+            csv_bc = bank_corr_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label='📥 బ్యాంక్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                data=csv_bc,
+                file_name='Bank_Name_Corrections_Report.csv',
+                mime='text/css',
+                type='primary'
+            )
+        else:
+            st.info('👉 ఇప్పటివరకు ఎలాంటి బ్యాంక్ పేరు మార్పులు నమోదు చేయబడలేదు.')
+
+    # 11. ACCOUNT NUMBER CORRECTIONS REPORT
+    elif app_mode == 'Account Corrections':
+        st.markdown("## 💳 అకౌంట్ నంబర్ మార్చిన సభ్యుల నివేదిక (Account Number Corrections Report)")
+        st.write('---')
+        
+        if len(st.session_state.acc_corrections_log) > 0:
+            acc_corr_df = pd.DataFrame(list(st.session_state.acc_corrections_log.values()))
+            
+            mandal_list_acc = ['అన్నీ (All)'] + sorted(acc_corr_df['MANDAL NAME'].dropna().unique().tolist())
+            chosen_m_acc = st.selectbox('మండలం వారీగా ఫిల్టర్ చేయండి:', mandal_list_acc, key='acc_mandal_filter')
+            
+            if chosen_m_acc != 'అన్నీ (All)':
+                acc_corr_df = acc_corr_df[acc_corr_df['MANDAL NAME'] == chosen_m_acc]
+            
+            st.markdown(f'### 📋 మొత్తం మార్చబడిన అకౌంట్ నంబర్లు: {len(acc_corr_df)}')
+            st.dataframe(acc_corr_df[['MANDAL NAME', 'VO NAME', 'SHG NAME', 'MEMBER NAME', 'MEMBER ID', 'OLD BANK ACCOUNT NUMBER', 'NEW BANK ACCOUNT NUMBER']], use_container_width=True)
+            
+            csv_acc = acc_corr_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label='📥 అకౌంట్ నంబర్ కరెక్షన్ రిపోర్ట్‌ని CSV గా డౌన్లోడ్ చేసుకోండి',
+                data=csv_acc,
+                file_name='Account_Number_Corrections_Report.csv',
+                mime='text/css',
+                type='primary'
+            )
+        else:
+            st.info('👉 ఇప్పటివరకు ఎలాంటి అకౌంట్ నంబర్ మార్పులు నమోదు చేయబడలేదు.')
