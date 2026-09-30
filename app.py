@@ -163,7 +163,7 @@ if df is not None:
         '5️⃣ 📈 Branch Wise Report': 'Branch Wise',
         '6️⃣ 📥 Pending Reports': 'Pending Reports',
         '7️⃣ 👥 Member Level List': 'Member Level',
-        '8️⃣ 📝 Corrections Reports (8va Report)': 'Corrections Reports'
+        '8️⃣ 📝 Corrections Report': 'Corrections Reports'
     }
 
     selected_display_opt = st.selectbox(
@@ -246,7 +246,7 @@ if df is not None:
                     status_tags.append("❌ Not Eligible")
                 else:
                     if pd.notna(p_bank) and str(p_bank).lower() != 'nan' and str(p_bank).strip() != '':
-                        status_tags.append("🛡 PMJJBY Enrolled")
+                        status_tags.append("🛡️ PMJJBY Enrolled")
                     elif pd.notna(p_sub) and str(p_sub).lower() != 'nan' and str(p_sub).strip() != '':
                         status_tags.append("🛡️ PMJJBY Application Submitted")
 
@@ -502,7 +502,7 @@ if df is not None:
 
         vo_summary = []
         for (mandal, vo), group in filtered_df.groupby(['MANDAL', 'VO']):
-            if scheme_choice == '🛡️ PMJJBY':
+            if scheme_choice == '🛡️️ PMJJBY':
                 elig = group[(group['NUM_AGE'] >= 18) & (group['NUM_AGE'] <= 50)]
                 target = len(elig)
                 enrolled = elig[elig[col_pmjjby_bank].notna()].shape[0]
@@ -549,7 +549,7 @@ if df is not None:
         
         banks_list = ['All Banks'] + sorted(export_df_base['BANK NAME'].dropna().unique().tolist())
         selected_bank_filter = st.selectbox('Bank Enchukondi:', banks_list)
-        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
+        scheme_choice = st.radio('Scheme Enchukondi:', ['🛡️️ PMJJBY', '🚑 PMSBY'], horizontal=True, key='b_scheme')
 
         filtered_bank_df = export_df_base.copy()
         if selected_bank_filter != 'All Banks':
@@ -588,7 +588,7 @@ if df is not None:
         )
 
         scheme_filter = st.radio('Scheme Enchukondi:', ['🛡️ PMJJBY', '🚑 PMSBY'], horizontal=True)
-        is_pmjjby = (scheme_filter == '🛡️️ PMJJBY')
+        is_pmjjby = (scheme_filter == '🛡️ PMJJBY')
 
         area_scope = st.radio('Scope Enchukondi:', ['Entire District', 'Specific Mandal'], horizontal=True)
 
@@ -650,7 +650,7 @@ if df is not None:
         st.dataframe(filtered_report_df[['MANDAL', 'VO', 'SHG', 'MEMBER NAME', 'MEMBER ID', 'AGE', col_pmjjby_sub, col_pmjjby_bank, col_pmsby_sub, col_pmsby_bank]], use_container_width=True)
 
     elif app_mode == 'Corrections Reports':
-        st.markdown("## 📝 Corrections Reports (8va Report)")
+        st.markdown("## 📝 Corrections Report")
         st.write('---')
 
         correction_type = st.selectbox(
@@ -714,7 +714,7 @@ if df is not None:
                 st.info('👉 Ippativaraku elanti age corrections namodu cheyabadaledu.')
 
         elif '3.' in correction_type:
-            st.markdown("### 🏛️️ Bank Name Corrections Report")
+            st.markdown("### 🏛️ Bank Name Corrections Report")
             if len(st.session_state.bank_corrections_log) > 0:
                 bank_corr_df = pd.DataFrame(list(st.session_state.bank_corrections_log.values()))
                 
